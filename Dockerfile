@@ -25,7 +25,10 @@ RUN pip install gunicorn
 COPY . .
 
 # Recopilar archivos estáticos
+RUN mkdir -p /app/staticfiles
 RUN python manage.py collectstatic --noinput
+
+
 # Exponer el puerto en el que Gunicorn va a correr
 EXPOSE 443
 
