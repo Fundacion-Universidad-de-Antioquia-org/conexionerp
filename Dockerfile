@@ -31,5 +31,6 @@ EXPOSE 443
 
 # Comando para ejecutar la aplicación usando Gunicorn en el puerto 8000
 #CMD [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
-CMD ["gunicorn", "conexionerp.wsgi:application", "--bind", "0.0.0.0:443"]
+CMD ["gunicorn", "conexionerp.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
+
 
