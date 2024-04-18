@@ -12,5 +12,4 @@ admin.autodiscover()
 
 urlpatterns = [
     path(route='sincronizar', view= views.sync_view, name='sincronizar'),
-    path(route='show_env', view= views.show_env, name='show_env'),
 ]
