@@ -25,9 +25,11 @@ RUN pip install gunicorn
 COPY . .
 
 # Recopilar archivos estáticos
-#RUN python manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput
 # Exponer el puerto en el que Gunicorn va a correr
-EXPOSE 8000
+EXPOSE 443
 
 # Comando para ejecutar la aplicación usando Gunicorn en el puerto 8000
-CMD [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+#CMD [ "python", "manage.py", "runserver", "0.0.0.0:8000" ]
+CMD ["gunicorn", "conexionerp.wsgi:application", "--bind", "0.0.0.0:443"]
+
