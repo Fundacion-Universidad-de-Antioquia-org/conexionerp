@@ -27,3 +27,18 @@ def sync_view(request):
     except Exception as e:
         # En caso de que algo falle durante la obtención de registros o la sincronización
         return JsonResponse({"error": "Error durante la sincronización: {}".format(str(e))}, status=500)
+from django.http import JsonResponse
+import os
+
+def show_env(request):
+    data = {
+        'Database': os.getenv("DATABASE"),
+        'User': os.getenv("USER"),
+        'Tenant ID': os.getenv("TENANT_ID"),
+        'Client ID': os.getenv("CLIENT_ID"),
+        'Client Secret': os.getenv("CLIENT_SECRET"),  # Cuidado con exponer esto públicamente
+        'Scope': os.getenv("SCOPE"),
+        'Site ID': os.getenv("SITE_ID"),
+        'List Name': os.getenv("LIST_NAME"),
+    }
+    return JsonResponse(data)

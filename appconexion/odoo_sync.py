@@ -7,7 +7,7 @@ import requests
 from dotenv import load_dotenv
 
 
-load_dotenv()
+
 database = os.getenv("DATABASE")
 user = os.getenv("USER")
 password = os.getenv("PASSWORD")
