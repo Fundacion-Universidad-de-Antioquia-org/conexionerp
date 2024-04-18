@@ -5,6 +5,10 @@ from .odoo_sync import obtener_registros_pendientes, sincronizar_con_sharepoint,
 from django.http import JsonResponse
 from .odoo_sync import obtener_access_token, obtener_registros_pendientes, sincronizar_con_sharepoint
 # Create your views here.
+from dotenv import load_dotenv
+
+
+load_dotenv()
 def sync_view(request):
     # Intentar obtener un token de acceso
     try:
