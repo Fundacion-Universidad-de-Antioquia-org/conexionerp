@@ -10,7 +10,7 @@ mi_signal = Signal()
 @receiver(mi_signal)
 def ejecutar_solicitud_http(sender, **kwargs):
     ahora = datetime.now().time()
-    hora_deseada = time(16, 25)  # 4:20 PM
+    hora_deseada = time(16, 30)  # 4:20 PM
 
     if ahora >= hora_deseada:
         realizar_solicitud_http()
