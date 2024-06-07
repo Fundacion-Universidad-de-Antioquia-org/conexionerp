@@ -33,7 +33,7 @@ def obtener_registros_pendientes():
         [[('x_studio_pendiente_sincronizacion', '=', 'Si')]],
         {'fields': ['identification_id','name', 'company_id',
         'job_title', 'x_studio_correo_electrnico_personal',
-        'work_email', 'birthday', 'x_studio_estado_empleado']})
+        'work_email', 'birthday', 'x_studio_estado_empleado', 'x_studio_fecha_de_ingreso_1']})
     if registros:
         print("Empleados pendientes de sincronización obtenidos con éxito desde Odoo.")
         return registros
@@ -112,6 +112,7 @@ def sincronizar_con_sharepoint(registros, access_token):
         work_email =  registro['work_email'] if registro['work_email'] else None
         birthday = registro['birthday']
         x_studio_estado_empleado = registro['x_studio_estado_empleado'] if registro['x_studio_estado_empleado']  else None
+        x_studio_fecha_de_ingreso_1 = registro['x_studio_fecha_de_ingreso_1'] if registro['x_studio_fecha_de_ingreso_1']  else None
         birthday2 = f"{birthday}T00:00:00Z" if birthday else None
         item_id, etag = verificar_si_existe(name, access_token)
         # Lógica para manejar el estado del registro
@@ -119,13 +120,13 @@ def sincronizar_con_sharepoint(registros, access_token):
             eliminado_exitosamente = eliminar_registro(item_id, etag, access_token, site_id, list_name)
             crear_registro_en_sharepoint(name, identification_id, company_id, job_title,
                                         x_studio_correo_electrnico_personal, work_email,
-                                        birthday2, x_studio_estado_empleado, access_token,
+                                        birthday2, x_studio_estado_empleado,x_studio_fecha_de_ingreso_1, access_token,
                                         site_id, list_name)
             marcar_registro_como_sincronizado(name)
         elif x_studio_estado_empleado == "Activo":
             crear_registro_en_sharepoint(name, identification_id, company_id, job_title,
                                         x_studio_correo_electrnico_personal, work_email,
-                                        birthday2, x_studio_estado_empleado, access_token,
+                                        birthday2, x_studio_estado_empleado, x_studio_fecha_de_ingreso_1, access_token,
                                         site_id, list_name)
             marcar_registro_como_sincronizado(name)
         elif x_studio_estado_empleado == "Retirado" and item_id:
@@ -145,7 +146,7 @@ def eliminar_registro(item_id, etag, access_token, site_id, list_name):
     print(f"Registro eliminado con éxito: {item_id}")
 def crear_registro_en_sharepoint(name, identification_id, company_id,
                                 job_title, x_studio_correo_electrnico_personal,
-                                work_email, birthday2, x_studio_estado_empleado,
+                                work_email, birthday2, x_studio_estado_empleado,x_studio_fecha_de_ingreso_1,
                                 access_token, site_id, list_name):
     """Esta función crea los registros de sharepoint."""
     create_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_name}/items"
@@ -162,7 +163,8 @@ def crear_registro_en_sharepoint(name, identification_id, company_id,
             "field_4": x_studio_correo_electrnico_personal,
             "field_5": work_email,
             "field_6": birthday2,
-            "field_7": company_id
+            "field_7": company_id,
+            "field_8": x_studio_fecha_de_ingreso_1,
         }
     }
     create_response = requests.post(create_url, headers=create_headers, json=payload, timeout=10)
