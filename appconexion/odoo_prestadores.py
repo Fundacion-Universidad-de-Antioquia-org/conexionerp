@@ -17,10 +17,10 @@ client_id = os.getenv('CLIENT_ID')
 client_secret  = os.getenv('CLIENT_SECRET')
 scope = os.getenv('SCOPE')
 site_id = os.getenv('SITE_ID')
-list_name = os.getenv('LIST_NAME')
+list_name = os.getenv('LIST_NAME_PRESTA')
 
 """Este módulo contiene funciones para sincronizar datos de Odoo con SharePoint ."""
-def obtener_registros_pendientes():
+def obtener_registros_pendientes_presta():
     """Esta función trae los registros desde Odoo."""
     # Conexión al servicio de autenticación de Odoo
     common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
@@ -29,18 +29,17 @@ def obtener_registros_pendientes():
     models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
     # Búsqueda de empleados pendientes de sincronización
     registros = models.execute_kw(database, uid, password,
-        'hr.employee', 'search_read',
+        'x_prestadores_de_servi', 'search_read',
         [[('x_studio_pendiente_sincronizacion', '=', 'Si')]],
-        {'fields': ['identification_id','name', 'company_id',
-        'job_title', 'x_studio_correo_electrnico_personal',
-        'work_email', 'birthday', 'x_studio_estado_empleado', 'x_studio_fecha_de_ingreso_1']})
+        {'fields': ['x_studio_nombre_contratista','x_name', 'x_studio_company_id',
+         'x_studio_partner_email', 'x_studio_fecha_de_nacimiento', 'x_studio_estado', 'x_studio_fecha_ingreso']})
     if registros:
         print("Empleados pendientes de sincronización obtenidos con éxito desde Odoo.")
         print("registros", registros)
         return registros
     print("No se encontraron empleados pendientes de sincronización en Odoo.")
     return None
-def obtener_access_token():
+def obtener_access_token_presta():
     """Esta función obtiene el token de Sharepoint."""
     url = f'https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token'
     data = {
@@ -58,14 +57,14 @@ def obtener_access_token():
         return response.json().get('access_token')
     print("Error al obtener el token de acceso:", token_response)
     return None     # Esto lanzará un error si la solicitud falla
-def verificar_si_existe( name, access_token):
+def verificar_si_existe_presta( x_name, access_token):
     """Esta función valida los registros de Odoo si ya existen el sharepoint."""
     headers = {"Authorization": f"Bearer {access_token}",
                "Content-Type": "application/json", 
                "Prefer": "HonorNonIndexedQueriesWarningMayFailRandomly" }
     search_url = (
     f"https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_name}"
-    f"/items?$filter=fields/field_2 eq '{quote(name)}'&$top=100"
+    f"/items?$filter=fields/field_1 eq '{quote(x_name)}'&$top=100"
     )
     response = requests.get(search_url, headers=headers, timeout=10)
     if response.status_code == 200 and response.json()['value']:
@@ -76,9 +75,9 @@ def verificar_si_existe( name, access_token):
         print("etag:",etag)
         return item_id, etag
     return None, None
-def marcar_registro_como_sincronizado(name):
+def marcar_registro_como_sincronizado_presta(x_name):
     """Esta función Ingresa a la BD de Odoo y actualiza el registro."""
-    if not name:
+    if not x_name:
         print("No se proporcionó un nombre de empleado para marcar como sincronizado.")
         return
     # Conexión al servicio de autenticación de Odoo
@@ -88,60 +87,57 @@ def marcar_registro_como_sincronizado(name):
     models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
     # Busca el ID del empleado basado en el 'name' (nombre) proporcionado
     employee_id = models.execute_kw(database, uid, password,
-                                    'hr.employee', 'search',
-                                    [[('name', '=', name)]])
+                                    'x_prestadores_de_servi', 'search',
+                                    [[('x_name', '=', x_name)]])
     if not employee_id:
-        print(f"No se encontró el empleado con nombre {name} para marcar como sincronizado.")
+        print(f"No se encontró el empleado con nombre {x_name} para marcar como sincronizado.")
         return
     # Marca el registro como sincronizado
     response = models.execute_kw(database, uid, password,
-        'hr.employee', 'write',
+        'x_prestadores_de_servi', 'write',
         [employee_id, {'x_studio_pendiente_sincronizacion': 'No'}],
         {'context': {'skip_sync': True}})
     if response:
-        print(f"Empleado {name} marcado como sincronizado con éxito.")
+        print(f"Empleado {x_name} marcado como sincronizado con éxito.")
     else:
         print("Error al actualizar el registro.")
-def sincronizar_con_sharepoint(registros, access_token):
+def sincronizar_con_sharepoint_presta(registros, access_token):
     """Esta función cumple con controlar y ejecutar el metodo eliminar y crear."""
     for registro in registros:
-        identification_id = registro['identification_id'] if registro['identification_id'] else None
-        name = registro['name'] if registro['name'] else None
-        _, company_id = registro['company_id'] if registro['company_id'] else None
-        job_title = registro['job_title'] if registro['job_title'] else None
-        x_studio_correo_electrnico_personal = registro['x_studio_correo_electrnico_personal'] if registro['x_studio_correo_electrnico_personal'] else None
-        work_email =  registro['work_email'] if registro['work_email'] else None
-        x_studio_estado_empleado = registro['x_studio_estado_empleado'] if registro['x_studio_estado_empleado']  else None
-        birthday = registro['birthday']
-        birthday2 = f"{birthday}T00:00:00Z" if birthday else None
-        x_studio_fecha_de_ingreso_1 = registro['x_studio_fecha_de_ingreso_1']
-        fecha_ingreso=f"{x_studio_fecha_de_ingreso_1}T00:00:00Z" if x_studio_fecha_de_ingreso_1 else None
+        x_studio_nombre_contratista = registro['x_studio_nombre_contratista'] if registro['x_studio_nombre_contratista'] else None
+        x_name = registro['x_name'] if registro['x_name'] else None
+        _, x_studio_company_id = registro['x_studio_company_id'] if registro['x_studio_company_id'] else None
+        x_studio_partner_email = registro['x_studio_partner_email'] if registro['x_studio_partner_email'] else None
+        x_studio_estado = registro['x_studio_estado'] if registro['x_studio_estado']  else None
+        x_studio_fecha_de_nacimiento = registro['x_studio_fecha_de_nacimiento']
+        birthday2 = f"{x_studio_fecha_de_nacimiento}T00:00:00Z" if x_studio_fecha_de_nacimiento else None
+        x_studio_fecha_ingreso = registro['x_studio_fecha_ingreso']
+        fecha_ingreso=f"{x_studio_fecha_ingreso}T00:00:00Z" if x_studio_fecha_ingreso else None
         #print("Fecha de ingreso formateada:", fecha_de_ingreso)  # Debug para ver la fecha formateada
-        item_id, etag = verificar_si_existe(name, access_token)
+        item_id, etag = verificar_si_existe_presta(x_name, access_token)
         # Lógica para manejar el estado del registro
-        if x_studio_estado_empleado == "Activo" and item_id:
-            print(f"Ingrese a registrar existente: {name}")
-            eliminado_exitosamente = eliminar_registro(item_id, etag, access_token, site_id, list_name)
-            crear_registro_en_sharepoint(name, identification_id, company_id, job_title,
-                                        x_studio_correo_electrnico_personal, work_email,x_studio_estado_empleado,birthday2,fecha_ingreso,
+        if x_studio_estado == "Activo" and item_id:
+            eliminado_exitosamente = eliminar_registro_presta(item_id, etag, access_token, site_id, list_name)
+            crear_registro_en_sharepoint_presta(x_name, x_studio_nombre_contratista, x_studio_company_id,
+                                        x_studio_partner_email,x_studio_estado,birthday2,fecha_ingreso,
                                          access_token,
                                         site_id, list_name)
-            marcar_registro_como_sincronizado(name)
-        elif x_studio_estado_empleado == "Activo":
-            print(f"Ingrese a registrar a lista: {name}")
+            marcar_registro_como_sincronizado_presta(x_name)
+        elif x_studio_estado == "Activo":
+            print(f"Ingrese a registrar a lista: {x_name}")
             print("Fecha de ingreso enviar antes:", fecha_ingreso)
-            crear_registro_en_sharepoint(name, identification_id, company_id, job_title,
-                                        x_studio_correo_electrnico_personal, work_email,x_studio_estado_empleado,birthday2,fecha_ingreso,
-                                    access_token,
+            crear_registro_en_sharepoint_presta(x_name, x_studio_nombre_contratista, x_studio_company_id,
+                                        x_studio_partner_email,x_studio_estado,birthday2,fecha_ingreso,
+                                         access_token,
                                         site_id, list_name)
-            if crear_registro_en_sharepoint:
-                marcar_registro_como_sincronizado(name)
-        elif x_studio_estado_empleado == "Retirado" and item_id:
-            print(f"Ingrese a eliminarlo a lista: {name}")
-            eliminado_exitosamente = eliminar_registro(item_id, etag, access_token, site_id, list_name)
+            if crear_registro_en_sharepoint_presta:
+                marcar_registro_como_sincronizado_presta(x_name)
+        elif x_studio_estado == "Retirado" and item_id:
+            print(f"Ingrese a eliminarlo a lista: {x_name}")
+            eliminado_exitosamente = eliminar_registro_presta(item_id, etag, access_token, site_id, list_name)
             if eliminado_exitosamente:
-                marcar_registro_como_sincronizado(name)
-def eliminar_registro(item_id, etag, access_token, site_id, list_name):
+                marcar_registro_como_sincronizado_presta(x_name)
+def eliminar_registro_presta(item_id, etag, access_token, site_id, list_name):
     """Esta función elimina los registros de sharepoint por ID."""
     delete_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_name}/items/{item_id}"
     delete_headers = {
@@ -152,10 +148,10 @@ def eliminar_registro(item_id, etag, access_token, site_id, list_name):
     delete_response = requests.delete(delete_url, headers=delete_headers, timeout=10)
     delete_response.raise_for_status()# Esto lanzará una excepción si la solicitud falla
     print(f"Registro eliminado con éxito: {item_id}")
-def crear_registro_en_sharepoint(name, identification_id, company_id,
-                                job_title, x_studio_correo_electrnico_personal,
-                                work_email, x_studio_estado_empleado,birthday2,fecha_ingreso,
-                                access_token, site_id, list_name):
+def crear_registro_en_sharepoint_presta(x_name, x_studio_nombre_contratista, x_studio_company_id,
+                                        x_studio_partner_email,x_studio_estado,birthday2,fecha_ingreso,
+                                         access_token,
+                                        site_id, list_name):
     """Esta función crea los registros de sharepoint."""
     create_url = f"https://graph.microsoft.com/v1.0/sites/{site_id}/lists/{list_name}/items"
     create_headers = {
@@ -165,21 +161,19 @@ def crear_registro_en_sharepoint(name, identification_id, company_id,
     print("Fecha de ingreso enviar despues:", fecha_ingreso)  # D
     payload = {
         "fields": {
-            "Title": x_studio_estado_empleado,
-            "field_2": name,
-            "field_1": identification_id,
-            "field_3": job_title,
-            "field_4": x_studio_correo_electrnico_personal,
-            "field_5": work_email,
-            "field_6": birthday2,
-            "field_7": company_id,
-            "Fecha_Ingreso": fecha_ingreso,#"2024-06-12T00:00:00Z"#fecha_de_ingreso,
+            "Title": x_studio_estado,
+            "field_1": x_name,
+            "field_2": x_studio_nombre_contratista,
+            "field_3": x_studio_partner_email,
+            "field_4": birthday2,
+            "field_5": fecha_ingreso,
+            "field_6": x_studio_company_id,
         }
     }
     try:
         create_response = requests.post(create_url, headers=create_headers, json=payload, timeout=10)
         create_response.raise_for_status()
-        print(f"Sincronizado con éxito: {name}")
+        print(f"Sincronizado con éxito: {x_name}")
         return True
     except requests.exceptions.HTTPError as err:
         print("HTTP Error:", err.response.status_code)
@@ -204,7 +198,7 @@ def crear_registro_en_sharepoint(name, identification_id, company_id,
             print(create_response.text)
             return False
             print(f"Error al sincronizar después del reintento: {name}")"""
-def enviar_solicitud_con_reintento(url, headers, payload, max_reintentos=5):
+def enviar_solicitud_con_reintento_presta(url, headers, payload, max_reintentos=5):
     """Esta función reintenta los registros que fallan."""
     espera = 2
     for reintento in range(max_reintentos):
@@ -221,7 +215,7 @@ def enviar_solicitud_con_reintento(url, headers, payload, max_reintentos=5):
                 print(f"Error {e.response.status_code}: {e.response.text}")
                 raise
     raise Exception("Se alcanzó el máximo número de reintentos sin éxito para crear el registro en SharePoint.")
-def clear_sharepoint_list(access_token, site_id, list_name):
+def clear_sharepoint_list_presta(access_token, site_id, list_name):
     """Esta función elimina todos los registros de sharepoint."""
     headers = {
         'Authorization': f'Bearer {access_token}',
