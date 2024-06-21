@@ -3,6 +3,11 @@
 import os
 import sys
 
+import os
+
+# Ruta del archivo relativa al script
+file_path = os.path.join(os.path.dirname(__file__), 'files', 'Directorio-Empelados.csv')
+
 
 def main():
     """Run administrative tasks."""
