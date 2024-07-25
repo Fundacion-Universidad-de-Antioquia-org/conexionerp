@@ -19,8 +19,13 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 
 urlpatterns = [
+    path('', TemplateView.as_view(template_name="vista.html"), name='home'),
+    #migracion
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name="vista.html"),name='home'),
-    path('appconexion/', include('appconexion.urls')),
-
+    path('sync/', include('app_sync.urls')),
+    path('files/', include('app_file_management.urls')),
+    path('tasks/', include('app_task_sync.urls')),
+    path('pdf/', include('app_pdf_management.urls')),
+    path('logs/', include('app_logging.urls')),
+    path('learn/', include('app_learning.urls')),
 ]
