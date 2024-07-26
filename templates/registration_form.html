@@ -1,0 +1,15 @@
+<!-- app_learning/templates/app_learning/registration_form.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Formulario de Registro</title>
+</head>
+<body>
+    <h1>Formulario de Registro</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Enviar</button>
+    </form>
+</body>
+</html>
