@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalles de la Capacitación</title>
+</head>
+<body>
+    <h1>Detalles de la Capacitación</h1>
+    <p><strong>Tema:</strong> {{ topic }}</p>
+    <p><strong>Departamento:</strong> {{ department }}</p>
+    <p><strong>Moderador:</strong> {{ moderator }}</p>
+    <p><strong>Fecha:</strong> {{ date }}</p>
+    <p><strong>Hora Inicial:</strong> {{ start_time }}</p>
+    <p><strong>Hora Final:</strong> {{ end_time }}</p>
+    <p><strong>Enlace:</strong> <a href="{{ qr_url }}">{{ qr_url }}</a></p>
+    <p><strong>Código QR:</strong></p>
+    <img src="/{{ qr_path }}" alt="Código QR">
+</body>
+</html>
+
+
+
+
