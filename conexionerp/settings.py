@@ -67,7 +67,11 @@ ROOT_URLCONF = 'conexionerp.urls'
 # logs/settings.py
 
 CORS_ALLOW_ALL_ORIGINS = True
-
+# O permitir orígenes específicos
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    # Añade otros dominios si es necesario
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
