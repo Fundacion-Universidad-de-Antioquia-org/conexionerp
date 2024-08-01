@@ -29,20 +29,22 @@ logger = logging.getLogger(__name__)
 def update_log_date(request):
     logger.debug("Request received for update_log_date")
     
-    email = request.GET.get('email')
-    if not email:
-        logger.error("Email is required")
-        return JsonResponse({'error': 'Email is required'}, status=400)
+    if not (correo := request.GET.get('correo')):
+        logger.error("Correo is required")
+        return JsonResponse({'error': 'Correo is required'}, status=400)
+    
+    logger.debug(f"Correo received: {correo}")
     
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
     
-    logger.debug(f"Searching for logs with email: {email}")
-    logs = Log.objects.filter(correo=email, tipo_evento='opcion3')
+    logger.debug(f"Searching for logs with correo: {correo}")
+    logs = Log.objects.filter(correo=correo, tipo_evento='SUCCESS')
+    logger.debug(f"Logs found: {logs.count()}")
 
     if not logs.exists():
-        logger.error(f"No logs found for email: {email}")
-        return JsonResponse({'error': 'No logs found for this email'}, status=404)
+        logger.error(f"No logs found for correo: {correo}")
+        return JsonResponse({'error': 'No logs found for this correo'}, status=404)
 
     if log_yesterday := logs.filter(fecha__date=yesterday).first():
         log_yesterday.fecha = timezone.now()
