@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'app_pdf_management', # Genera archivos PDF con informacion de registros de listas en sharepoint
     'app_logging',  # Control de logs de la ejecucion de tareas de sincronizacion y automatizaciones
     'app_learning',
-    'corsheaders',# Control de asistencia a capacitaciones
+    #Control de asistencia a capacitaciones
 ]
 
 MIDDLEWARE = [
@@ -60,35 +60,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'conexionerp.urls'
 # logs/settings.py
-
-CORS_ALLOW_ALL_ORIGINS = True
-# O permitir orígenes específicos
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    # Añade otros dominios si es necesario
-]
-# Asegúrate de permitir los métodos HTTP necesarios
-CORS_ALLOW_METHODS = [
-    "GET",
-    "POST",
-    "PUT",
-    "PATCH",
-    "DELETE",
-    "OPTIONS",
-]
-
-# Permitir los encabezados necesarios
-CORS_ALLOW_HEADERS = [
-    "authorization",
-    "content-type",
-    "x-requested-with",
-    "Access-Control-Allow-Origin",
-]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',

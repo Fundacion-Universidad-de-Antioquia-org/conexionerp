@@ -1,11 +1,10 @@
 from django.views.decorators.csrf import csrf_exempt
+import json
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.http import JsonResponse
 from .models import Log
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.dateparse import parse_date
-import datetime
-import json
+from datetime import timedelta
 
 
 @csrf_exempt
@@ -24,22 +23,30 @@ def registrar_log(request):
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-
 @csrf_exempt
-def consultar_logs(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        correo = data.get('correo')
-        fecha = parse_date(data.get('fecha'))
-        if correo and fecha:
-            # Obtener la fecha del día anterior
-            fecha_anterior = fecha - datetime.timedelta(days=1)
-            # Verificar si existe un registro con la fecha del día anterior y estado 'SUCCESS'
-            registro_existe = Log.objects.filter(correo=correo, fecha__date=fecha_anterior, tipo_evento='SUCCESS').exists()
-            
-            if registro_existe:
-                return JsonResponse({'status': 'existe_registro', 'fecha_actual': str(fecha)})
-            else:
-                return JsonResponse({'status': 'no_existe_registro', 'fecha_anterior': str(fecha_anterior)})
-        return JsonResponse({'status': 'error', 'message': 'Correo o fecha no proporcionados'}, status=400)
-    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+def update_log_date(request):
+    if not (email := request.GET.get('email')):
+        return JsonResponse({'error': 'Email is required'}, status=400)
+    
+    today = timezone.now().date()
+    yesterday = today - timedelta(days=1)
+    
+    # Buscar registros con estado success
+    logs = Log.objects.filter(correo=email, tipo_evento='opcion3')
+
+    if not logs.exists():
+        return JsonResponse({'error': 'No logs found for this email'}, status=404)
+
+    # Verificar si hay registros del día anterior
+    if log_yesterday := logs.filter(fecha__date=yesterday).first():
+        # Actualizar la fecha a hoy si hay un registro de ayer
+        log_yesterday.fecha = timezone.now()
+        log_yesterday.save()
+        return JsonResponse({'message': 'Log date updated to today', 'log': log_yesterday.id})
+
+    # Asignar fecha de ayer si no hay registro
+    if log_today := logs.filter(fecha__date=today).first():
+        return JsonResponse({'message': 'Log already exists for today', 'log': log_today.id})
+
+    new_log = Log.objects.create(correo=email, tipo_evento='opcion3', observacion='Automatic update', nombre_aplicacion='IDS', tipo='Automatizacion')
+    return JsonResponse({'message': 'Log created for yesterday', 'log': new_log.id})
