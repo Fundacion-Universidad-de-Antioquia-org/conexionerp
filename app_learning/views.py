@@ -12,7 +12,6 @@ from dotenv import load_dotenv
 import logging
 import base64
 
-
 logger = logging.getLogger(__name__)
 
 # Cargar variables de entorno
@@ -22,14 +21,13 @@ user = os.getenv("ODOO_USER")
 password = os.getenv("PASSWORD")
 host = os.getenv("HOST")
 
-#Función para obtener el ID del departamento
+# Función para obtener el ID del departamento
 def get_department_id(department_name):
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
         models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-        # Buscar el ID del departamento por nombre
         department = models.execute_kw(database, uid, password,
             'hr.department', 'search_read',
             [[['name', '=', department_name]]],
@@ -44,14 +42,13 @@ def get_department_id(department_name):
         logger.error('Failed to fetch department ID from Odoo', exc_info=True)
         return None
 
-#Función para obtener el ID del empleado por Nombre:
+# Función para obtener el ID del empleado por Nombre
 def get_employee_id_by_name(employee_name):
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
         models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-        # Buscar el ID del empleado por su nombre
         employees = models.execute_kw(database, uid, password,
             'hr.employee', 'search_read',
             [[['name', '=', employee_name]]],
@@ -68,25 +65,21 @@ def get_employee_id_by_name(employee_name):
         logger.error('Failed to fetch employee ID from Odoo', exc_info=True)
         return None
 
-#Función para enviar
+# Función para enviar datos a Odoo
 def send_to_odoo(data):
-    
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
         models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-        # Obtener el ID del departamento
         department_id = get_department_id(data['department'])
         if not department_id:
             raise ValueError(f"Department '{data['department']}' not found in Odoo")
 
-        # Obtener el ID del empleado por nombre
         employee_id = get_employee_id_by_name(data['document_id'])
         if not employee_id:
             raise ValueError(f"Employee with name '{data['document_id']}' not found in Odoo")
 
-        # Preparar los datos para enviar a Odoo
         odoo_data = {
             'x_studio_tema': data['topic'],
             'x_studio_many2one_field_iphhw': employee_id,
@@ -94,12 +87,11 @@ def send_to_odoo(data):
             'x_studio_hora_inicial': data['start_time'],
             'x_studio_hora_final': data['end_time'],
             'x_studio_many2one_field_ftouu': department_id,
-            'x_studio_estado': 'ACTIVA',  # Asumiendo que siempre es ACTIVA, puedes cambiar esto si es necesario
+            'x_studio_estado': 'ACTIVA',
             'x_studio_moderador': data['moderator'],
             'x_studio_asisti': 'Si'
         }
 
-        # Crear el registro en Odoo
         record_id = models.execute_kw(database, uid, password,
                                       'x_capacitacion_emplead', 'create', [odoo_data])
 
@@ -110,9 +102,7 @@ def send_to_odoo(data):
         logger.error('Failed to send data to Odoo', exc_info=True)
         return None
 
-#Función para crear QR de Capacitación
-import base64
-
+# Función para crear QR de Capacitación
 def create_capacitacion(request):
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST)
@@ -142,30 +132,20 @@ def create_capacitacion(request):
             buffer = BytesIO()
             img.save(buffer, format='PNG')
             buffer.seek(0)
-            img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            img_base64 = img_base64.replace('\n', '')  # Elimina cualquier salto de línea
 
-            # Guardar la imagen QR temporalmente
-            qr_dir = os.path.join('static', 'qr_codes')
-            if not os.path.exists(qr_dir):
-                os.makedirs(qr_dir)
-            
-            qr_path = os.path.join(qr_dir, f"{capacitacion.id}.png")
-            with open(qr_path, 'wb') as f:
-                f.write(buffer.getvalue())
-
-            # Redirigir a la vista de detalles con el QR y la información
-            return HttpResponseRedirect(reverse('details_view') + f'?{query_string}&qr_path={qr_path}')
+            return HttpResponseRedirect(reverse('details_view') + f'?{query_string}&qr_base64={img_base64}')
     else:
         form = CtrlCapacitacionesForm()
     return render(request, 'crear_capacitacion.html', {'form': form})
 
-
-#Función para mostrar lista de Capacitaciones
+# Función para mostrar lista de Capacitaciones
 def list_capacitaciones(request):
     capacitaciones = CtrlCapacitaciones.objects.all()
     return render(request, 'list_capacitaciones.html', {'capacitaciones': capacitaciones})
 
-#Función para registrar asistencia y actualizar registro en Odoo
+# Función para registrar asistencia y actualizar registro en Odoo
 def registration_view(request):
     initial_data = {}
     if request.GET:
@@ -181,7 +161,6 @@ def registration_view(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            # Procesa los datos en form.cleaned_data
             topic = form.cleaned_data['topic']
             department = form.cleaned_data['department']
             moderator = form.cleaned_data['moderator']
@@ -190,7 +169,6 @@ def registration_view(request):
             end_time = form.cleaned_data['end_time']
             document_id = form.cleaned_data['document_id']
             
-            # Crear diccionario con los datos
             data = {
                 'topic': topic,
                 'department': department,
@@ -201,20 +179,19 @@ def registration_view(request):
                 'document_id': document_id
             }
             
-            # Enviar datos a Odoo
             send_to_odoo(data)
             
-            # Redirigir a la vista de éxito
             return redirect('success')
     else:
         form = RegistrationForm(initial=initial_data)
 
     return render(request, 'registration_form.html', {'form': form})
 
-#Vista de Éxito
+# Vista de Éxito Al Enviar Datos
 def success_view(request):
     return render(request, 'success.html')
 
+#Vista Detalles de la Capacitación
 def details_view(request):
     context = {
         'topic': request.GET.get('topic', ''),
@@ -224,9 +201,7 @@ def details_view(request):
         'start_time': request.GET.get('start_time', ''),
         'end_time': request.GET.get('end_time', ''),
         'qr_url': f"http://127.0.0.1:8000/learn/register/?{request.GET.urlencode()}",
-        'qr_path': request.GET.get('qr_path', '')
+        'qr_base64': request.GET.get('qr_base64', '').replace(' ', '+')  # Asegúrate de que no haya espacios
     }
 
-
     return render(request, 'details_view.html', context)
-
