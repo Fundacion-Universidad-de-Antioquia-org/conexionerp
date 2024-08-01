@@ -72,6 +72,23 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     # Añade otros dominios si es necesario
 ]
+# Asegúrate de permitir los métodos HTTP necesarios
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+# Permitir los encabezados necesarios
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "x-requested-with",
+    "Access-Control-Allow-Origin",
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
