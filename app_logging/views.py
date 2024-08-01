@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from .models import Log
 from datetime import timedelta
+import logging
 
 
 @csrf_exempt
@@ -23,30 +24,35 @@ def registrar_log(request):
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
-@csrf_exempt
+logger = logging.getLogger(__name__)
+
 def update_log_date(request):
-    if not (email := request.GET.get('email')):
+    logger.debug("Request received for update_log_date")
+    
+    email = request.GET.get('email')
+    if not email:
+        logger.error("Email is required")
         return JsonResponse({'error': 'Email is required'}, status=400)
     
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
     
-    # Buscar registros con estado success
+    logger.debug(f"Searching for logs with email: {email}")
     logs = Log.objects.filter(correo=email, tipo_evento='opcion3')
 
     if not logs.exists():
+        logger.error(f"No logs found for email: {email}")
         return JsonResponse({'error': 'No logs found for this email'}, status=404)
 
-    # Verificar si hay registros del día anterior
     if log_yesterday := logs.filter(fecha__date=yesterday).first():
-        # Actualizar la fecha a hoy si hay un registro de ayer
         log_yesterday.fecha = timezone.now()
         log_yesterday.save()
-        return JsonResponse({'message': 'Log date updated to today', 'log': log_yesterday.id})
+        logger.debug(f"Log found for yesterday. Updating date to today for log id: {log_yesterday.id}")
+        return JsonResponse({'message': 'Log date updated to today', 'new_date': today.strftime('%Y-%m-%d')})
 
-    # Asignar fecha de ayer si no hay registro
     if log_today := logs.filter(fecha__date=today).first():
-        return JsonResponse({'message': 'Log already exists for today', 'log': log_today.id})
+        logger.debug(f"Log already exists for today with log id: {log_today.id}")
+        return JsonResponse({'message': 'Log already exists for today', 'new_date': today.strftime('%Y-%m-%d')})
 
-    new_log = Log.objects.create(correo=email, tipo_evento='opcion3', observacion='Automatic update', nombre_aplicacion='IDS', tipo='Automatizacion')
-    return JsonResponse({'message': 'Log created for yesterday', 'log': new_log.id})
+    logger.debug("No log found for today or yesterday. Setting date to yesterday.")
+    return JsonResponse({'message': 'No log found for today or yesterday, setting date to yesterday', 'new_date': yesterday.strftime('%Y-%m-%d')})
