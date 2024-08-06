@@ -2,7 +2,7 @@ from django.db import models
 
 class Log(models.Model):
     correo = models.EmailField()
-    fecha = models.DateTimeField(auto_now_add=True)
+    fecha = models.DateTimeField()
     tipo_evento = models.CharField(
         max_length=50,
         choices=[
