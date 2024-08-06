@@ -59,7 +59,6 @@ def update_log_date(request):
     return JsonResponse({'message': 'No log found for today or yesterday, setting date to yesterday', 'new_date': yesterday.strftime('%Y-%m-%d')})"""
     
     
-
 def update_log_date(request):
     logger.debug("Request received for update_log_date")
 
@@ -82,23 +81,28 @@ def update_log_date(request):
         return JsonResponse({'error': 'No logs found for this correo'}, status=404)
 
     log_yesterday = logs.filter(fecha__date=yesterday).first()
-    if log_today := logs.filter(fecha__date=today).first():
-        # Si ya hay un registro para hoy, usamos la fecha de hoy
-        logger.debug(f"Log already exists for today with log id: {log_today.id}")
-        return JsonResponse({'message': 'Log already exists for today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
-    elif log_yesterday:
-        # Si hay un registro para ayer, verificamos la hora actual
-        if now.hour < 12:
-            # Antes de las 12:00 pm, usamos la fecha de ayer
-            logger.debug(f"Log found for yesterday. Using yesterday's date for log id: {log_yesterday.id}")
-            return JsonResponse({'message': 'Log date is yesterday', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': False})
-        else:
-            # Después de las 12:00 pm, usamos la fecha de hoy pero requerimos justificación
-            logger.debug(
-                "Log found for yesterday but it is after 12:00 pm. Using today's date and requiring justification."
-            )
-            return JsonResponse({'message': 'Log date is today, justification required', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': True})
+    log_today = logs.filter(fecha__date=today).first()
 
-    # No hay registros para hoy ni para ayer, usamos la fecha de hoy sin justificación
-    logger.debug("No log found for today or yesterday. Using today's date without requiring justification.")
+    if log_yesterday:
+        logger.debug(f"Log found for yesterday with log id: {log_yesterday.id}")
+        if log_today:
+            # Si ya hay un registro para hoy, usamos la fecha de hoy y no se requiere justificación
+            logger.debug(f"Log already exists for today with log id: {log_today.id}")
+            return JsonResponse({'message': 'Log already exists for today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
+        else:
+            # No hay registro para hoy, pero hay registro para ayer
+            logger.debug("No log found for today, but log found for yesterday. Using today's date.")
+            return JsonResponse({'message': 'Log date is today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
+    else:
+        # No hay registro para ayer
+        logger.debug("No log found for yesterday. Using yesterday's date.")
+        if now.hour < 12:
+            # Antes de las 12:00 pm, usamos la fecha de ayer y no se requiere justificación
+            return JsonResponse({'message': 'Log date is yesterday, no justification required', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': False})
+        else:
+            # Después de las 12:00 pm, usamos la fecha de ayer y se requiere justificación
+            return JsonResponse({'message': 'Log date is yesterday, justification required', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': True})
+
+    # En caso de cualquier otro escenario, usamos la fecha de hoy y no se requiere justificación
+    logger.debug("Using today's date without requiring justification.")
     return JsonResponse({'message': 'Log date is today, no justification required', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
