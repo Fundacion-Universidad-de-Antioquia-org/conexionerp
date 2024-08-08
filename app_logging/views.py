@@ -46,6 +46,7 @@ def registrar_log(request):
 
     try:
         fecha = parser.isoparse(fecha_str)
+        #
         # Convertir la fecha a la zona horaria de Colombia
         colombia_tz = pytz.timezone('America/Bogota')
         if is_naive(fecha):
