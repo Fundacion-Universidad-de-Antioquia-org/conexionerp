@@ -30,7 +30,8 @@ logger = logging.getLogger(__name__)"""
 
 
 
-logger = logging.getLogger(__name__)@csrf_exempt
+logger = logging.getLogger(__name__)
+@csrf_exempt
 def registrar_log(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
