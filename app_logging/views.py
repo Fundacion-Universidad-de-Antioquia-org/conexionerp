@@ -6,7 +6,8 @@ from .models import Log
 from datetime import timedelta
 import logging
 from dateutil import parser
-from django.utils.timezone import make_aware, get_default_timezone, is_naive
+from django.utils.timezone import make_aware, is_naive
+import pytz
 
 
 """@csrf_exempt
@@ -29,8 +30,7 @@ logger = logging.getLogger(__name__)"""
 
 
 
-logger = logging.getLogger(__name__)
-@csrf_exempt
+logger = logging.getLogger(__name__)@csrf_exempt
 def registrar_log(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -46,11 +46,11 @@ def registrar_log(request):
     try:
         fecha = parser.isoparse(fecha_str)
         # Convertir la fecha a la zona horaria de Colombia
-        tz = get_default_timezone()
+        colombia_tz = pytz.timezone('America/Bogota')
         if is_naive(fecha):
-            fecha = make_aware(fecha, timezone=tz)
+            fecha = make_aware(fecha, timezone=colombia_tz)
         else:
-            fecha = fecha.astimezone(tz)
+            fecha = fecha.astimezone(colombia_tz)
     except Exception as e:
         logger.error(f"Error al parsear la fecha: {e}")
         return JsonResponse({'error': 'Fecha inválida'}, status=400)
