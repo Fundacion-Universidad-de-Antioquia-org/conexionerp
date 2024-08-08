@@ -46,7 +46,8 @@ def registrar_log(request):
 
     try:
         fecha = parser.isoparse(fecha_str)
-        fecha = make_aware(fecha)  # Asegurarse de que la fecha sea consciente de la zona horaria
+        if fecha.tzinfo is None:
+            fecha = make_aware(fecha)  # Asegurarse de que la fecha sea consciente de la zona horaria
     except Exception as e:
         logger.error(f"Error al parsear la fecha: {e}")
         return JsonResponse({'error': 'Fecha inválida'}, status=400)
