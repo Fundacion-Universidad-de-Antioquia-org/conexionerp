@@ -5,9 +5,11 @@ from django.http import JsonResponse
 from .models import Log
 from datetime import timedelta
 import logging
+from dateutil import parser
+from django.utils.timezone import make_aware
 
 
-@csrf_exempt
+"""@csrf_exempt
 def registrar_log(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -23,7 +25,36 @@ def registrar_log(request):
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+logger = logging.getLogger(__name__)"""
+
+
+
 logger = logging.getLogger(__name__)
+
+@csrf_exempt
+def registrar_log(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    data = json.loads(request.body)
+    correo = data.get('correo')
+    fecha_str = data.get('fecha')
+    tipo_evento = data.get('tipo_evento')
+    observacion = data.get('observacion')
+    nombre_aplicacion = data.get('nombre_aplicacion')
+    tipo = data.get('tipo')
+
+    try:
+        fecha = parser.isoparse(fecha_str)
+        fecha = make_aware(fecha)  # Asegurarse de que la fecha sea consciente de la zona horaria
+    except Exception as e:
+        logger.error(f"Error al parsear la fecha: {e}")
+        return JsonResponse({'error': 'Fecha inválida'}, status=400)
+
+    log = Log.objects.create(correo=correo, fecha=fecha, tipo_evento=tipo_evento, observacion=observacion, nombre_aplicacion=nombre_aplicacion, tipo=tipo)
+    return JsonResponse({'message': 'Log registrado correctamente'}, status=201)
+
+
 """
 def update_log_date(request):
     logger.debug("Request received for update_log_date")
