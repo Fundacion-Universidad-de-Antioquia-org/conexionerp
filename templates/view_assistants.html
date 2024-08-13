@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Asistentes{% endblock %}
+
+{% block content %}
+<h1>Asistentes a la Capacitación: {{ capacitacion.tema }}</h1>
+<ul class="list-group">
+    {% for assistant in assistants %}
+    <li class="list-group-item">{{ assistant }}</li>
+    {% endfor %}
+</ul>
+<a href="{% url 'home' %}"><button class="btn btn-secondary">Volver</button></a>
+{% endblock %}
+

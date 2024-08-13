@@ -1,0 +1,57 @@
+{% extends 'base.html' %} {% block title %}Lista de Capacitaciones{% endblock %}
+{% block content %}
+
+<section class="home">
+	<div class="btn-center">
+		<a class="btn-center" href="{% url 'create_capacitacion' %}"
+		><button class="btn btn-funda btn-success-f">Crear Capacitación</button>
+	</a>
+	</div>
+	
+	
+	<h3 class="subtitle">Capacitaciones Registradas:</h3>
+	
+	<div class="table-responsive">
+		<table class="table table-hover">
+			<thead>
+				<tr>
+					<th>Tema</th>
+					<th>Proceso</th>
+					<th>Moderador</th>
+					<th>Fecha</th>
+					<th>Inicio</th>
+					<th>Fin</th>
+					<th>Estado</th>
+					<th>Objetivo</th>
+					<th>Acciones</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for capacitacion in capacitaciones %}
+				<tr>
+					<td>{{ capacitacion.tema }}</td>
+					<td>{{ capacitacion.area_encargada }}</td>
+					<td>{{ capacitacion.moderador }}</td>
+					<td style="width: 110px;">{{ capacitacion.fecha_formateada }}</td>
+					<td>{{ capacitacion.hora_inicial }}</td>
+					<td style="min-width: 60px;">{{ capacitacion.hora_final }}</td>
+					<td>{{ capacitacion.estado }}</td>
+					<td>{{ capacitacion.objetivo }}</td>
+					<td class="btn-actions">
+						<a href="{% url 'details_view' capacitacion.id %}" title="Ver Detalles"
+							><button type="button" class="btn btn-info-f"><i class="bi bi-info-lg"></i></button></a
+						>
+						<a href="{% url 'edit_capacitacion' capacitacion.id %}" title="Editar Capacitación"
+							><button type="button" class="btn btn-warning-f"><i class="bi bi-pencil-square"></i></button></a
+						>
+						<a href="{% url 'view_assistants' capacitacion.id %}" title="Ver Asistentes"
+							><button type="button" class="btn btn-success-f"><i class="bi bi-person-check"></i></button></a
+						>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</section>
+{% endblock %}

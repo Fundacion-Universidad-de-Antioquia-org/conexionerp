@@ -32,7 +32,6 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -128,6 +127,8 @@ TIME_ZONE = 'America/Bogota'
 USE_I18N = True
 
 USE_TZ = False
+
+
 
 
 # Static files (CSS, JavaScript, Images)

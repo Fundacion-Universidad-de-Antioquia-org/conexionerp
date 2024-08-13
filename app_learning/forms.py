@@ -3,22 +3,30 @@ from .models import CtrlCapacitaciones
 from app_learning.services.odoo_conection import fetch_departametos_from_odoo
 
 class CtrlCapacitacionesForm(forms.ModelForm):
-  area_encargada =forms.ChoiceField(choices=[], label=('Departamentos'))
+  area_encargada =forms.ChoiceField(choices=[], label=('Programa - Área'))
   class Meta:
     model = CtrlCapacitaciones
-    fields = '__all__'
+    fields = ['fecha', 'moderador','hora_inicial', 'hora_final','tema','area_encargada','objetivo','estado']
     widgets = {
       'fecha': forms.DateInput(attrs={'type': 'date'}),
       'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
       'hora_final': forms.TimeInput(attrs={'type': 'time'}),
+      'tema': forms.TextInput(attrs={'placeholder': 'Nombre de la capacitación'}),
+      'moderador': forms.TextInput(attrs={'placeholder':'Nombre del Moderador'}),
+      'objetivo': forms.Textarea(attrs={
+                'rows': 4, 
+                'cols': 40, 
+                'placeholder': 'Escriba un objetivo de máximo 160 caracteres',
+                'maxlength': 161
+            }),
     }
     
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     areas = fetch_departametos_from_odoo()
-    # print('departamentos',areas)
+    #print('departamentos',areas)
     areas_choices = [(area_encargada, area_encargada)for area_encargada in areas]
-    self .fields['area_encargada'].choices = areas_choices  
+    self .fields['area_encargada'].choices = areas_choices
         
 class RegistrationForm(forms.Form):
   topic = forms.CharField(max_length= 250, label = 'Tema', widget=forms.TextInput(attrs={'readonly':'readonly'}))
@@ -27,4 +35,10 @@ class RegistrationForm(forms.Form):
   date = forms.DateField(widget=forms.DateInput(attrs={'type':'date', 'readonly': 'readonly'}), label='fecha')
   start_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora inicial')
   end_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora final')
-  document_id = forms.CharField(max_length=20, label='Documento de Identidad', required=True)
+  document_id = forms.CharField(
+    max_length=20, 
+    label='Documento de Identidad', 
+    required=True, 
+    widget=forms.TextInput(attrs={
+            'placeholder': 'Ingrese su número de documento'
+        }))
