@@ -65,7 +65,7 @@ MIDDLEWARE = [
     
 ]
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
+    "http://localhost:8000","https://app-softwareids-prod-002-gaegafduh6d5akd5.eastus-01.azurewebsites.net/"
     # Puedes agregar más dominios aquí si es necesario
 ]
 
