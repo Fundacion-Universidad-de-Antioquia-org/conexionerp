@@ -4,7 +4,8 @@ header {
 }
 
 body {
-  background-color: #e0e0e0 !important;
+  /* background-color: #e0e0e0 !important; */
+  background-color: #FFE4B2;
   font-family: "Open Sans", sans-serif !important;
 }
 
@@ -17,6 +18,7 @@ body {
 .items-header a {
   font-family: "Open Sans", sans-serif;
   text-decoration: none;
+  color: #fff;
   font-size: 1rem;
 }
 
@@ -29,7 +31,8 @@ body {
 .items-h button:hover {
   border-radius: 6px;
   color: #fff;
-  background-color: #3c6922;
+  /* background-color: #3c6922; */
+  text-decoration: #FFD700 underline;
 }
 
 .items-h {
@@ -139,10 +142,14 @@ body {
 }
 
 .btn-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
+  display: table-cell;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.btn-actions a{
+  display: block;
+  margin: 8px 0;
 }
 
 .btn-actions i {
@@ -221,6 +228,7 @@ body {
 .table-responsive{
   max-height: 530px;
   border-radius: 8px;
+  padding: 20px;
   background-color: #fff;
 }
 
@@ -294,9 +302,42 @@ body {
   width: 100%;
 }
 
+.central-div{
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.succes{
+  color: #fff;
+  background-color: #2c2c2c;
+}
+
+.logo-end{
+  max-width: 370px;
+}
+
+.separator{
+  width: 5px;
+  height: 160px;
+  background-color: #fff;
+}
+
+.header-section{
+  display: flex;
+  gap: 15px;
+  margin: 35px 0;
+}
+
 /* MEDIA QUEARIES */
 
 @media (max-width: 700px){
+  .desktop{
+    display: none;
+  }
+  /* REGISTRER SECTION  */
   .registrer{
     display: block;
     background-color: #2c2c2c;
@@ -308,5 +349,51 @@ body {
 
   .logo{
     max-width: 100px;
+  }
+
+  .logo-picture{
+    max-width: 55px;
+    min-width: 40px;
+  }
+
+  .grid-container{
+    display: block;
+    max-width: 500px;
+  }
+
+  .items-h i{
+    font-size: 1.5rem;
+  }
+
+  .items-h i:hover{
+    color: #bebebe;
+  }
+
+  .qr-container{
+    align-items: center;
+  }
+
+  .central-div{
+    flex-direction: column;
+    gap: 60px;
+  }
+
+  .central-div h2, .central-div h5{
+    text-align: center;
+    margin: 30px;
+  }
+
+  .logo-end{
+    max-width: 300px;
+  }
+
+  .table-responsive{
+    max-height: unset;
+  }
+}
+
+@media (min-width: 701px) {
+  .mobile{
+    display: none;
   }
 }

@@ -30,25 +30,29 @@
     <header class="dinamic-header">
         <div class="container items-header">
             <div class="logo-container">
-                <img src="{% static 'media/funda-logo-2.png' %}" class="logo-picture" alt="Logo Fundacion" />
+                <img src="{% static 'media/funda-logo-2.png' %}" class="logo-picture desktop" alt="Logo Fundacion" />
+                <img src="{% static 'media/funda-icon-1.png' %}" class="logo-picture mobile" alt="Logo Fundacion" />
             </div>
             <div class="items-h">
                 <div class="item-h">
                     <a href="{% url 'home' %}">
-                        <button>
+                        <i class="bi bi-house-fill mobile"></i>
+                        <button class="desktop">
                             Inicio
                         </button>
                     </a>
                 </div>
                 <div class="item-h">
                     <a href="{% url 'create_capacitacion' %}">
-                    <button>
-                        Crear Capacitacion
-                    </button>
+                        <i class="bi bi-plus-circle-fill mobile"></i>
+                        <button class="desktop">
+                            Crear Capacitacion
+                        </button>
                     </a>
                 </div>
             </div>
         </div>
+       
     </header>
 
     <div class="container">
@@ -56,7 +60,7 @@
         <!-- Contenido de la página -->
         {% endblock %}
     </div>
-
+    <div style="position: absolute; margin-bottom: 0; color: rgba(255, 255, 255, 0);">117</div>
     <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"

@@ -75,8 +75,8 @@
             </div>
 
             <div class="mb-3">
-              <label><strong>Fecha:</strong> {{ form.initial.date|date:"Y/m/d" }}</label>
-                <input type="hidden" name="date" value="{{ form.initial.date }}">
+              <label><strong>Fecha:</strong> {{ form.initial.date }}</label>
+              <input type="hidden" name="date" value="{{ form.initial.date }}">
             </div>
 
             <div class="mb-3">
@@ -95,7 +95,7 @@
                 {{ form.document_id }}
               </div>
               <button type="submit" class="btn btn-funda" {% if not is_active %} disabled {% endif %}>
-                Enviar
+                Registrar
               </button>
             </div>
         </form>

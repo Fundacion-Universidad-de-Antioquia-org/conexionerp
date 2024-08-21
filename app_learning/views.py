@@ -8,6 +8,7 @@ from io import BytesIO
 import xmlrpc.client
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 import logging
 import base64
 
@@ -39,7 +40,7 @@ def get_department_id(department_name):
             return None
     
     except Exception as e:
-        logger.error('Failed to fetch department ID from Odoo' + e, exc_info=True)
+        logger.error('Failed to fetch department ID from Odoo', exc_info=True)
         return None
 
 # Función para obtener el ID del empleado por Nombre
@@ -67,6 +68,7 @@ def get_employee_id_by_name(employee_name):
 
 # Función para enviar datos a Odoo
 def send_to_odoo(data):
+    logger.debug(f"Intentando enviar datos a Odoo: {data}")
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
@@ -80,7 +82,7 @@ def send_to_odoo(data):
         if not employee_id:
             raise ValueError(f"Employee with name '{data['document_id']}' not found in Odoo")
 
-         # Convertir fechas a cadenas
+        # Convertir fechas a cadenas
         date_str = data['date'].strftime('%Y-%m-%d')
         start_time_str = data['start_time'].strftime('%H:%M:%S')
         end_time_str = data['end_time'].strftime('%H:%M:%S')
@@ -107,6 +109,7 @@ def send_to_odoo(data):
         logger.error('Failed to send data to Odoo', exc_info=True)
         return None
 
+
 # Función para crear QR de Capacitación
 def create_capacitacion(request):
     if request.method == 'POST':
@@ -132,7 +135,7 @@ def create_capacitacion(request):
             capacitacion.qr_base64 = img_base64
             capacitacion.save()
 
-            return HttpResponseRedirect(reverse('details_view') + f'?id={capacitacion.id}')
+            return HttpResponseRedirect(reverse('details_view', args=[capacitacion.id]))
     else:
         form = CtrlCapacitacionesForm()
     return render(request, 'crear_capacitacion.html', {'form': form})
@@ -142,17 +145,21 @@ def list_capacitaciones(request):
     capacitaciones = CtrlCapacitaciones.objects.all()
     return render(request, 'list_capacitaciones.html', {'capacitaciones': capacitaciones})
 
+
 # Función para registrar asistencia y actualizar registro en Odoo
 def registration_view(request):
     capacitacion_id = request.GET.get('id')
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=capacitacion_id)
+    
+    # Formatea la fecha correctamente
+    date_str = capacitacion.fecha.strftime('%Y-%m-%d')
     
     initial_data = {
         'topic': capacitacion.tema,
         'objective': capacitacion.objetivo,
         'department': capacitacion.area_encargada,
         'moderator': capacitacion.moderador,
-        'date': capacitacion.fecha,
+        'date': date_str,
         'start_time': capacitacion.hora_inicial,
         'end_time': capacitacion.hora_final,
         'document_id': ''  # Este campo se llenará por el usuario
@@ -161,62 +168,46 @@ def registration_view(request):
     form = RegistrationForm(request.POST or None, initial=initial_data)
     is_active = capacitacion.estado == 'ACTIVA'
     
+    error_message = None  # Inicializa la variable error_message
+    
     if request.method == 'POST' and is_active:
         if form.is_valid():
+            logger.debug("El formulario es válido")
             document_id = form.cleaned_data['document_id']
 
             try:
-                common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
-                uid = common.authenticate(database, user, password, {})
-                models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
-
-                # Buscar el asistente en Odoo
-                assistants = models.execute_kw(database, uid, password,
-                    'x_capacitacion_emplead', 'search_read',
-                    [[
-                        ['x_studio_tema', '=', capacitacion.tema],
-                        ['x_studio_fecha_sesin', '=', capacitacion.fecha.strftime('%Y-%m-%d')],
-                        ['x_studio_hora_inicial', '=', capacitacion.hora_inicial.strftime('%H:%M:%S')],
-                        ['x_studio_many2one_field_iphhw', '=', document_id]  # Aquí se hace la comparación con el document_id
-                    ]],
-                    {'fields': ['x_studio_many2one_field_iphhw']})
-                
-                if assistants:
-                    # Si ya está registrado, limpiar el campo document_id pero mantener los demás datos
-                    form.data = form.data.copy()
-                    form.data['document_id'] = ''
-                    error_message = f"El usuario con documento {document_id} ya está registrado en esta capacitación."
-                    context = {
-                        'form': form,
-                        'is_active': is_active,
-                        'capacitacion': capacitacion,
-                        'error_message': error_message
-                    }
-                    return render(request, 'registration_form.html', context)
+                # Verifica si el documento existe en Odoo
+                employee_id = get_employee_id_by_name(document_id)
+                if not employee_id:
+                    error_message = f"No se encontró un empleado con el documento {document_id}. Por favor, verifique los datos."
                 else:
-                    # Si no está registrado, proceder con el registro
+                    # Si el documento es válido, envía los datos a Odoo
                     data = form.cleaned_data
-                    send_to_odoo(data)
-                    return redirect('success')
+                    record_id = send_to_odoo(data)
+                    if record_id:
+                        return redirect('success')
+                    else:
+                        error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
 
             except Exception as e:
-                logger.error('Failed to verify assistant in Odoo', exc_info=True)
+                logger.error('Failed to verify or register assistant in Odoo', exc_info=True)
                 error_message = "Hubo un problema al verificar los datos en el sistema. Por favor, intente nuevamente."
-                context = {
-                    'form': form,
-                    'is_active': is_active,
-                    'capacitacion': capacitacion,
-                    'error_message': error_message
-                }
-                return render(request, 'registration_form.html', context)
+        
+        else:
+            logger.debug("El formulario no es válido")
+            logger.debug(form.errors)
 
+    # Asegúrate de incluir siempre error_message en el contexto
     context = {
         'form': form,
         'is_active': is_active,
-        'capacitacion': capacitacion
+        'capacitacion': capacitacion,
+        'error_message': error_message  # Incluye error_message en el contexto
     }
     
     return render(request, 'registration_form.html', context)
+
+
 
 
 # Vista de Éxito Al Enviar Datos
@@ -277,12 +268,24 @@ def view_assistants(request, id):
                 ['x_studio_fecha_sesin', '=', capacitacion.fecha.strftime('%Y-%m-%d')],
                 ['x_studio_hora_inicial', '=', capacitacion.hora_inicial.strftime('%H:%M:%S')]
             ]],
-            {'fields': ['x_studio_many2one_field_iphhw']})
-        
-        assistant_names = [assistant['x_studio_many2one_field_iphhw'][1] for assistant in assistants]
-        
+            {'fields': ['x_studio_many2one_field_iphhw', 'x_studio_cargo', 'x_studio_nombre_empleado', 'x_studio_departamento_empleado']})
+
+        assistant_data = []
+        for assistant in assistants:
+            userId = assistant['x_studio_many2one_field_iphhw'][1] if assistant['x_studio_many2one_field_iphhw'] else ''
+            jobTitle = assistant.get('x_studio_cargo', '')
+            username = assistant.get('x_studio_nombre_empleado','')
+            employeeDepartment = assistant.get('x_studio_departamento_empleado','')
+            
+            assistant_data.append({'userId': userId, 'jobTitle': jobTitle, 'username':username, 'employeeDepartment': employeeDepartment})
+
     except Exception as e:
         logger.error('Failed to fetch assistants from Odoo', exc_info=True)
-        assistant_names = []
+        assistant_data = []
 
-    return render(request, 'view_assistants.html', {'capacitacion': capacitacion, 'assistants': assistant_names})
+    return render(request, 'view_assistants.html', {
+        'capacitacion': capacitacion,
+        'assistants': assistant_data
+    })
+
+
