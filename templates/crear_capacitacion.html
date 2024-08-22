@@ -9,7 +9,7 @@
   <form class="form-create-cap" method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit" class="btn btn-success-f">{% if form.instance.pk %}Guardar{% else %}Crear{% endif %}</button>
+    <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>{% if form.instance.pk %}Guardar{% else %}Crear{% endif %}</button>
     <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f">Cancelar</button></a>
   </form>
   

@@ -42,3 +42,10 @@ class RegistrationForm(forms.Form):
     widget=forms.TextInput(attrs={
             'placeholder': 'Ingrese su número de documento'
         }))
+  def clean(self):
+    cleaned_data = super().clean()
+    # Convertir todos los campos a mayúsculas
+    for field in cleaned_data:
+      if isinstance(cleaned_data[field], str):
+        cleaned_data[field] = cleaned_data[field].upper()
+    return cleaned_data

@@ -1,57 +1,191 @@
 {% extends 'base.html' %} {% block title %}Lista de Capacitaciones{% endblock %}
 {% block content %}
-
 <section class="home">
-	<div class="btn-center">
-		<a class="btn-center" href="{% url 'create_capacitacion' %}"
-		><button class="btn btn-funda btn-success-f">Crear Capacitación</button>
-	</a>
-	</div>
-	
-	
-	<h3 class="subtitle">Capacitaciones Registradas:</h3>
-	
-	<div class="table-responsive">
-		<table class="table table-hover">
-			<thead>
-				<tr>
-					<th>Tema</th>
-					<th>Proceso</th>
-					<th>Moderador</th>
-					<th>Fecha</th>
-					<th>Inicio</th>
-					<th>Fin</th>
-					<th>Estado</th>
-					<th>Objetivo</th>
-					<th>Acciones</th>
-				</tr>
-			</thead>
-			<tbody>
-				{% for capacitacion in capacitaciones %}
-				<tr>
-					<td>{{ capacitacion.tema }}</td>
-					<td>{{ capacitacion.area_encargada }}</td>
-					<td>{{ capacitacion.moderador }}</td>
-					<td style="width: 110px;">{{ capacitacion.fecha_formateada }}</td>
-					<td>{{ capacitacion.hora_inicial }}</td>
-					<td style="min-width: 60px;">{{ capacitacion.hora_final }}</td>
-					<td>{{ capacitacion.estado }}</td>
-					<td style="min-width: 200px;">{{ capacitacion.objetivo }}</td>
-					<td class="btn-actions">
-						<a href="{% url 'details_view' capacitacion.id %}" title="Ver Detalles"
-							><button type="button" class="btn btn-info-f"><i class="bi bi-info-lg"></i></button></a
-						>
-						<a href="{% url 'edit_capacitacion' capacitacion.id %}" title="Editar Capacitación"
-							><button type="button" class="btn btn-warning-f"><i class="bi bi-pencil-square"></i></button></a
-						>
-						<a href="{% url 'view_assistants' capacitacion.id %}" title="Ver Asistentes"
-							><button type="button" class="btn btn-success-f"><i class="bi bi-person-check"></i></button></a
-						>
-					</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</div>
+  <div class="btn-center">
+    <a class="btn-center" href="{% url 'create_capacitacion' %}">
+      <button class="btn btn-funda btn-success-f">Crear Capacitación</button>
+    </a>
+  </div>
+
+  <h3 class="subtitle">Capacitaciones Registradas:</h3>
+
+  <!-- Filtros -->
+  <div class="accordion mb-3" id="accordionExample">
+    <div class="accordion-item">
+      <h2 class="accordion-header">
+        <button
+          class="accordion-button collapsed"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#collapseTwo"
+          aria-expanded="false"
+          aria-controls="collapseTwo"
+        >
+          Filtrar Información
+        </button>
+      </h2>
+      <div
+        id="collapseTwo"
+        class="accordion-collapse collapse"
+        data-bs-parent="#accordionExample"
+      >
+        <div class="accordion-body">
+          <div class="filter-container">
+            <div class="fc-items fc-1">
+              <label>Filtrar por Tema:</label>
+              <input
+                type="text"
+                id="filterTema"
+                placeholder="Escribe el tema de la capacitación"
+                class="form-control"
+              />
+              <label>Filtrar por Proceso:</label>
+              <input
+                type="text"
+                id="filterProceso"
+                placeholder="Escribe el proceso responsable"
+                class="form-control"
+              />
+            </div>
+            <div class="fc-items fc-2">
+              <label>Filtrar por Moderador:</label>
+              <input
+                type="text"
+                id="filterModerador"
+                placeholder="Escreibe el nombre del Moderador"
+                class="form-control"
+              />
+              <label>Filtrar por Fecha:</label>
+              <input
+                type="date"
+                id="filterFecha"
+                placeholder="Escribe la Fecha de la Capacitación"
+                class="form-control"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover" id="capacitacionesTable">
+      <thead>
+        <tr>
+          <th>Tema</th>
+          <th>Proceso</th>
+          <th>Moderador</th>
+          <th>Fecha</th>
+          <th>Inicio</th>
+          <th>Fin</th>
+          <th>Estado</th>
+          <th>Objetivo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for capacitacion in capacitaciones %}
+        <tr>
+          <td>{{ capacitacion.tema|upper }}</td>
+          <td>{{ capacitacion.area_encargada|upper }}</td>
+          <td>{{ capacitacion.moderador|upper }}</td>
+          <td style="width: 110px">{{ capacitacion.fecha_formateada }}</td>
+          <td>{{ capacitacion.hora_inicial }}</td>
+          <td style="min-width: 60px">{{ capacitacion.hora_final }}</td>
+          <td>{{ capacitacion.estado|upper }}</td>
+          <td style="min-width: 200px">{{ capacitacion.objetivo|upper }}</td>
+          <td class="btn-actions">
+            <a
+              href="{% url 'details_view' capacitacion.id %}"
+              title="Ver Detalles"
+            >
+              <button type="button" class="btn btn-info-f">
+                <i class="bi bi-info-lg"></i>
+              </button>
+            </a>
+
+			{% if capacitacion.estado != 'CERRADA' %}
+			<a href="{% url 'edit_capacitacion' capacitacion.id %}" title="Editar Capacitación">
+				<button type="button" class="btn btn-warning-f">
+					<i class="bi bi-pencil-square"></i>
+				</button>
+			</a>
+			{% else %}
+			<button type="button" class="btn btn-warning-f" disabled>
+				<i class="bi bi-pencil-square"></i>
+			</button>
+			{% endif %}
+
+            <a
+              href="{% url 'view_assistants' capacitacion.id %}"
+              title="Ver Asistentes"
+            >
+              <button type="button" class="btn btn-success-f">
+                <i class="bi bi-person-check"></i>
+              </button>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
+
+<script>
+  // Filtrar tabla por columna
+  function filterTable() {
+    var inputTema = document.getElementById("filterTema").value.toUpperCase();
+    var inputProceso = document
+      .getElementById("filterProceso")
+      .value.toUpperCase();
+    var inputModerador = document
+      .getElementById("filterModerador")
+      .value.toUpperCase();
+    var inputFecha = document.getElementById("filterFecha").value;
+
+    var table = document.getElementById("capacitacionesTable");
+    var tr = table.getElementsByTagName("tr");
+
+    for (var i = 1; i < tr.length; i++) {
+      var tdTema = tr[i].getElementsByTagName("td")[0];
+      var tdProceso = tr[i].getElementsByTagName("td")[1];
+      var tdModerador = tr[i].getElementsByTagName("td")[2];
+      var tdFecha = tr[i].getElementsByTagName("td")[3];
+
+      if (tdTema && tdProceso && tdModerador && tdFecha) {
+        var tema = tdTema.textContent || tdTema.innerText;
+        var proceso = tdProceso.textContent || tdProceso.innerText;
+        var moderador = tdModerador.textContent || tdModerador.innerText;
+        var fecha = tdFecha.textContent || tdFecha.innerText;
+
+        // Filtra por todos los campos
+        if (
+          tema.toUpperCase().indexOf(inputTema) > -1 &&
+          proceso.toUpperCase().indexOf(inputProceso) > -1 &&
+          moderador.toUpperCase().indexOf(inputModerador) > -1 &&
+          (fecha === inputFecha || inputFecha === "")
+        ) {
+          tr[i].style.display = "";
+        } else {
+          tr[i].style.display = "none";
+        }
+      }
+    }
+  }
+
+  // Asignar eventos de filtro a los campos
+  document.getElementById("filterTema").addEventListener("keyup", filterTable);
+  document
+    .getElementById("filterProceso")
+    .addEventListener("keyup", filterTable);
+  document
+    .getElementById("filterModerador")
+    .addEventListener("keyup", filterTable);
+  document
+    .getElementById("filterFecha")
+    .addEventListener("change", filterTable);
+</script>
+
 {% endblock %}

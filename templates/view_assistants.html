@@ -20,10 +20,10 @@
         <tbody>
             {% for assistant in assistants %}
             <tr>
-                <td>{{ assistant.userId }}</td>          
-                <td>{{ assistant.username }}</td>
-                <td>{{ assistant.jobTitle }}</td>
-                <td>{{ assistant.employeeDepartment }}</td>
+                <td>{{ assistant.userId|upper }}</td>          
+                <td>{{ assistant.username|upper }}</td>
+                <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}{% endif %}</td>
+                <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>

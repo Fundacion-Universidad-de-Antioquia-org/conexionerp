@@ -31,7 +31,7 @@ def get_department_id(department_name):
 
         department = models.execute_kw(database, uid, password,
             'hr.department', 'search_read',
-            [[['name', '=', department_name]]],
+             [[['name', 'ilike', department_name]]],
             {'fields': ['id'], 'limit': 1})
         
         if department:
@@ -88,14 +88,14 @@ def send_to_odoo(data):
         end_time_str = data['end_time'].strftime('%H:%M:%S')
         
         odoo_data = {
-            'x_studio_tema': data['topic'],
+            'x_studio_tema': data['topic'].upper(),
             'x_studio_many2one_field_iphhw': employee_id,
             'x_studio_fecha_sesin': date_str,
             'x_studio_hora_inicial': start_time_str,
             'x_studio_hora_final': end_time_str,
             'x_studio_many2one_field_ftouu': department_id,
             'x_studio_estado': 'ACTIVA',
-            'x_studio_moderador': data['moderator'],
+            'x_studio_moderador': data['moderator'].upper(),
             'x_studio_asisti': 'Si'
         }
 
@@ -151,7 +151,6 @@ def registration_view(request):
     capacitacion_id = request.GET.get('id')
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=capacitacion_id)
     
-    # Formatea la fecha correctamente
     date_str = capacitacion.fecha.strftime('%Y-%m-%d')
     
     initial_data = {
@@ -168,11 +167,10 @@ def registration_view(request):
     form = RegistrationForm(request.POST or None, initial=initial_data)
     is_active = capacitacion.estado == 'ACTIVA'
     
-    error_message = None  # Inicializa la variable error_message
+    error_message = None
     
     if request.method == 'POST' and is_active:
         if form.is_valid():
-            logger.debug("El formulario es válido")
             document_id = form.cleaned_data['document_id']
 
             try:
@@ -181,13 +179,34 @@ def registration_view(request):
                 if not employee_id:
                     error_message = f"No se encontró un empleado con el documento {document_id}. Por favor, verifique los datos."
                 else:
-                    # Si el documento es válido, envía los datos a Odoo
-                    data = form.cleaned_data
-                    record_id = send_to_odoo(data)
-                    if record_id:
-                        return redirect('success')
+                    common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+                    uid = common.authenticate(database, user, password, {})
+                    models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+
+                    print(f"Buscando registros con tema: {capacitacion.tema}, fecha: {capacitacion.fecha.strftime('%Y-%m-%d')}, empleado ID: {employee_id}")
+                    # Buscar registros en Odoo para evitar duplicados
+                    existing_records = models.execute_kw(database, uid, password,
+                        'x_capacitacion_emplead', 'search_read',
+                        [[
+                            ['x_studio_tema', '=', capacitacion.tema],
+                            ['x_studio_fecha_sesin', '=', capacitacion.fecha.strftime('%Y-%m-%d')],
+                            ['x_studio_many2one_field_iphhw', '=', employee_id]
+                        ]],
+                        {'fields': ['id']})
+                    print(f"Registros encontrados: {existing_records}")
+
+                    if existing_records:
+                        print('Existe')
+                        error_message = f"El usuario con documento {document_id} ya está registrado en esta capacitación."
                     else:
-                        error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
+                        print('No existe')
+                        # Si no existe duplicado, procede a crear el registro en Odoo
+                        data = form.cleaned_data
+                        record_id = send_to_odoo(data)
+                        if record_id:
+                            return redirect('success')
+                        else:
+                            error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
 
             except Exception as e:
                 logger.error('Failed to verify or register assistant in Odoo', exc_info=True)
@@ -197,16 +216,14 @@ def registration_view(request):
             logger.debug("El formulario no es válido")
             logger.debug(form.errors)
 
-    # Asegúrate de incluir siempre error_message en el contexto
     context = {
         'form': form,
         'is_active': is_active,
         'capacitacion': capacitacion,
-        'error_message': error_message  # Incluye error_message en el contexto
+        'error_message': error_message
     }
-    
-    return render(request, 'registration_form.html', context)
 
+    return render(request, 'registration_form.html', context)
 
 
 
@@ -287,5 +304,3 @@ def view_assistants(request, id):
         'capacitacion': capacitacion,
         'assistants': assistant_data
     })
-
-
