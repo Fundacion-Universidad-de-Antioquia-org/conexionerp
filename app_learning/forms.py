@@ -47,5 +47,5 @@ class RegistrationForm(forms.Form):
     # Convertir todos los campos a mayúsculas
     for field in cleaned_data:
       if isinstance(cleaned_data[field], str):
-        cleaned_data[field] = cleaned_data[field].upper()
+        cleaned_data[field] = cleaned_data[field]
     return cleaned_data

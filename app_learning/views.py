@@ -31,7 +31,7 @@ def get_department_id(department_name):
 
         department = models.execute_kw(database, uid, password,
             'hr.department', 'search_read',
-             [[['name', 'ilike', department_name]]],
+            [[['name', '=', department_name]]],
             {'fields': ['id'], 'limit': 1})
         
         if department:
@@ -66,6 +66,7 @@ def get_employee_id_by_name(employee_name):
         logger.error('Failed to fetch employee ID from Odoo', exc_info=True)
         return None
 
+
 # Función para enviar datos a Odoo
 def send_to_odoo(data):
     logger.debug(f"Intentando enviar datos a Odoo: {data}")
@@ -78,36 +79,50 @@ def send_to_odoo(data):
         if not department_id:
             raise ValueError(f"Department '{data['department']}' not found in Odoo")
 
-        employee_id = get_employee_id_by_name(data['document_id'])
-        if not employee_id:
+        employee_data = models.execute_kw(database, uid, password,
+                                          'hr.employee', 'search_read',
+                                          [[['name', '=', data['document_id']]]],
+                                          {'fields': ['id', 'name'], 'limit': 1})
+
+        if not employee_data:
             raise ValueError(f"Employee with name '{data['document_id']}' not found in Odoo")
+
+        employee_id = employee_data[0]['id']
 
         # Convertir fechas a cadenas
         date_str = data['date'].strftime('%Y-%m-%d')
         start_time_str = data['start_time'].strftime('%H:%M:%S')
         end_time_str = data['end_time'].strftime('%H:%M:%S')
-        
+
+        # Preparar los datos para el registro en Odoo
         odoo_data = {
-            'x_studio_tema': data['topic'].upper(),
+            'x_studio_tema': data['topic'],
             'x_studio_many2one_field_iphhw': employee_id,
             'x_studio_fecha_sesin': date_str,
             'x_studio_hora_inicial': start_time_str,
             'x_studio_hora_final': end_time_str,
             'x_studio_many2one_field_ftouu': department_id,
             'x_studio_estado': 'ACTIVA',
-            'x_studio_moderador': data['moderator'].upper(),
+            'x_studio_moderador': data['moderator'],
             'x_studio_asisti': 'Si'
         }
 
         record_id = models.execute_kw(database, uid, password,
                                       'x_capacitacion_emplead', 'create', [odoo_data])
 
-        logger.debug(f'Record created in Odoo with ID: {record_id}')
-        return record_id
+        # Obtener el nombre del empleado desde el campo `identification_id`
+        employee_name = models.execute_kw(database, uid, password,
+                                          'hr.employee', 'search_read',
+                                          [[['id', '=', employee_id]]],
+                                          {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
+
+        logger.debug(f'Record created in Odoo with ID: {record_id}, employee_name: {employee_name}')
+        return record_id, employee_name
 
     except Exception as e:
         logger.error('Failed to send data to Odoo', exc_info=True)
-        return None
+        return None, None
+
 
 
 # Función para crear QR de Capacitación
@@ -150,9 +165,10 @@ def list_capacitaciones(request):
 def registration_view(request):
     capacitacion_id = request.GET.get('id')
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=capacitacion_id)
-    
+
+    # Formatea la fecha correctamente
     date_str = capacitacion.fecha.strftime('%Y-%m-%d')
-    
+
     initial_data = {
         'topic': capacitacion.tema,
         'objective': capacitacion.objetivo,
@@ -163,14 +179,15 @@ def registration_view(request):
         'end_time': capacitacion.hora_final,
         'document_id': ''  # Este campo se llenará por el usuario
     }
-    
+
     form = RegistrationForm(request.POST or None, initial=initial_data)
     is_active = capacitacion.estado == 'ACTIVA'
-    
-    error_message = None
-    
+
+    error_message = None  # Inicializa la variable error_message
+
     if request.method == 'POST' and is_active:
         if form.is_valid():
+            logger.debug("El formulario es válido")
             document_id = form.cleaned_data['document_id']
 
             try:
@@ -183,7 +200,6 @@ def registration_view(request):
                     uid = common.authenticate(database, user, password, {})
                     models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-                    print(f"Buscando registros con tema: {capacitacion.tema}, fecha: {capacitacion.fecha.strftime('%Y-%m-%d')}, empleado ID: {employee_id}")
                     # Buscar registros en Odoo para evitar duplicados
                     existing_records = models.execute_kw(database, uid, password,
                         'x_capacitacion_emplead', 'search_read',
@@ -193,18 +209,16 @@ def registration_view(request):
                             ['x_studio_many2one_field_iphhw', '=', employee_id]
                         ]],
                         {'fields': ['id']})
-                    print(f"Registros encontrados: {existing_records}")
 
                     if existing_records:
-                        print('Existe')
                         error_message = f"El usuario con documento {document_id} ya está registrado en esta capacitación."
                     else:
-                        print('No existe')
                         # Si no existe duplicado, procede a crear el registro en Odoo
                         data = form.cleaned_data
-                        record_id = send_to_odoo(data)
+                        record_id, employee_name = send_to_odoo(data)
                         if record_id:
-                            return redirect('success')
+                            # Redirigir a la vista de éxito con el nombre del empleado
+                            return redirect(reverse('success', kwargs={'employee_name': employee_name}))
                         else:
                             error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
 
@@ -220,16 +234,20 @@ def registration_view(request):
         'form': form,
         'is_active': is_active,
         'capacitacion': capacitacion,
-        'error_message': error_message
+        'error_message': error_message  # Incluye error_message en el contexto
     }
 
     return render(request, 'registration_form.html', context)
 
 
-
 # Vista de Éxito Al Enviar Datos
-def success_view(request):
-    return render(request, 'success.html')
+def success_view(request, employee_name):
+    context = {
+        'employee_name': employee_name
+    }
+    return render(request, 'success.html', context)
+
+
 
 #Vista Detalles de la Capacitación
 def details_view(request, id):
