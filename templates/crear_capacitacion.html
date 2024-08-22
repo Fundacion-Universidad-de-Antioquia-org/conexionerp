@@ -1,14 +1,18 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Crear Capacitación</title>
-</head>
-<body>
-    <h1>Crear Capacitación</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
-</body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar Capacitación{% else %}Crear Capacitación{% endif %}{% endblock %}
+
+{% block content %}
+<section class="create-capacitation">
+  <h3 class="subtitle">{% if form.instance.pk %}Editar Capacitación{% else %}Crear Capacitación{% endif %}</h3>
+
+  <form class="form-create-cap" method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>{% if form.instance.pk %}Guardar{% else %}Crear{% endif %}</button>
+    <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f">Cancelar</button></a>
+  </form>
+  
+</section>
+
+{% endblock %}

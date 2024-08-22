@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Asistentes{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
+    <h3>Asistentes a la Capacitación: {{ capacitacion.tema }}</h3>
+</div>
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Cargo</th>
+                <th>Área</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for assistant in assistants %}
+            <tr>
+                <td>{{ assistant.userId|upper }}</td>          
+                <td>{{ assistant.username|upper }}</td>
+                <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}{% endif %}</td>
+                <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+
+
