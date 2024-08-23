@@ -23,3 +23,6 @@ psycopg2==2.9.9
 pillow==10.4.0
 qrcode==7.4.2
 pypng==0.20220715.0
+django-cors-headers==4.4.0
+python-dateutil==2.9.0.post0
+pytz==2024.1
