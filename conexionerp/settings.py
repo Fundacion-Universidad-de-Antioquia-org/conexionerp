@@ -66,7 +66,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "https://app-softwareids-prod-002-gaegafduh6d5akd5.eastus-01.azurewebsites.net"
 ]
+CORS_ALLOW_HEADERS = [
+    "content-type",
+]
 
+CORS_ALLOW_METHODS = [
+    "GET",
+    "OPTIONS",
+]
 
 # Alternativamente, permitir todos los orígenes (no recomendado para producción)
 #CORS_ALLOW_ALL_ORIGINS = True
