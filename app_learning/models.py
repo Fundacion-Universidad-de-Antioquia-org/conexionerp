@@ -12,7 +12,15 @@ class CtrlCapacitaciones(models.Model):
         ('ACTIVA', 'ACTIVA'),
         ('CERRADA', 'CERRADA'),
     ]
+    MODALIDAD = [
+        ('PRESENCIAL', 'PRESENCIAL'),
+        ('VIRTUAL', 'VIRTUAL'),
+        ('MIXTA', 'MIXTA'),
+    ]
     tema = models.CharField(max_length=60)
+    modalidad = models.CharField(max_length=10, choices=MODALIDAD, default='')
+    url_reunion = models.CharField(max_length=255, blank=True, null=True, verbose_name='URL de la Reunión')
+    ubicacion = models.CharField(max_length=255, blank=True, null=True, verbose_name='Ubicación')
     estado = models.CharField(max_length=10, choices=ESTADO, default='ACTIVA')
     objetivo = models.CharField(max_length=161)
     qr_base64 = models.TextField(blank=True, null=True)  # Campo para almacenar el QR en base64

@@ -131,6 +131,8 @@ def create_capacitacion(request):
         form = CtrlCapacitacionesForm(request.POST)
         if form.is_valid():
             capacitacion = form.save()
+            capacitacion = form.save(commit=False)
+            
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
 
             qr = qrcode.QRCode(
@@ -253,6 +255,10 @@ def success_view(request, employee_name):
 def details_view(request, id):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     
+     # Determinar si mostrar ubicación y/o URL de la reunión según la modalidad
+    show_url = capacitacion.modalidad == 'VIRTUAL' or capacitacion.modalidad == 'MIXTA'
+    show_ubicacion = capacitacion.modalidad == 'PRESENCIAL' or capacitacion.modalidad == 'MIXTA'
+    
     context = {
         'topic': capacitacion.tema,
         'department': capacitacion.area_encargada,
@@ -261,6 +267,9 @@ def details_view(request, id):
         'date': capacitacion.fecha.strftime('%Y-%m-%d'),
         'start_time': capacitacion.hora_inicial.strftime('%H:%M'),
         'end_time': capacitacion.hora_final.strftime('%H:%M'),
+        'modalidad': capacitacion.modalidad, 
+        'ubicacion': capacitacion.ubicacion if show_ubicacion else None,  # Condicionalmente según la modalidad
+        'url_reunion': capacitacion.url_reunion if show_url else None,  # Condicionalmente según la modalidad
         'qr_url': f"{apphost}/learn/register/?id={capacitacion.id}",
         'qr_base64': capacitacion.qr_base64
     }
@@ -282,6 +291,7 @@ def edit_capacitacion(request, id):
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST, instance=capacitacion)
         if form.is_valid():
+            capacitacion = form.save(commit=False)
             form.save()
             return redirect('home')
     else:
