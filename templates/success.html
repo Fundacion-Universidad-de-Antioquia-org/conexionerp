@@ -40,7 +40,16 @@
       <div class="text-central-div">
         <h2>{{ employee_name }}:</h2>
         <h2>Has registrado exitosamente tu asistencia</h2>
-        <h5>Gracias por Participar</h5>
+        {% if url_reunion %}
+        <!-- Si hay una URL válida, muestra el botón de unirse -->
+          <h5>Ingresa a la Reunión:</h5>
+          <a href="{{ url_reunion }}" target="_blank" class="btn btn-funda">Unirse</a>
+        {% else %}
+            <!-- Si no hay URL, muestra un mensaje de agradecimiento -->
+            <h5>Gracias por Participar</h5>
+        {% endif %}
+
+
       </div>
       </div>
       

@@ -59,6 +59,9 @@ class RegistrationForm(forms.Form):
   date = forms.DateField(widget=forms.DateInput(attrs={'type':'date', 'readonly': 'readonly'}), label='fecha', input_formats=['%Y-%m-%d'])
   start_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora inicial')
   end_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora final')
+  mode = forms.CharField(max_length=10, label='Modalidad', required=True)
+  location = forms.CharField(max_length=255, label='Ubicación', required=False)  # Solo requerido para ciertas modalidades
+  url_reunion = forms.CharField(max_length=255, label='URL de la Reunión', required=False)  # Solo requerido para ciertas modalidades
   document_id = forms.CharField(
     max_length=20,
     label='Documento de Identidad', 
