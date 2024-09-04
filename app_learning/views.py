@@ -9,10 +9,12 @@ import xmlrpc.client
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import pytz
 import logging
 import base64
 from urllib.parse import quote
 from urllib.parse import unquote
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +25,16 @@ user = os.getenv("ODOO_USER")
 password = os.getenv("PASSWORD")
 host = os.getenv("HOST")
 apphost = os.getenv('APP_HOST')
+
+# Conversión a UTC asegurando que el objeto sea datetime
+def convert_to_utc(dt, timezone_str):
+    if isinstance(dt, datetime):
+        local = pytz.timezone(timezone_str)
+        local_dt = local.localize(dt, is_dst=None)
+        utc_dt = local_dt.astimezone(pytz.utc)
+        return utc_dt
+    else:
+        raise ValueError("El objeto proporcionado no es de tipo datetime.datetime")
 
 # Función para obtener el ID del departamento
 def get_department_id(department_name):
@@ -58,10 +70,8 @@ def get_employee_id_by_name(employee_name):
             {'fields': ['id', 'name'], 'limit': 1})
         
         if employees:
-            print(f"Employee found: {employees[0]}")
             return employees[0]['id']
         else:
-            print(f"No employee found with name: {employee_name}")
             return None
     
     except Exception as e:
@@ -91,11 +101,12 @@ def send_to_odoo(data):
 
         employee_id = employee_data[0]['id']
 
-        # Convertir fechas a cadenas
+       # Convertir fechas a cadenas en UTC
         date_str = data['date'].strftime('%Y-%m-%d')
         start_time_str = data['start_time'].strftime('%H:%M:%S')
         end_time_str = data['end_time'].strftime('%H:%M:%S')
-        # Preparar los datos para el registro en Odoo
+        
+       # Preparar los datos para el registro en Odoo
         odoo_data = {
             'x_studio_tema': data['topic'],
             'x_studio_many2one_field_iphhw': employee_id,
@@ -104,17 +115,19 @@ def send_to_odoo(data):
             'x_studio_hora_final': end_time_str,
             'x_studio_many2one_field_ftouu': department_id,
             'x_studio_estado': 'ACTIVA',
-            'x_studio_modalidad': data.get('mode', ''),  # Usar .get() para evitar KeyError
-            'x_studio_ubicacin': data.get('location', ''),  # Usar .get() para evitar KeyError
-            'x_studio_url': data.get('url_reunion', ''),  # Usar .get() para evitar KeyError
+            'x_studio_modalidad': data.get('mode', ''),
+            'x_studio_ubicacin': data.get('location', ''),
+            'x_studio_url': data.get('url_reunion', ''),
             'x_studio_asisti': 'Si',
-            'x_studio_fecha_y_hora_de_registro': data.get('registro_datetime'),  # Campo nuevo para la fecha/hora
-            'x_studio_ip_del_registro': data.get('ip_address'),  # Campo nuevo para la IP
-            'x_studio_user_agent': data.get('user_agent'), #Campo nuevo para el user-agent
+            'x_studio_fecha_hora_registro': data['registro_datetime'],
+            'x_studio_ip_del_registro': data.get('ip_address'),
+            'x_studio_user_agent': data.get('user_agent'),
             'x_studio_longitud': data.get('longitude'),
-            'x_studio_latitud': data.get('latitude')
+            'x_studio_latitud': data.get('latitude'),
+            'x_studio_moderador': data.get('moderator', '')
         }
 
+        
         record_id = models.execute_kw(database, uid, password,
                                       'x_capacitacion_emplead', 'create', [odoo_data])
 
@@ -124,7 +137,6 @@ def send_to_odoo(data):
                                           [[['id', '=', employee_id]]],
                                           {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
 
-        logger.debug(f'Record created in Odoo with ID: {record_id}, employee_name: {employee_name}')
         return record_id, employee_name, data.get('url_reunion', '')
 
     except Exception as e:
@@ -135,12 +147,13 @@ def send_to_odoo(data):
 
 # Función para crear QR de Capacitación
 def create_capacitacion(request):
+    
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST)
         if form.is_valid():
             capacitacion = form.save()
             capacitacion = form.save(commit=False)
-            
+                     
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
 
             qr = qrcode.QRCode(
@@ -185,8 +198,8 @@ def registration_view(request):
         'department': capacitacion.area_encargada,
         'moderator': capacitacion.moderador,
         'date': date_str,
-        'start_time': capacitacion.hora_inicial,
-        'end_time': capacitacion.hora_final,
+        'start_time': capacitacion.hora_inicial,  # Formato de 24 horas
+        'end_time': capacitacion.hora_final,      # Formato de 24 horas
         'mode': capacitacion.modalidad,
         'location': capacitacion.ubicacion,
         'url_reunion': capacitacion.url_reunion,
@@ -199,8 +212,9 @@ def registration_view(request):
     error_message = None  # Inicializa la variable error_message
 
     if request.method == 'POST' and is_active:
+        
         if form.is_valid():
-            logger.debug("El formulario es válido")
+            
             document_id = form.cleaned_data['document_id']
 
             try:
@@ -228,7 +242,8 @@ def registration_view(request):
                         error_message = f"El usuario con documento {document_id} ya está registrado en esta capacitación."
                     else:
                         #Obtener fecha y hora actual
-                        registro_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        timezone = pytz.timezone('America/Bogota')
+                        registro_datetime = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')
                         user_agent = request.META.get('HTTP_USER_AGENT', '')
                         
                         # Obtener la dirección IP del cliente
@@ -269,8 +284,8 @@ def registration_view(request):
                 error_message = "Hubo un problema al verificar los datos en el sistema. Por favor, intente nuevamente."
         
         else:
-            logger.debug("El formulario no es válido")
-            logger.debug(form.errors)
+            print("El formulario no es válido")
+            print(form.errors)
 
     context = {
         'form': form,
@@ -284,7 +299,6 @@ def registration_view(request):
 
 # Vista de Éxito Al Enviar Datos
 def success_view(request, employee_name, url_reunion=None):
-    print(f"Valor de url_reunion antes de la validación: {url_reunion}")
     decoded_url = unquote(url_reunion) if url_reunion and url_reunion != 'without-url' else None
     context = {
         'employee_name': employee_name,
