@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from datetime import datetime
 import logging
 import base64
+from urllib.parse import quote
+from urllib.parse import unquote
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +95,6 @@ def send_to_odoo(data):
         date_str = data['date'].strftime('%Y-%m-%d')
         start_time_str = data['start_time'].strftime('%H:%M:%S')
         end_time_str = data['end_time'].strftime('%H:%M:%S')
-
         # Preparar los datos para el registro en Odoo
         odoo_data = {
             'x_studio_tema': data['topic'],
@@ -103,8 +104,15 @@ def send_to_odoo(data):
             'x_studio_hora_final': end_time_str,
             'x_studio_many2one_field_ftouu': department_id,
             'x_studio_estado': 'ACTIVA',
-            'x_studio_moderador': data['moderator'],
-            'x_studio_asisti': 'Si'
+            'x_studio_modalidad': data.get('mode', ''),  # Usar .get() para evitar KeyError
+            'x_studio_ubicacin': data.get('location', ''),  # Usar .get() para evitar KeyError
+            'x_studio_url': data.get('url_reunion', ''),  # Usar .get() para evitar KeyError
+            'x_studio_asisti': 'Si',
+            'x_studio_fecha_y_hora_de_registro': data.get('registro_datetime'),  # Campo nuevo para la fecha/hora
+            'x_studio_ip_del_registro': data.get('ip_address'),  # Campo nuevo para la IP
+            'x_studio_user_agent': data.get('user_agent'), #Campo nuevo para el user-agent
+            'x_studio_longitud': data.get('longitude'),
+            'x_studio_latitud': data.get('latitude')
         }
 
         record_id = models.execute_kw(database, uid, password,
@@ -117,11 +125,11 @@ def send_to_odoo(data):
                                           {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
 
         logger.debug(f'Record created in Odoo with ID: {record_id}, employee_name: {employee_name}')
-        return record_id, employee_name
+        return record_id, employee_name, data.get('url_reunion', '')
 
     except Exception as e:
         logger.error('Failed to send data to Odoo', exc_info=True)
-        return None, None
+        return None, None, None
 
 
 
@@ -131,6 +139,8 @@ def create_capacitacion(request):
         form = CtrlCapacitacionesForm(request.POST)
         if form.is_valid():
             capacitacion = form.save()
+            capacitacion = form.save(commit=False)
+            
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
 
             qr = qrcode.QRCode(
@@ -177,6 +187,9 @@ def registration_view(request):
         'date': date_str,
         'start_time': capacitacion.hora_inicial,
         'end_time': capacitacion.hora_final,
+        'mode': capacitacion.modalidad,
+        'location': capacitacion.ubicacion,
+        'url_reunion': capacitacion.url_reunion,
         'document_id': ''  # Este campo se llenará por el usuario
     }
 
@@ -193,6 +206,7 @@ def registration_view(request):
             try:
                 # Verifica si el documento existe en Odoo
                 employee_id = get_employee_id_by_name(document_id)
+                
                 if not employee_id:
                     error_message = f"No se encontró un empleado con el documento {document_id}. Por favor, verifique los datos."
                 else:
@@ -213,12 +227,40 @@ def registration_view(request):
                     if existing_records:
                         error_message = f"El usuario con documento {document_id} ya está registrado en esta capacitación."
                     else:
+                        #Obtener fecha y hora actual
+                        registro_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        user_agent = request.META.get('HTTP_USER_AGENT', '')
+                        
+                        # Obtener la dirección IP del cliente
+                        ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
+                        
+                        #Capturar Ubicación
+                        latitude = request.POST.get('latitude')
+                        longitude = request.POST.get('longitude')
+
+                        
+                        if ip_address:
+                            ip_address = ip_address.split(',')[0]
+                        else:
+                            ip_address = request.META.get('REMOTE_ADDR')
+                            
+                        url_reunion = form.cleaned_data.get('url_reunion', '')
+                        
+                        if not url_reunion or url_reunion.lower() == 'none':
+                            url_reunion = 'without-url'  # Establece un valor por defecto
+                            
                         # Si no existe duplicado, procede a crear el registro en Odoo
                         data = form.cleaned_data
-                        record_id, employee_name = send_to_odoo(data)
+                        data['registro_datetime'] = registro_datetime
+                        data['ip_address'] = ip_address
+                        data['user_agent'] = user_agent
+                        data['latitude'] = latitude
+                        data['longitude'] = longitude
+                        record_id, employee_name, url_reunion = send_to_odoo(data)
                         if record_id:
                             # Redirigir a la vista de éxito con el nombre del empleado
-                            return redirect(reverse('success', kwargs={'employee_name': employee_name}))
+                            encoded_url = quote(url_reunion, safe='')
+                            return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
                         else:
                             error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
 
@@ -241,17 +283,22 @@ def registration_view(request):
 
 
 # Vista de Éxito Al Enviar Datos
-def success_view(request, employee_name):
+def success_view(request, employee_name, url_reunion=None):
+    print(f"Valor de url_reunion antes de la validación: {url_reunion}")
+    decoded_url = unquote(url_reunion) if url_reunion and url_reunion != 'without-url' else None
     context = {
-        'employee_name': employee_name
+        'employee_name': employee_name,
+        'url_reunion': decoded_url  # Usa la URL decodificada o None si no se proporciona
     }
     return render(request, 'success.html', context)
-
-
 
 #Vista Detalles de la Capacitación
 def details_view(request, id):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    
+     # Determinar si mostrar ubicación y/o URL de la reunión según la modalidad
+    show_url = capacitacion.modalidad == 'VIRTUAL' or capacitacion.modalidad == 'MIXTA'
+    show_ubicacion = capacitacion.modalidad == 'PRESENCIAL' or capacitacion.modalidad == 'MIXTA'
     
     context = {
         'topic': capacitacion.tema,
@@ -261,6 +308,9 @@ def details_view(request, id):
         'date': capacitacion.fecha.strftime('%Y-%m-%d'),
         'start_time': capacitacion.hora_inicial.strftime('%H:%M'),
         'end_time': capacitacion.hora_final.strftime('%H:%M'),
+        'modalidad': capacitacion.modalidad, 
+        'ubicacion': capacitacion.ubicacion if show_ubicacion else None,  # Condicionalmente según la modalidad
+        'url_reunion': capacitacion.url_reunion if show_url else None,  # Condicionalmente según la modalidad
         'qr_url': f"{apphost}/learn/register/?id={capacitacion.id}",
         'qr_base64': capacitacion.qr_base64
     }
@@ -273,7 +323,6 @@ def home(request):
     for capacitacion in capacitaciones:
         capacitacion.fecha_formateada = capacitacion.fecha.strftime('%Y-%m-%d')
         
-        
     return render(request, 'home.html', {'capacitaciones': capacitaciones})
 
 # Vista para editar una capacitación existente
@@ -282,6 +331,7 @@ def edit_capacitacion(request, id):
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST, instance=capacitacion)
         if form.is_valid():
+            capacitacion = form.save(commit=False)
             form.save()
             return redirect('home')
     else:

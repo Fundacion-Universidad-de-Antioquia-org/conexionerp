@@ -1,41 +1,50 @@
-{% extends 'base.html' %}
-
-{% block title %}{% if form.instance.pk %}Editar Capacitación{% else %}Crear Capacitación{% endif %}{% endblock %}
-
+{% extends 'base.html' %} 
+{% block title %}
+{% if form.instance.pk %}Editar Capacitación{% else %}Crear Capacitación{% endif %}
+{% endblock %} 
 {% block content %}
 
 <section class="details">
-    <h1 class="principal-title">Detalles de la Capacitación</h1>
+  <h1 class="principal-title">Detalles de la Capacitación</h1>
 
-    <div class="grid-container">
-        <div class="detail-info">
-            <p><strong>Tema:</strong> {{ topic }}</p>
-            <p><strong>Proceso:</strong> {{ department }}</p>
-            <p><strong>Moderador:</strong> {{ moderator }}</p>
-            <p><strong>Fecha:</strong> {{ date }}</p>
-            <p><strong>Hora Inicial:</strong> {{ start_time }}</p>
-            <p><strong>Hora Final:</strong> {{ end_time }}</p>
-        </div>
-        <div class="url-container">
-            <p><strong>Enlace:</strong> <a href="{{ qr_url }}">{{ qr_url }}</a></p>
-        </div>
-        <div class="qr-container">
-            <div class="subtitle-qr">
-                <p><strong>Código QR:</strong></p>
-            </div>
-            <img id="qr-image" alt="Código QR">
-        </div>
+  <div class="grid-container">
+    <div class="detail-info">
+      <p><strong>Tema:</strong> {{ topic }}</p>
+      <p><strong>Proceso:</strong> {{ department }}</p>
+      <p><strong>Moderador:</strong> {{ moderator }}</p>
+      <p><strong>Fecha:</strong> {{ date }}</p>
+      <p><strong>Hora Inicial:</strong> {{ start_time }}</p>
+      <p><strong>Hora Final:</strong> {{ end_time }}</p>
+      <p><strong>Modalidad:</strong> {{ modalidad }}</p>
+      {% if ubicacion %}
+      <p><strong>Ubicación:</strong> {{ ubicacion }}</p>
+      {% endif %} {% if url_reunion %}
+      <p>
+        <strong>URL Reunión:</strong>
+        <a href="{{ url_reunion }}" target="_blank"> Ver Reunión </a>
+      </p>
+      {% endif %}
     </div>
+    <div class="url-container">
+      <p><strong>Enlace asistencia:</strong> <a href="{{ qr_url }}">{{ qr_url }}</a></p>
+    </div>
+    <div class="qr-container">
+      <div class="subtitle-qr">
+        <p><strong>Código QR:</strong></p>
+      </div>
+      <img id="qr-image" alt="Código QR" />
+    </div>
+  </div>
 </section>
 
 <script>
-    const qrBase64 = "{{ qr_base64|safe }}".replace(/(\r\n|\n|\r)/gm, "");  // Elimina cualquier salto de línea
-    const image = document.getElementById('qr-image');
-    if (qrBase64) {
-        image.src = `data:image/png;base64,${qrBase64}`;
-        console.log("QR Base64: ", qrBase64);
-    } else {
-        console.error("No QR Base64 data available.");
-    }
+  const qrBase64 = "{{ qr_base64|safe }}".replace(/(\r\n|\n|\r)/gm, ""); // Elimina cualquier salto de línea
+  const image = document.getElementById("qr-image");
+  if (qrBase64) {
+    image.src = `data:image/png;base64,${qrBase64}`;
+    console.log("QR Base64: ", qrBase64);
+  } else {
+    console.error("No QR Base64 data available.");
+  }
 </script>
 {% endblock %}

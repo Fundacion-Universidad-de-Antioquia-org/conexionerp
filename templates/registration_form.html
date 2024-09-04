@@ -4,7 +4,6 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <link rel="stylesheet" href="{% static 'style.css' %}" /> -->
     <link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/style.css" />
     <!-- Bootstrap -->
     <link
@@ -25,8 +24,63 @@
       rel="stylesheet"
     />
      <!-- FAVICON -->
-    <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png"/>
+     <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png"/>
     <title>Registro Asistencia</title>
+    <script>
+      function getLocationAndSend() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('latitude').value = position.coords.latitude;
+                document.getElementById('longitude').value = position.coords.longitude;
+                document.getElementById('error-message').innerHTML = ''; // Limpiar mensajes de error previos
+                showSpinner();  // Mostrar el spinner antes de enviar el formulario
+                document.getElementById('registrationForm').submit(); // Enviar el formulario
+            }, function(error) {
+                console.log("Error obteniendo la ubicación: ", error);
+                if (error.code === error.PERMISSION_DENIED) {
+                    document.getElementById('error-message').innerHTML = '<div class="alert alert-danger" role="alert"> Para continuar con el registro, es necesario permitir el acceso a su ubicación. </div>';
+                } else {
+                    document.getElementById('error-message').innerHTML = '<div class="alert alert-warning" role="alert"> Hubo un problema al obtener su ubicación. Por favor, intente nuevamente. </div>';
+                }
+            });
+        } else {
+            console.log("Geolocalización no es soportada por este navegador.");
+            document.getElementById('error-message').innerHTML = 'Su navegador no soporta geolocalización.';
+        }
+      }
+
+      function showSpinner() {
+          // Mostrar el spinner al usuario
+          document.getElementById('loading-spinner').style.display = 'block';
+      }
+
+      // Restaurar el spinner a none si el usuario regresa usando el botón 'atrás' del navegador
+      window.addEventListener('pageshow', function(event) {
+          if (event.persisted) {  // Detecta si la página se carga desde la caché
+              document.getElementById('loading-spinner').style.display = 'none';
+          }
+      });
+    </script>
+    <style>
+      /* Ocultar el spinner inicialmente */
+
+      #loading-spinner {
+          display: none;
+          position: fixed; /* Para que se quede fijo en la pantalla */
+          top: 40%;
+          left: 40%;
+          width: 10rem;
+          height: 10rem;
+          z-index: 1000; /* Asegurarse de que esté sobre otros elementos */
+      }
+
+      @media (max-width: 768px){
+        #loading-spinner{
+          top: 30%;
+          left: 32%;
+        }
+      }
+  </style>
   </head>
   <body>
       <div class="registrer">
@@ -53,26 +107,29 @@
             </div>
           {% endif %}
 
-          <form class="mt-4" method="post">
+          <!-- Contenedor para mensajes de error -->
+          <div id="error-message" class="mt-5"></div>
+
+          <form id="registrationForm" class="mt-4" method="post" onsubmit="event.preventDefault(); getLocationAndSend();">
             {% csrf_token %}
 
             <div class="mb-3">
-                <input type="hidden" name="topic" value="{{ form.initial.topic }}">
+              <input type="hidden" name="topic" value="{{ form.initial.topic }}">
             </div>
 
             <div class="mb-3">
-                <label><strong>Objetivo:</strong> {{ form.initial.objective }}</label>
-                <input type="hidden" name="objective" value="{{ form.initial.objective }}">
+              <label><strong>Objetivo:</strong> {{ form.initial.objective }}</label>
+              <input type="hidden" name="objective" value="{{ form.initial.objective }}">
             </div>
 
             <div class="mb-3">
-                <label><strong>Área:</strong> {{ form.initial.department }}</label>
-                <input type="hidden" name="department" value="{{ form.initial.department }}">
+              <label><strong>Área:</strong> {{ form.initial.department }}</label>
+              <input type="hidden" name="department" value="{{ form.initial.department }}">
             </div>
 
             <div class="mb-3">
-                <label><strong>Moderador:</strong> {{ form.initial.moderator }}</label>
-                <input type="hidden" name="moderator" value="{{ form.initial.moderator }}">
+              <label><strong>Moderador:</strong> {{ form.initial.moderator }}</label>
+              <input type="hidden" name="moderator" value="{{ form.initial.moderator }}">
             </div>
 
             <div class="mb-3">
@@ -81,14 +138,24 @@
             </div>
 
             <div class="mb-3">
-                <label><strong>Hora Inicial:</strong> {{ form.initial.start_time }}</label>
-                <input type="hidden" name="start_time" value="{{ form.initial.start_time|date:"H:i" }}">
+              <label><strong>Hora Inicial:</strong> {{ form.initial.start_time }}</label>
+              <input type="hidden" name="start_time" value="{{ form.initial.start_time|date:"H:i" }}">
+          </div>
+
+            <div class="mb-3">
+              <label><strong>Hora Final:</strong> {{ form.initial.end_time }}</label>
+              <input type="hidden" name="end_time" value="{{ form.initial.end_time|date:"H:i" }}">
             </div>
 
             <div class="mb-3">
-                <label><strong>Hora Final:</strong> {{ form.initial.end_time }}</label>
-                <input type="hidden" name="end_time" value="{{ form.initial.end_time|date:"H:i" }}">
+              <label><strong>Modalidad: </strong> {{ form.initial.mode}}</label>
+              <input type="hidden" name="mode" value="{{ form.initial.mode }}">
+              <input type="hidden" name="url_reunion"  {% if form.initial.url_reunion %} value="{{ form.initial.url_reunion }}" {% else %} value="without-url" {% endif %}>
             </div>
+
+            <!-- LOCATION DATA -->
+            <input type="hidden" id="latitude" name="latitude" value="">
+            <input type="hidden" id="longitude" name="longitude" value="">
 
             <div class="id-capture">
               <div class="mb-3">
@@ -100,9 +167,13 @@
               </button>
             </div>
         </form>
+         <!-- Spinner de carga -->
+        <div id="loading-spinner" class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
       </div>
     </div>
+  </div>
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"

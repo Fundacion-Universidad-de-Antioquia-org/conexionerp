@@ -8,11 +8,55 @@
 
   <form class="form-create-cap" method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>{% if form.instance.pk %}Guardar{% else %}Crear{% endif %}</button>
+    {{ form.fecha.label_tag }} {{ form.fecha }}
+    {{ form.moderador.label_tag }} {{ form.moderador }}
+    {{ form.hora_inicial.label_tag }} {{ form.hora_inicial }}
+    {{ form.hora_final.label_tag }} {{ form.hora_final }}
+    {{ form.tema.label_tag }} {{ form.tema }}
+    {{ form.area_encargada.label_tag }} {{ form.area_encargada }}
+    {{ form.modalidad.label_tag }} {{ form.modalidad }}
+
+    <!-- Los campos se agregarán dinámicamente según la selección de modalidad -->
+    <div id="virtual-fields" class="virtual-f" style="display: none;">
+      {{ form.url_reunion.label_tag }} {{ form.url_reunion }}
+    </div>
+    <div id="presencial-fields" class="presencial-f" style="display: none;">
+      {{ form.ubicacion.label_tag }} {{ form.ubicacion }}
+    </div>
+
+    {{ form.objetivo.label_tag }} {{ form.objetivo }}
+    {{ form.estado.label_tag }} {{ form.estado }}
+
+    <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
+        {% if form.instance.pk %}Guardar{% else %}Crear{% endif %}
+    </button>
     <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f">Cancelar</button></a>
   </form>
-  
 </section>
 
+<script>
+  function toggleFields() {
+    var modalidad = document.getElementById('id_modalidad').value;
+    var virtualFields = document.getElementById('virtual-fields');
+    var presencialFields = document.getElementById('presencial-fields');
+
+    // Ocultar todos los campos al inicio
+    virtualFields.style.display = 'none';
+    presencialFields.style.display = 'none';
+
+    // Mostrar los campos según la modalidad seleccionada
+    if (modalidad === 'VIRTUAL') {
+      virtualFields.style.display = 'inherit';
+      
+    } else if (modalidad === 'PRESENCIAL') {
+      presencialFields.style.display = 'inherit';
+    } else if (modalidad === 'MIXTA') {
+      virtualFields.style.display = 'inherit';
+      presencialFields.style.display = 'inherit';
+    }
+  }
+
+  document.getElementById('id_modalidad').addEventListener('change', toggleFields);
+  window.onload = toggleFields;  // Para inicializar el estado de los campos al cargar la página
+</script>
 {% endblock %}
