@@ -110,7 +110,9 @@ def send_to_odoo(data):
             'x_studio_asisti': 'Si',
             'x_studio_fecha_y_hora_de_registro': data.get('registro_datetime'),  # Campo nuevo para la fecha/hora
             'x_studio_ip_del_registro': data.get('ip_address'),  # Campo nuevo para la IP
-            'x_studio_user_agent': data.get('user_agent') #Campo nuevo para el user-agent
+            'x_studio_user_agent': data.get('user_agent'), #Campo nuevo para el user-agent
+            'x_studio_longitud': data.get('longitude'),
+            'x_studio_latitud': data.get('latitude')
         }
 
         record_id = models.execute_kw(database, uid, password,
@@ -231,6 +233,12 @@ def registration_view(request):
                         
                         # Obtener la dirección IP del cliente
                         ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
+                        
+                        #Capturar Ubicación
+                        latitude = request.POST.get('latitude')
+                        longitude = request.POST.get('longitude')
+
+                        
                         if ip_address:
                             ip_address = ip_address.split(',')[0]
                         else:
@@ -246,6 +254,8 @@ def registration_view(request):
                         data['registro_datetime'] = registro_datetime
                         data['ip_address'] = ip_address
                         data['user_agent'] = user_agent
+                        data['latitude'] = latitude
+                        data['longitude'] = longitude
                         record_id, employee_name, url_reunion = send_to_odoo(data)
                         if record_id:
                             # Redirigir a la vista de éxito con el nombre del empleado
