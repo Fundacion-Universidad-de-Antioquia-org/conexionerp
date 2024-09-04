@@ -26,3 +26,4 @@ pypng==0.20220715.0
 django-cors-headers==4.4.0
 python-dateutil==2.9.0.post0
 pytz==2024.1
+pypng==0.20220715.0

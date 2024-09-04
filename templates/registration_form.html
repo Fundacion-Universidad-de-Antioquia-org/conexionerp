@@ -86,7 +86,7 @@
       <div class="registrer">
         <div class="left-side">
           <img
-          src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
+          src="{% static 'media/funda-logo-3.png' %}"
           class="logo"
           alt="Logo Fundacion"
           />
@@ -138,18 +138,19 @@
             </div>
 
             <div class="mb-3">
-              <label><strong>Hora Inicial:</strong> {{ form.initial.start_time }}</label>
-              <input type="hidden" name="start_time" value="{{ form.initial.start_time|date:"H:i" }}">
+              <label><strong>Hora Inicial:</strong> {{ form.initial.start_time|time:"h:i A" }}</label>
+              <input type="hidden" name="start_time" value="{{ form.initial.start_time|time:"H:i" }}">
           </div>
 
             <div class="mb-3">
-              <label><strong>Hora Final:</strong> {{ form.initial.end_time }}</label>
-              <input type="hidden" name="end_time" value="{{ form.initial.end_time|date:"H:i" }}">
+              <label><strong>Hora Final:</strong> {{ form.initial.end_time|time:"h:i A" }}</label>
+              <input type="hidden" name="end_time" value="{{ form.initial.end_time|time:"H:i" }}">
             </div>
 
             <div class="mb-3">
               <label><strong>Modalidad: </strong> {{ form.initial.mode}}</label>
               <input type="hidden" name="mode" value="{{ form.initial.mode }}">
+              <input type="hidden" name="location" value="{{ form.initial.location }}">
               <input type="hidden" name="url_reunion"  {% if form.initial.url_reunion %} value="{{ form.initial.url_reunion }}" {% else %} value="without-url" {% endif %}>
             </div>
 
