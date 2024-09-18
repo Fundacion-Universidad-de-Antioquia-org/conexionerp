@@ -7,23 +7,55 @@
     <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
     <h3>Asistentes a la Capacitación: {{ capacitacion.tema }}</h3>
 </div>
+
+<section class="attendants-data">
+    <div class="total-attendants">
+        <div class="item-attendants">
+            <i class="bi bi-envelope-check-fill"></i>
+            <p>Total Invitados: <strong>{{ capacitacion.total_invitados }}</strong></p>
+        </div>
+        <div class="item-attendants">
+            <div class="desktop separator-sm"></div>
+            <i class="bi bi-person-check-fill"></i>
+            <p>Total Asistentes: <strong>{{ assistants|length }}</strong></p>
+        </div>
+        <div class="item-attendants">
+            <div class="desktop separator-sm"></div>
+            <i class="bi bi-reception-3"></i>
+            <p>Tasa de éxito: <strong>{{ tasa_exito }} %</strong></p>
+        </div>
+    </div>
+
+    <div class="download-zone">
+        <a href="?download=excel" class="btn btn-success-f">
+            Descargar Asistencia
+        </a>
+    </div>
+</section>
+
 <div class="table-responsive">
-    <table class="table">
+    <table class="table table-hover">
         <thead>
             <tr>
+                <th>No</th>
                 <th>Cédula</th>
                 <th>Nombre</th>
                 <th>Cargo</th>
                 <th>Área</th>
+                <th>Correo Personal</th>
+                <th>Correo Corporativo</th>
             </tr>
         </thead>
         <tbody>
             {% for assistant in assistants %}
             <tr>
+                <td>{{ forloop.counter }}</td>
                 <td>{{ assistant.userId|upper }}</td>          
                 <td>{{ assistant.username|upper }}</td>
                 <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}{% endif %}</td>
                 <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}{% endif %}</td>
+                <td>{% if assistant.personalEmail %}{{ assistant.personalEmail }}{% else %}{% endif %}</td>
+                <td>{% if assistant.corporateEmail %}{{ assistant.corporateEmail }}{% else %}{% endif %}</td>
             </tr>
             {% endfor %}
         </tbody>

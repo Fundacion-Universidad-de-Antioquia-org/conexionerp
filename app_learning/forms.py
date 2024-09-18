@@ -12,7 +12,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
 
     class Meta:
         model = CtrlCapacitaciones
-        fields = ['fecha', 'moderador', 'hora_inicial', 'hora_final', 'tema', 'area_encargada', 'modalidad', 'url_reunion', 'ubicacion', 'objetivo', 'estado']
+        fields = ['fecha', 'moderador', 'hora_inicial', 'hora_final', 'tema', 'total_invitados','area_encargada', 'modalidad', 'url_reunion', 'ubicacion', 'objetivo', 'estado']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
@@ -27,6 +27,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             }),
             'url_reunion': forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'}),
             'ubicacion': forms.TextInput(attrs={'placeholder': 'Ingrese la ubicación'}),
+            'total_invitados': forms.NumberInput(attrs={'min':1, 'placeholder': 'Cantidad de invitados'}),
         }
     
     def __init__(self, *args, **kwargs):
@@ -34,6 +35,10 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         areas = fetch_departametos_from_odoo()
         areas_choices = [(area_encargada, area_encargada) for area_encargada in areas]
         self.fields['area_encargada'].choices = areas_choices
+        
+        # Campo 'tema' de solo lectura en modo edición
+        if self.instance and self.instance.pk:
+                self.fields['tema'].widget.attrs['readonly'] = True
 
         # Obtener modalidad actual desde datos del formulario o instancia existente
         modalidad = self.data.get('modalidad') or (self.instance.modalidad if self.instance else '')
