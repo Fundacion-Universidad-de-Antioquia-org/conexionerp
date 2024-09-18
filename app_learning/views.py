@@ -1,20 +1,21 @@
 import qrcode
+import pytz
+import logging
+import base64
+import openpyxl
+import xmlrpc.client
+import os
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CtrlCapacitacionesForm, RegistrationForm
 from .models import CtrlCapacitaciones
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from io import BytesIO
-import xmlrpc.client
-import os
 from dotenv import load_dotenv
 from datetime import datetime
-import pytz
-import logging
-import base64
 from urllib.parse import quote
 from urllib.parse import unquote
-
 
 logger = logging.getLogger(__name__)
 
@@ -352,6 +353,7 @@ def edit_capacitacion(request, id):
         form = CtrlCapacitacionesForm(instance=capacitacion)
     return render(request, 'crear_capacitacion.html', {'form': form})
 
+
 # Vista para ver los usuarios que asistieron a una capacitación
 def view_assistants(request, id):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
@@ -367,7 +369,8 @@ def view_assistants(request, id):
                 ['x_studio_fecha_sesin', '=', capacitacion.fecha.strftime('%Y-%m-%d')],
                 ['x_studio_hora_inicial', '=', capacitacion.hora_inicial.strftime('%H:%M:%S')]
             ]],
-            {'fields': ['x_studio_many2one_field_iphhw', 'x_studio_cargo', 'x_studio_nombre_empleado', 'x_studio_departamento_empleado']})
+            {'fields': ['x_studio_many2one_field_iphhw', 'x_studio_cargo', 'x_studio_nombre_empleado', 'x_studio_departamento_empleado',
+                        'x_studio_correo_personal', 'x_studio_correo_corporativo']})
 
         assistant_data = []
         for assistant in assistants:
@@ -375,14 +378,53 @@ def view_assistants(request, id):
             jobTitle = assistant.get('x_studio_cargo', '')
             username = assistant.get('x_studio_nombre_empleado','')
             employeeDepartment = assistant.get('x_studio_departamento_empleado','')
+            personalEmail = assistant.get('x_studio_correo_personal')
+            corporateEmail = assistant.get('x_studio_correo_corporativo')
             
-            assistant_data.append({'userId': userId, 'jobTitle': jobTitle, 'username':username, 'employeeDepartment': employeeDepartment})
+            
+            assistant_data.append({'userId': userId, 
+                                   'jobTitle': jobTitle, 
+                                   'username':username, 
+                                   'employeeDepartment': employeeDepartment,
+                                   'personalEmail':personalEmail,
+                                   'corporateEmail':corporateEmail})
+        
+        #Calcular porcentaje de asistencia:
+        total_invitados = capacitacion.total_invitados
+        total_asistentes = len(assistant_data)
+        tasa_exito = 0
+        
+        if total_invitados > 0 :
+            tasa_exito = (total_asistentes/total_invitados)*100
+            
+        #Descarga de Excel:
+        if request.GET.get('download') == 'excel':
+            #Crear archivo de excel en memoria
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.title = f"Asistentes - {capacitacion.tema}"
+            
+            #Escribir encabezados
+            ws.append(["Número de Documento", "Nombre","Cargo", "Área", "Correo Personal", "Correo Corporativo"])
+            
+            #Agregar Datos de los asistentes
+            for assistant in assistant_data:
+                ws.append([assistant['userId'], assistant['username'], assistant['jobTitle'], assistant['employeeDepartment'],
+                           assistant['personalEmail'], assistant['corporateEmail']])
+                
+            #Generar respuesta HTTP  con el archivo
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename=Asistentes_{capacitacion.tema}.xlsx'
+            wb.save(response)
+            return response
 
     except Exception as e:
         logger.error('Failed to fetch assistants from Odoo', exc_info=True)
         assistant_data = []
+        tasa_exito = 0
 
     return render(request, 'view_assistants.html', {
         'capacitacion': capacitacion,
-        'assistants': assistant_data
+        'assistants': assistant_data,
+        'tasa_exito': round(tasa_exito, 2) # Cifra redondeada
     })

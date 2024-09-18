@@ -36,14 +36,14 @@
               <input
                 type="text"
                 id="filterTema"
-                placeholder="Escribe el tema de la capacitación"
+                placeholder="Tema de la capacitación"
                 class="form-control"
               />
               <label>Filtrar por Proceso:</label>
               <input
                 type="text"
                 id="filterProceso"
-                placeholder="Escribe el proceso responsable"
+                placeholder="Proceso responsable"
                 class="form-control"
               />
             </div>
@@ -52,14 +52,14 @@
               <input
                 type="text"
                 id="filterModerador"
-                placeholder="Escreibe el nombre del Moderador"
+                placeholder="Nombre del Moderador"
                 class="form-control"
               />
               <label>Filtrar por Fecha:</label>
               <input
                 type="date"
                 id="filterFecha"
-                placeholder="Escribe la Fecha de la Capacitación"
+                placeholder="Fecha de la Capacitación"
                 class="form-control"
               />
             </div>
@@ -134,15 +134,16 @@
 </section>
 
 <script>
+  // Función para eliminar tildes
+  function removeAccents(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
   // Filtrar tabla por columna
   function filterTable() {
-    var inputTema = document.getElementById("filterTema").value.toUpperCase();
-    var inputProceso = document
-      .getElementById("filterProceso")
-      .value.toUpperCase();
-    var inputModerador = document
-      .getElementById("filterModerador")
-      .value.toUpperCase();
+    var inputTema = removeAccents(document.getElementById("filterTema").value.toUpperCase());
+    var inputProceso = removeAccents(document.getElementById("filterProceso").value.toUpperCase());
+    var inputModerador = removeAccents(document.getElementById("filterModerador").value.toUpperCase());
     var inputFecha = document.getElementById("filterFecha").value;
 
     var table = document.getElementById("capacitacionesTable");
@@ -155,9 +156,9 @@
       var tdFecha = tr[i].getElementsByTagName("td")[3];
 
       if (tdTema && tdProceso && tdModerador && tdFecha) {
-        var tema = tdTema.textContent || tdTema.innerText;
-        var proceso = tdProceso.textContent || tdProceso.innerText;
-        var moderador = tdModerador.textContent || tdModerador.innerText;
+        var tema = removeAccents(tdTema.textContent || tdTema.innerText);
+        var proceso = removeAccents(tdProceso.textContent || tdProceso.innerText);
+        var moderador = removeAccents(tdModerador.textContent || tdModerador.innerText);
         var fecha = tdFecha.textContent || tdFecha.innerText;
 
         // Filtra por todos los campos
@@ -177,15 +178,9 @@
 
   // Asignar eventos de filtro a los campos
   document.getElementById("filterTema").addEventListener("keyup", filterTable);
-  document
-    .getElementById("filterProceso")
-    .addEventListener("keyup", filterTable);
-  document
-    .getElementById("filterModerador")
-    .addEventListener("keyup", filterTable);
-  document
-    .getElementById("filterFecha")
-    .addEventListener("change", filterTable);
+  document.getElementById("filterProceso").addEventListener("keyup", filterTable);
+  document.getElementById("filterModerador").addEventListener("keyup", filterTable);
+  document.getElementById("filterFecha").addEventListener("change", filterTable);
 </script>
 
 {% endblock %}
