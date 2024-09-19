@@ -402,20 +402,35 @@ def view_assistants(request, id):
             #Crear archivo de excel en memoria
             wb = openpyxl.Workbook()
             ws = wb.active
-            ws.title = f"Asistentes - {capacitacion.tema}"
+            ws.title = f"Datos Asistentes"
             
             #Escribir encabezados
             ws.append(["Número de Documento", "Nombre","Cargo", "Área", "Correo Personal", "Correo Corporativo"])
             
-            #Agregar Datos de los asistentes
+             # Agregar Datos de los asistentes, con manejo de valores vacíos
             for assistant in assistant_data:
-                ws.append([assistant['userId'], assistant['username'], assistant['jobTitle'], assistant['employeeDepartment'],
-                           assistant['personalEmail'], assistant['corporateEmail']])
+                row = [
+                    assistant['userId'].strip() if assistant['userId'] else '', 
+                    assistant['username'].strip() if assistant['username'] else '', 
+                    assistant['jobTitle'].strip() if assistant['jobTitle'] else '', 
+                    assistant['employeeDepartment'].strip() if assistant['employeeDepartment'] else '', 
+                    assistant['personalEmail'].strip() if assistant['personalEmail'] else '', 
+                    assistant['corporateEmail'].strip() if assistant['corporateEmail'] else ''
+                ]
                 
-            #Generar respuesta HTTP  con el archivo
-            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                ws.append(row)
+                
+            # Guardar el archivo en memoria
+            output = BytesIO()
+            wb.save(output)
+            output.seek(0)
+
+            # Generar respuesta HTTP con el archivo
+            response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = f'attachment; filename=Asistentes_{capacitacion.tema}.xlsx'
-            wb.save(response)
+
+            # Cerrar el workbook antes de enviar la respuesta
+            wb.close()
             return response
 
     except Exception as e:
