@@ -4,6 +4,7 @@ import logging
 import base64
 import openpyxl
 import xmlrpc.client
+import unicodedata
 import os
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -125,7 +126,8 @@ def send_to_odoo(data):
             'x_studio_user_agent': data.get('user_agent'),
             'x_studio_longitud': data.get('longitude'),
             'x_studio_latitud': data.get('latitude'),
-            'x_studio_moderador': data.get('moderator', '')
+            'x_studio_moderador': data.get('moderator', ''),
+            'x_studio_id_capacitacion': data['capacitacion_id']
         }
 
         
@@ -356,6 +358,12 @@ def edit_capacitacion(request, id):
 
 # Vista para ver los usuarios que asistieron a una capacitación
 def view_assistants(request, id):
+    
+    #Remover Acentos
+    def remove_accents(input_str):
+        nfkd_form = unicodedata.normalize('NFKD', input_str)
+        return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+        
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
@@ -364,11 +372,7 @@ def view_assistants(request, id):
 
         assistants = models.execute_kw(database, uid, password,
             'x_capacitacion_emplead', 'search_read',
-            [[
-                ['x_studio_tema', '=', capacitacion.tema],
-                ['x_studio_fecha_sesin', '=', capacitacion.fecha.strftime('%Y-%m-%d')],
-                ['x_studio_hora_inicial', '=', capacitacion.hora_inicial.strftime('%H:%M:%S')]
-            ]],
+            [[['x_studio_id_capacitacion', '=',id]]],
             {'fields': ['x_studio_many2one_field_iphhw', 'x_studio_cargo', 'x_studio_nombre_empleado', 'x_studio_departamento_empleado',
                         'x_studio_correo_personal', 'x_studio_correo_corporativo']})
 
@@ -396,13 +400,13 @@ def view_assistants(request, id):
         
         if total_invitados > 0 :
             tasa_exito = (total_asistentes/total_invitados)*100
-            
+                    
         #Descarga de Excel:
         if request.GET.get('download') == 'excel':
             #Crear archivo de excel en memoria
             wb = openpyxl.Workbook()
             ws = wb.active
-            ws.title = f"Datos Asistentes"
+            ws.title = remove_accents(f"Datos Asistentes")
             
             #Escribir encabezados
             ws.append(["Número de Documento", "Nombre","Cargo", "Área", "Correo Personal", "Correo Corporativo"])
@@ -426,8 +430,9 @@ def view_assistants(request, id):
             output.seek(0)
 
             # Generar respuesta HTTP con el archivo
+            sanitized_filename = remove_accents(f"Asistentes_{capacitacion.tema}.xlsx")
             response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = f'attachment; filename=Asistentes_{capacitacion.tema}.xlsx'
+            response['Content-Disposition'] = f'attachment; filename={sanitized_filename}'
 
             # Cerrar el workbook antes de enviar la respuesta
             wb.close()
