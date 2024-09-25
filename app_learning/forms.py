@@ -3,7 +3,7 @@ from .models import CtrlCapacitaciones
 from app_learning.services.odoo_conection import fetch_departametos_from_odoo
 
 class CtrlCapacitacionesForm(forms.ModelForm):
-    area_encargada = forms.ChoiceField(choices=[], label=('Programa - Área'))
+    area_encargada = forms.ChoiceField(choices=[], label=('Proceso encargado'))
     modalidad = forms.ChoiceField(
         choices=[('', 'Elija una modalidad')] + CtrlCapacitaciones.MODALIDAD,
         required=True,
@@ -12,13 +12,26 @@ class CtrlCapacitacionesForm(forms.ModelForm):
 
     class Meta:
         model = CtrlCapacitaciones
-        fields = ['fecha', 'moderador', 'hora_inicial', 'hora_final', 'tema', 'total_invitados','area_encargada', 'modalidad', 'url_reunion', 'ubicacion', 'objetivo', 'estado']
+        fields = ['fecha', 
+                  'responsable', 
+                  'hora_inicial', 
+                  'hora_final', 
+                  'tema',
+                  'moderador', 
+                  'total_invitados',
+                  'area_encargada', 
+                  'modalidad', 
+                  'url_reunion', 
+                  'ubicacion', 
+                  'objetivo', 
+                  'estado']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
             'hora_final': forms.TimeInput(attrs={'type': 'time'}),
             'tema': forms.TextInput(attrs={'placeholder': 'Nombre de la capacitación'}),
             'moderador': forms.TextInput(attrs={'placeholder': 'Nombre del Moderador'}),
+            'responsable': forms.TextInput(attrs={'placeholder': 'Nombre del Responsable'}),
             'objetivo': forms.Textarea(attrs={
                 'rows': 4,
                 'cols': 40,
@@ -36,9 +49,9 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         areas_choices = [(area_encargada, area_encargada) for area_encargada in areas]
         self.fields['area_encargada'].choices = areas_choices
         
-        # Campo 'tema' de solo lectura en modo edición
-        if self.instance and self.instance.pk:
-                self.fields['tema'].widget.attrs['readonly'] = True
+        # # Campo 'tema' de solo lectura en modo edición
+        # if self.instance and self.instance.pk:
+        #         self.fields['tema'].widget.attrs['readonly'] = True
 
         # Obtener modalidad actual desde datos del formulario o instancia existente
         modalidad = self.data.get('modalidad') or (self.instance.modalidad if self.instance else '')
@@ -67,6 +80,7 @@ class RegistrationForm(forms.Form):
   mode = forms.CharField(max_length=10, label='Modalidad', required=True)
   location = forms.CharField(max_length=255, label='Ubicación', required=False)  # Solo requerido para ciertas modalidades
   url_reunion = forms.CharField(max_length=255, label='URL de la Reunión', required=False)  # Solo requerido para ciertas modalidades
+  in_charge = forms.CharField(max_length=60, label='Responsable', widget=forms.TextInput(attrs={'readonly':'readonly'}))
   document_id = forms.CharField(
     max_length=20,
     label='Documento de Identidad', 

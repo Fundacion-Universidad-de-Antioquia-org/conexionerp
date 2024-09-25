@@ -8,9 +8,16 @@
   <h1 class="principal-title">Detalles de la Capacitación</h1>
 
   <div class="grid-container">
+    <div class="header-resume">
+      <div class="d-flex justify-content-center">
+        <p><strong> {{ topic }} </strong></p>
+      </div>
+      <p><strong>Objetivo:</strong> {{ objective }}</p>
+      <div class="separator-sm desktop"></div>
+    </div>
     <div class="detail-info">
-      <p><strong>Tema:</strong> {{ topic }}</p>
       <p><strong>Proceso:</strong> {{ department }}</p>
+      <p><strong>Responsable:</strong> {{ in_charge }}</p>
       <p><strong>Moderador:</strong> {{ moderator }}</p>
       <p><strong>Fecha:</strong> {{ date }}</p>
       <p><strong>Hora Inicial:</strong> {{ start_time }}</p>

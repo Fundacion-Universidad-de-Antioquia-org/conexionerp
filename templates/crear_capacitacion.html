@@ -9,10 +9,11 @@
   <form class="form-create-cap" method="post">
     {% csrf_token %}
     {{ form.fecha.label_tag }} {{ form.fecha }}
+    {{ form.tema.label_tag }} {{ form.tema }}
+    {{ form.responsable.label_tag }} {{ form.responsable }}
     {{ form.moderador.label_tag }} {{ form.moderador }}
     {{ form.hora_inicial.label_tag }} {{ form.hora_inicial }}
     {{ form.hora_final.label_tag }} {{ form.hora_final }}
-    {{ form.tema.label_tag }} {{ form.tema }}
     {{ form.total_invitados.label_tag }} {{ form.total_invitados }}
     {{ form.area_encargada.label_tag }} {{ form.area_encargada }}
     {{ form.modalidad.label_tag }} {{ form.modalidad }}
