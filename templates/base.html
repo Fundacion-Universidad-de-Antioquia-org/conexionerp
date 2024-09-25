@@ -1,9 +1,10 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <!-- {% load static %}
     <link rel="stylesheet" href="{% static 'style.css' %}" /> -->
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Bootstrap -->
     <link
@@ -34,8 +35,10 @@
     <header class="dinamic-header">
         <div class="container items-header">
             <div class="logo-container">
-                <img src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-2.png" class="logo-picture desktop" alt="Logo Fundacion" />
-                <img src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-icon-1.png" class="logo-picture mobile" alt="Logo Fundacion" />
+                <a href="{% url 'home' %}">
+                    <img src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-2.png" class="logo-picture desktop" alt="Logo Fundacion" />
+                    <img src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-icon-1.png" class="logo-picture mobile" alt="Logo Fundacion" />
+                </a>
             </div>
             <div class="items-h">
                 <div class="item-h">

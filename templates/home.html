@@ -80,7 +80,7 @@
           <th>Inicio</th>
           <th>Fin</th>
           <th>Estado</th>
-          <th>Objetivo</th>
+          <!-- <th>Objetivo</th> -->
           <th>Acciones</th>
         </tr>
       </thead>
@@ -91,10 +91,10 @@
           <td>{{ capacitacion.area_encargada|upper }}</td>
           <td>{{ capacitacion.moderador|upper }}</td>
           <td style="width: 110px">{{ capacitacion.fecha_formateada }}</td>
-          <td>{{ capacitacion.hora_inicial }}</td>
-          <td style="min-width: 60px">{{ capacitacion.hora_final }}</td>
+          <td>{{ capacitacion.hora_inicial_formateada }}</td>
+          <td style="min-width: 60px">{{ capacitacion.hora_final_formateada }}</td>
           <td>{{ capacitacion.estado|upper }}</td>
-          <td style="min-width: 200px">{{ capacitacion.objetivo|upper }}</td>
+          <!-- <td style="min-width: 200px">{{ capacitacion.objetivo|upper }}</td> -->
           <td class="btn-actions">
             <a
               href="{% url 'details_view' capacitacion.id %}"

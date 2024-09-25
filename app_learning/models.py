@@ -23,8 +23,9 @@ class CtrlCapacitaciones(models.Model):
     ubicacion = models.CharField(max_length=255, blank=True, null=True, verbose_name='Ubicación')
     estado = models.CharField(max_length=10, choices=ESTADO, default='ACTIVA')
     objetivo = models.CharField(max_length=255)
+    responsable = models.CharField(max_length=60, default='')
     qr_base64 = models.TextField(blank=True, null=True)  # Campo para almacenar el QR en base64
-    total_invitados = models.IntegerField(default=0, verbose_name='Total de Invitados')
+    total_invitados = models.IntegerField(default=0, verbose_name='Total Asistentes Esperados')
 
     def __str__(self):
         return f"{self.tema} - {self.moderador}"
