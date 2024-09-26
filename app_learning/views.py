@@ -161,8 +161,9 @@ def create_capacitacion(request):
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST)
         if form.is_valid():
-            capacitacion = form.save()
             capacitacion = form.save(commit=False)
+            capacitacion.estado = 'ACTIVA'
+            capacitacion = form.save()
                      
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
 

@@ -49,9 +49,12 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         areas_choices = [(area_encargada, area_encargada) for area_encargada in areas]
         self.fields['area_encargada'].choices = areas_choices
         
-        # # Campo 'tema' de solo lectura en modo edición
-        # if self.instance and self.instance.pk:
-        #         self.fields['tema'].widget.attrs['readonly'] = True
+        #Estado 'ACTIVA' al crear capacitación:
+        if not self.instance.pk:
+            self.fields['estado'].initial = 'ACTIVA'
+            self.fields['estado'].widget.attrs['disabled'] = 'disabled'
+        else: #si se está editando
+            self.fields['estado'].widget.attrs.pop('disabled', None)
 
         # Obtener modalidad actual desde datos del formulario o instancia existente
         modalidad = self.data.get('modalidad') or (self.instance.modalidad if self.instance else '')
