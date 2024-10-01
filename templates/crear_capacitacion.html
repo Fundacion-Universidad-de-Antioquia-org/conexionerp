@@ -15,6 +15,12 @@
     {{ form.hora_inicial.label_tag }} {{ form.hora_inicial }}
     {{ form.hora_final.label_tag }} {{ form.hora_final }}
     {{ form.total_invitados.label_tag }} {{ form.total_invitados }}
+    <p></p>
+    <!-- Botón para abrir el modal de añadir asistentes -->
+    <button type="button" class="fua-btn-outline-1" data-bs-toggle="modal" data-bs-target="#asistentesModal" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
+      <i class="bi bi-person-plus-fill"></i>
+      Añadir Asistentes
+    </button>
     {{ form.area_encargada.label_tag }} {{ form.area_encargada }}
     {{ form.modalidad.label_tag }} {{ form.modalidad }}
 
@@ -29,14 +35,134 @@
     {{ form.objetivo.label_tag }} {{ form.objetivo }}
     {{ form.estado.label_tag }} {{ form.estado }}
 
+    <!-- Campo oculto para almacenar los IDs de los asistentes seleccionados -->
+    <input type="hidden" name="employee_names" id="selectedEmployeeIds">
+
     <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
-        {% if form.instance.pk %}Guardar{% else %}Crear{% endif %}
+      <i class="bi bi-upload"></i>{% if form.instance.pk %} Guardar{% else %} Crear{% endif %}
     </button>
     <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f">Cancelar</button></a>
   </form>
 </section>
 
+<!-- Modal para añadir asistentes -->
+<div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="asistentesModalLabel">Añadir Asistentes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="numero_identificacion" class="form-label">Número de Identificación</label>
+          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese número de cédula" autocomplete="off">
+          <div id="sugerencias" class="mt-2"></div> <!-- Donde se mostrarán las sugerencias -->
+        </div>
+        <div id="selected-employees-container" class="mt-2">
+          <div id="selected-employees-list"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success-f" id="btn-completar">Completar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
+  // Initialize an array to store selected employees as objects
+  let selectedEmployeeIds = [];
+
+  // Function to update the display of selected employees
+  function updateSelectedEmployeesDisplay() {
+    const selectedEmployeesList = document.getElementById('selected-employees-list');
+    selectedEmployeesList.innerHTML = ''; // Clear previous list
+
+    selectedEmployeeIds.forEach(function(employee, index) {
+      const employeeDiv = document.createElement('div');
+      employeeDiv.classList.add('selected-employee');
+      employeeDiv.textContent = `${employee.name} - ${employee.identification_id}`;
+
+      // Add a remove button to each employee
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Eliminar';
+      removeButton.classList.add('btn', 'btn-danger', 'btn-sm', 'ms-2');
+      removeButton.addEventListener('click', function() {
+        // Remove the employee from the array
+        selectedEmployeeIds.splice(index, 1);
+        // Update the display
+        updateSelectedEmployeesDisplay();
+      });
+      employeeDiv.appendChild(removeButton);
+
+      selectedEmployeesList.appendChild(employeeDiv);
+    });
+  }
+
+  // Function to fetch and display suggestions
+  function fetchEmployeeSuggestions(query) {
+    fetch(`/learn/search_employees/?q=${query}`)
+      .then(response => response.json())
+      .then(data => {
+        const sugerencias = document.getElementById('sugerencias');
+        sugerencias.innerHTML = ''; // Clear previous suggestions
+
+        data.results.forEach(function(employee) {
+          const suggestion = document.createElement('div');
+          suggestion.classList.add('suggestion');
+          suggestion.textContent = `${employee.name} - ${employee.identification_id}`;
+          suggestion.addEventListener('click', function() {
+            // Check if the employee is already selected
+            if (!selectedEmployeeIds.some(emp => emp.identification_id === employee.identification_id)) {
+              selectedEmployeeIds.push({
+                name: employee.name,
+                identification_id: employee.identification_id
+              });
+              // Update the display
+              updateSelectedEmployeesDisplay();
+              // Clear suggestions and input
+              sugerencias.innerHTML = '';
+              document.getElementById('numero_identificacion').value = '';
+            } else {
+              alert('Este empleado ya ha sido añadido.');
+            }
+          });
+          sugerencias.appendChild(suggestion);
+        });
+      });
+  }
+
+  // Event listener for input changes
+  document.getElementById('numero_identificacion').addEventListener('input', function() {
+    const query = this.value;
+
+    if (query.length >= 2) {  // Search after 2 characters
+      fetchEmployeeSuggestions(query);
+    }
+  });
+
+  // Handle paste event
+  document.getElementById('numero_identificacion').addEventListener('paste', function() {
+    setTimeout(() => {  // Ensure it runs after the content is pasted
+      const query = this.value.trim();
+      if (query.length >= 2) {
+        fetchEmployeeSuggestions(query);
+      }
+    }, 100);
+  });
+
+  // Complete the form when closing the modal
+  document.getElementById('btn-completar').addEventListener('click', function() {
+    // Map the selected employees to their identification IDs
+    const ids = selectedEmployeeIds.map(emp => emp.identification_id);
+    document.getElementById('selectedEmployeeIds').value = ids.join(',');
+    console.log("Asistentes Seleccionados: ", selectedEmployeeIds);
+    document.querySelector('.btn-close').click();  // Close the modal
+  });
+
+
+  // Mostrar campos según modalidad
   function toggleFields() {
     var modalidad = document.getElementById('id_modalidad').value;
     var virtualFields = document.getElementById('virtual-fields');
