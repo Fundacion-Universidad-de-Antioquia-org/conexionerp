@@ -59,6 +59,7 @@
           <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese número de cédula" autocomplete="off">
           <div id="sugerencias" class="mt-2"></div> <!-- Donde se mostrarán las sugerencias -->
         </div>
+        <div id="selected-employees-list"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-success-f" id="btn-completar">Completar</button>
@@ -70,6 +71,31 @@
 <script>
   // Campo oculto para almacenar los IDs de los asistentes seleccionados
   let selectedEmployeeIds = [];
+
+  function updateSelectedEmployeesDisplay() {
+    const selectedEmployeesList = document.getElementById('selected-employees-list');
+    selectedEmployeesList.innerHTML = ''; // Limpiar lista previa
+
+    selectedEmployeeIds.forEach(function(name, index) {
+      const employeeDiv = document.createElement('div');
+      employeeDiv.classList.add('selected-employee');
+      employeeDiv.textContent = name;
+
+      // Botón para eliminar cada empleado
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Eliminar';
+      removeButton.classList.add('btn', 'btn-danger', 'btn-sm', 'ms-2');
+      removeButton.addEventListener('click', function() {
+        // Eliminar el empleado del array
+        selectedEmployeeIds.splice(index, 1);
+        // Actualizar la visualización
+        updateSelectedEmployeesDisplay();
+      });
+      employeeDiv.appendChild(removeButton);
+
+      selectedEmployeesList.appendChild(employeeDiv);
+    });
+  }
 
   // Función para buscar asistentes y sugerir resultados desde Odoo
   document.getElementById('numero_identificacion').addEventListener('input', function() {
@@ -88,9 +114,10 @@
             suggestion.textContent = `${employee.name} - ${employee.identification_id}`;
             suggestion.addEventListener('click', function() {
               selectedEmployeeIds.push(employee.name);  // Añadir el ID a la lista
+              updateSelectedEmployeesDisplay();
               sugerencias.innerHTML = ''; // Limpiar sugerencias después de la selección
               document.getElementById('numero_identificacion').value = ''; // Limpiar input
-              alert(`Empleado ${employee.identification_id} añadido.`);
+              // alert(`Empleado ${employee.identification_id} añadido.`);
             });
             sugerencias.appendChild(suggestion);
           });
