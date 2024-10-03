@@ -48,11 +48,12 @@ def registrar_log(request):
         fecha = parser.isoparse(fecha_str)
         #
         # Convertir la fecha a la zona horaria de Colombia
-        colombia_tz = pytz.timezone('America/Bogota')
-        if is_naive(fecha):
-            fecha = make_aware(fecha, timezone=colombia_tz)
-        else:
-            fecha = fecha.astimezone(colombia_tz)
+        
+        #colombia_tz = pytz.timezone('America/Bogota')
+        #if is_naive(fecha):
+        #    fecha = make_aware(fecha, timezone=colombia_tz)
+        #else:
+        #    fecha = fecha.astimezone(colombia_tz)
     except Exception as e:
         logger.error(f"Error al parsear la fecha: {e}")
         return JsonResponse({'error': 'Fecha inválida'}, status=400)
