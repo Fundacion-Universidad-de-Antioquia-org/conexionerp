@@ -41,7 +41,7 @@
     <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
       <i class="bi bi-upload"></i>{% if form.instance.pk %} Guardar{% else %} Crear{% endif %}
     </button>
-    <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f">Cancelar</button></a>
+    <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f"><i class="bi bi-x-circle-fill"></i> Cancelar</button></a>
   </form>
 </section>
 

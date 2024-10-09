@@ -366,7 +366,7 @@ def details_view(request, id):
 
 # Vista Home que muestra todas las capacitaciones
 def home(request):
-    capacitaciones = CtrlCapacitaciones.objects.all()
+    capacitaciones = CtrlCapacitaciones.objects.all().order_by('estado','-fecha', '-hora_inicial')
     for capacitacion in capacitaciones:
         capacitacion.fecha_formateada = capacitacion.fecha.strftime('%Y-%m-%d')
         capacitacion.hora_inicial_formateada = capacitacion.hora_inicial.strftime('%H:%M')
@@ -460,9 +460,11 @@ def view_assistants(request, id):
             'x_capacitacion_emplead', 'search_read',
             [[['x_studio_id_capacitacion', '=',id]]],
             {'fields': ['x_studio_many2one_field_iphhw', 'x_studio_cargo', 'x_studio_nombre_empleado', 'x_studio_departamento_empleado',
-                        'x_studio_correo_personal', 'x_studio_correo_corporativo']})
+                        'x_studio_correo_personal', 'x_studio_correo_corporativo', 'x_studio_asisti']})
 
-        assistant_data = []
+        assistant_data_yes = []
+        assistant_data_no = []
+        
         for assistant in assistants:
             userId = assistant['x_studio_many2one_field_iphhw'][1] if assistant['x_studio_many2one_field_iphhw'] else ''
             jobTitle = assistant.get('x_studio_cargo', '')
@@ -470,18 +472,26 @@ def view_assistants(request, id):
             employeeDepartment = assistant.get('x_studio_departamento_empleado','')
             personalEmail = assistant.get('x_studio_correo_personal')
             corporateEmail = assistant.get('x_studio_correo_corporativo') 
+            x_studio_asisti = assistant.get('x_studio_asisti','')
             
             
-            assistant_data.append({'userId': userId, 
-                                   'jobTitle': jobTitle, 
-                                   'username':username, 
-                                   'employeeDepartment': employeeDepartment,
-                                   'personalEmail':personalEmail,
-                                   'corporateEmail':corporateEmail})
+            assistant_data = {
+                'userId': userId, 
+                'jobTitle': jobTitle, 
+                'username':username, 
+                'employeeDepartment': employeeDepartment,
+                'personalEmail':personalEmail,
+                'corporateEmail':corporateEmail
+            }
+
+            if x_studio_asisti == 'Si':
+                assistant_data_yes.append(assistant_data)
+            elif x_studio_asisti == 'No':
+                assistant_data_no.append(assistant_data)
         
         #Calcular porcentaje de asistencia:
         total_invitados = capacitacion.total_invitados
-        total_asistentes = len(assistant_data)
+        total_asistentes = len(assistant_data_yes)
         tasa_exito = 0
         
         if total_invitados > 0 :
@@ -530,7 +540,7 @@ def view_assistants(request, id):
            
 
             # Agregar datos de los asistentes con manejo de valores vacíos
-            for assistant in assistant_data:
+            for assistant in assistant_data_yes:
                 row = [
                     assistant['userId'].strip() if assistant['userId'] else '',
                     assistant['username'].strip() if assistant['username'] else '',
@@ -565,7 +575,9 @@ def view_assistants(request, id):
 
     return render(request, 'view_assistants.html', {
         'capacitacion': capacitacion,
-        'assistants': assistant_data,
+        'assistants_yes': assistant_data_yes,
+        'assistants_no': assistant_data_no,
+        'total_invitados': total_invitados,
         'tasa_exito': round(tasa_exito, 2) # Cifra redondeada
     })
     
@@ -625,7 +637,7 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
                     'x_studio_many2one_field_iphhw': employee_id,  # ID del empleado en Odoo
                     'x_studio_fecha_sesin': capacitacion.fecha.strftime('%Y-%m-%d'),
                     'x_studio_hora_inicial': capacitacion.hora_inicial.strftime('%H:%M:%S'),
-                    'x_studio_hora_final': capacitacion.hora_final.strftime('%H:%M:%S'),
+                    'x_studio_hora_final': capacitacion.hora_final.strftime('%H:%M:%S'),                                                                                                                       
                     'x_studio_estado':capacitacion.estado,
                     'x_studio_many2one_field_ftouu': department_id,
                     'x_studio_asisti': 'No',  # Marcamos asistencia en 'No'
@@ -636,6 +648,7 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
                     'x_studio_ubicacin': capacitacion.ubicacion or '',
                     'x_studio_url': capacitacion.url_reunion or ''
                 }
+                
                 # Crear el registro de asistente en Odoo
                 models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'create', [odoo_data])
 
