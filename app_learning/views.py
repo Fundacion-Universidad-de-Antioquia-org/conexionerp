@@ -19,6 +19,8 @@ from urllib.parse import quote
 from urllib.parse import unquote
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
+from django.http import JsonResponse
+
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +125,7 @@ def send_to_odoo(data):
             'x_studio_ubicacin': data.get('location', ''),
             'x_studio_url': data.get('url_reunion', ''),
             'x_studio_asisti': 'Si',
+            'x_studio_tipo':data.get('tipo',''),
             'x_studio_fecha_hora_registro': data['registro_datetime'],
             'x_studio_ip_del_registro': data.get('ip_address'),
             'x_studio_user_agent': data.get('user_agent'),
@@ -159,10 +162,19 @@ def send_to_odoo(data):
 def create_capacitacion(request):
     
     if request.method == 'POST':
+        request.POST = request.POST.copy()
+        request.POST['estado'] = 'ACTIVA'
         form = CtrlCapacitacionesForm(request.POST)
         if form.is_valid():
-            capacitacion = form.save()
             capacitacion = form.save(commit=False)
+            capacitacion.estado = 'ACTIVA'
+            capacitacion = form.save()
+            
+            employee_names = request.POST.get('employee_names', '').split(',')
+            print(f"Empleados seleccionados (POST): {employee_names}") 
+            if employee_names:
+                print("Llamando a send_assistants_to_odoo...")  # Confirmar si entra aquí
+                send_assistants_to_odoo(capacitacion.id, employee_names)
                      
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
 
@@ -184,6 +196,9 @@ def create_capacitacion(request):
             capacitacion.save()
 
             return HttpResponseRedirect(reverse('details_view', args=[capacitacion.id]))
+        else:
+            print("El formulario No es válido")
+            print(form.errors)
     else:
         form = CtrlCapacitacionesForm()
     return render(request, 'crear_capacitacion.html', {'form': form})
@@ -194,6 +209,7 @@ def list_capacitaciones(request):
     return render(request, 'list_capacitaciones.html', {'capacitaciones': capacitaciones})
 
 
+# Función para registrar asistencia y actualizar registro en Odoo
 # Función para registrar asistencia y actualizar registro en Odoo
 def registration_view(request):
     capacitacion_id = request.GET.get('id')
@@ -207,6 +223,7 @@ def registration_view(request):
         'objective': capacitacion.objetivo,
         'department': capacitacion.area_encargada,
         'moderator': capacitacion.moderador,
+        'tipo': capacitacion.tipo,
         'date': date_str,
         'start_time': capacitacion.hora_inicial,  # Formato de 24 horas
         'end_time': capacitacion.hora_final,      # Formato de 24 horas
@@ -221,19 +238,15 @@ def registration_view(request):
     is_active = capacitacion.estado == 'ACTIVA'
 
     error_message = None  # Inicializa la variable error_message
-    
-    print("Valor de in_charge: ", request.POST.get('in_charge'))
 
     if request.method == 'POST' and is_active:
-        
         if form.is_valid():
-            
             document_id = form.cleaned_data['document_id']
 
             try:
                 # Verifica si el documento existe en Odoo
                 employee_id = get_employee_id_by_name(document_id)
-                
+
                 if not employee_id:
                     error_message = f"No se encontró un empleado con el documento {document_id}. Por favor, verifique los datos."
                 else:
@@ -241,62 +254,75 @@ def registration_view(request):
                     uid = common.authenticate(database, user, password, {})
                     models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-                    # Buscar registros en Odoo para evitar duplicados
+                    # Buscar si ya existe un registro del asistente en la capacitación en Odoo
                     existing_records = models.execute_kw(database, uid, password,
                         'x_capacitacion_emplead', 'search_read',
                         [[
-                            ['x_studio_tema', '=', capacitacion.tema],
-                            ['x_studio_fecha_sesin', '=', capacitacion.fecha.strftime('%Y-%m-%d')],
+                            ['x_studio_id_capacitacion', '=', capacitacion_id],
                             ['x_studio_many2one_field_iphhw', '=', employee_id]
                         ]],
-                        {'fields': ['id']})
+                        {'fields': ['id', 'x_studio_asisti']})
+                    
+                    timezone = pytz.timezone('America/Bogota')
+                    registro_datetime = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')
+                    user_agent = request.META.get('HTTP_USER_AGENT', '')
+                    ip_address = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
+                    latitude = request.POST.get('latitude')
+                    longitude = request.POST.get('longitude')
+                    
+                    if ip_address:
+                        ip_address = ip_address.split(',')[0]
+                    else:
+                        ip_address = request.META.get('REMOTE_ADDR')
 
                     if existing_records:
-                        error_message = f"El usuario con documento {document_id} ya está registrado en esta capacitación."
-                    else:
-                        #Obtener fecha y hora actual
-                        timezone = pytz.timezone('America/Bogota')
-                        registro_datetime = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')
-                        user_agent = request.META.get('HTTP_USER_AGENT', '')
-                        
-                        # Obtener la dirección IP del cliente
-                        ip_address = request.META.get('HTTP_X_FORWARDED_FOR')
-                        
-                        #Capturar Ubicación
-                        latitude = request.POST.get('latitude')
-                        longitude = request.POST.get('longitude')
+                        # Si el registro ya existe, verificar si la asistencia está en "No"
+                        record_id = existing_records[0]['id']
+                        asistencia_actual = existing_records[0]['x_studio_asisti']
 
-                        
-                        if ip_address:
-                            ip_address = ip_address.split(',')[0]
+                        if asistencia_actual == 'No':
+                            update_data = {
+                               'x_studio_asisti': 'Si',
+                               'x_studio_fecha_hora_registro': registro_datetime,
+                               'x_studio_ip_del_registro': ip_address,
+                               'x_studio_user_agent': user_agent,
+                               'x_studio_longitud': longitude,
+                               'x_studio_latitud': latitude,
+                            }
+                            
+                            models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'write', [[record_id], update_data])
+                            print(f"Asistencia actualizada a 'Sí' para el empleado con documento {document_id}.")
+                            
+                            employee_name = models.execute_kw(database, uid, password,
+                                'hr.employee', 'search_read',
+                                [[['id', '=', employee_id]]],
+                                {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
+                            
+                            encoded_url = quote(capacitacion.url_reunion or 'without-url', safe='')
+                            return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))  
                         else:
-                            ip_address = request.META.get('REMOTE_ADDR')
-                            
-                        url_reunion = form.cleaned_data.get('url_reunion', '')
-                        
-                        if not url_reunion or url_reunion.lower() == 'none':
-                            url_reunion = 'without-url'  # Establece un valor por defecto
-                            
-                        # Si no existe duplicado, procede a crear el registro en Odoo
+                            error_message = f"El usuario con documento {document_id} ya ha registrado su asistencia."
+
+                    else:
                         data = form.cleaned_data
                         data['registro_datetime'] = registro_datetime
                         data['ip_address'] = ip_address
                         data['user_agent'] = user_agent
                         data['latitude'] = latitude
                         data['longitude'] = longitude
-                        data['capacitacion_id']= capacitacion_id
+                        data['capacitacion_id'] = capacitacion_id
+                        
                         record_id, employee_name, url_reunion = send_to_odoo(data)
                         if record_id:
-                            # Redirigir a la vista de éxito con el nombre del empleado
                             encoded_url = quote(url_reunion, safe='')
                             return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
                         else:
-                            error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
+                            error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente"
 
             except Exception as e:
-                logger.error('Failed to verify or register assistant in Odoo', exc_info=True)
+                logger.error('Error al registrar la asistencia en Odoo:', exc_info=True)
                 error_message = "Hubo un problema al verificar los datos en el sistema. Por favor, intente nuevamente."
-        
+
         else:
             print("El formulario no es válido")
             print(form.errors)
@@ -305,11 +331,10 @@ def registration_view(request):
         'form': form,
         'is_active': is_active,
         'capacitacion': capacitacion,
-        'error_message': error_message  # Incluye error_message en el contexto
+        'error_message': error_message
     }
 
     return render(request, 'registration_form.html', context)
-
 
 # Vista de Éxito Al Enviar Datos
 def success_view(request, employee_name, url_reunion=None):
@@ -348,7 +373,7 @@ def details_view(request, id):
 
 # Vista Home que muestra todas las capacitaciones
 def home(request):
-    capacitaciones = CtrlCapacitaciones.objects.all()
+    capacitaciones = CtrlCapacitaciones.objects.all().order_by('estado','-fecha', '-hora_inicial')
     for capacitacion in capacitaciones:
         capacitacion.fecha_formateada = capacitacion.fecha.strftime('%Y-%m-%d')
         capacitacion.hora_inicial_formateada = capacitacion.hora_inicial.strftime('%H:%M')
@@ -363,14 +388,12 @@ def update_odoo_capacitacion (capacitacion):
         uid = common.authenticate(database, user, password, {})
         models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
         
-        odoo_capacitacion = models.execute_kw(database, uid, password,
-            'x_capacitacion_emplead', 'search_read',
-            [[['x_studio_id_capacitacion', '=', capacitacion.id]]],
-            {'fields': ['id'], 'limit': 1})
-        
-        if odoo_capacitacion:
-            odoo_capacitacion_id = odoo_capacitacion[0]['id']
+        odoo_capacitaciones_ids = models.execute_kw(database, uid, password,
+            'x_capacitacion_emplead', 'search',
+            [[['x_studio_id_capacitacion', '=', capacitacion.id]]])
             
+        
+        if odoo_capacitaciones_ids:
             update_data = {
                 'x_studio_tema': capacitacion.tema,
                 'x_studio_fecha_sesin': capacitacion.fecha.strftime('%Y-%m-%d'),
@@ -381,14 +404,15 @@ def update_odoo_capacitacion (capacitacion):
                 'x_studio_ubicacin': capacitacion.ubicacion or '',
                 'x_studio_url': capacitacion.url_reunion or '',
                 'x_studio_moderador': capacitacion.moderador,
+                'x_studio_tipo': capacitacion.tipo,
                 'x_studio_responsable': capacitacion.responsable
             }
             
             models.execute_kw(database, uid, password,
                               'x_capacitacion_emplead', 'write',
-                              [[odoo_capacitacion_id], update_data])
+                              [odoo_capacitaciones_ids, update_data])
             
-            logger.info(f"Capacitación con ID {capacitacion.id} actualizada en Odoo")
+            logger.info(f"Capacitación con ID {capacitacion.id} actualizada en Odoo para {len(odoo_capacitaciones_ids)} registros.")
             
         else:
             logger.warning(f"No se encontró la capacitación con ID {capacitacion.id} en Odoo")
@@ -401,11 +425,22 @@ def update_odoo_capacitacion (capacitacion):
 # Vista para editar una capacitación existente
 def edit_capacitacion(request, id):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST, instance=capacitacion)
         if form.is_valid():
             capacitacion = form.save(commit=False)
             form.save()
+            
+            # Obtener los empleados seleccionados del POST
+            employee_names = request.POST.get('employee_names', '').split(',')
+            print(f"Asistentes seleccionados en edición: {employee_names}")  # Verificar si los datos llegan aquí
+
+            # Llamar a send_assistants_to_odoo después de guardar la capacitación
+            if employee_names:
+                print("Enviando asistentes a Odoo desde la edición...")
+                send_assistants_to_odoo(capacitacion.id, employee_names)
+            
             update_odoo_capacitacion(capacitacion)
             return redirect('home')
     else:
@@ -431,9 +466,11 @@ def view_assistants(request, id):
             'x_capacitacion_emplead', 'search_read',
             [[['x_studio_id_capacitacion', '=',id]]],
             {'fields': ['x_studio_many2one_field_iphhw', 'x_studio_cargo', 'x_studio_nombre_empleado', 'x_studio_departamento_empleado',
-                        'x_studio_correo_personal', 'x_studio_correo_corporativo']})
+                        'x_studio_correo_personal', 'x_studio_correo_corporativo', 'x_studio_asisti']})
 
-        assistant_data = []
+        assistant_data_yes = []
+        assistant_data_no = []
+        
         for assistant in assistants:
             userId = assistant['x_studio_many2one_field_iphhw'][1] if assistant['x_studio_many2one_field_iphhw'] else ''
             jobTitle = assistant.get('x_studio_cargo', '')
@@ -441,18 +478,26 @@ def view_assistants(request, id):
             employeeDepartment = assistant.get('x_studio_departamento_empleado','')
             personalEmail = assistant.get('x_studio_correo_personal')
             corporateEmail = assistant.get('x_studio_correo_corporativo') 
+            x_studio_asisti = assistant.get('x_studio_asisti','')
             
             
-            assistant_data.append({'userId': userId, 
-                                   'jobTitle': jobTitle, 
-                                   'username':username, 
-                                   'employeeDepartment': employeeDepartment,
-                                   'personalEmail':personalEmail,
-                                   'corporateEmail':corporateEmail})
+            assistant_data = {
+                'userId': userId, 
+                'jobTitle': jobTitle, 
+                'username':username, 
+                'employeeDepartment': employeeDepartment,
+                'personalEmail':personalEmail,
+                'corporateEmail':corporateEmail
+            }
+
+            if x_studio_asisti == 'Si':
+                assistant_data_yes.append(assistant_data)
+            elif x_studio_asisti == 'No':
+                assistant_data_no.append(assistant_data)
         
         #Calcular porcentaje de asistencia:
         total_invitados = capacitacion.total_invitados
-        total_asistentes = len(assistant_data)
+        total_asistentes = len(assistant_data_yes)
         tasa_exito = 0
         
         if total_invitados > 0 :
@@ -501,7 +546,7 @@ def view_assistants(request, id):
            
 
             # Agregar datos de los asistentes con manejo de valores vacíos
-            for assistant in assistant_data:
+            for assistant in assistant_data_yes:
                 row = [
                     assistant['userId'].strip() if assistant['userId'] else '',
                     assistant['username'].strip() if assistant['username'] else '',
@@ -536,6 +581,85 @@ def view_assistants(request, id):
 
     return render(request, 'view_assistants.html', {
         'capacitacion': capacitacion,
-        'assistants': assistant_data,
+        'assistants_yes': assistant_data_yes,
+        'assistants_no': assistant_data_no,
+        'total_invitados': total_invitados,
         'tasa_exito': round(tasa_exito, 2) # Cifra redondeada
     })
+    
+# Buscar Empleados en Odoo
+def search_employees(request):
+    query = request.GET.get('q', '')
+    results = []
+    
+    if query:
+        try:
+            common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+            uid = common.authenticate(database, user, password, {})
+            models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+
+            employees = models.execute_kw(database, uid, password,
+                                          'hr.employee', 'search_read',
+                                          [[['name', 'ilike', query]]],  # Filtrar por número de identificación
+                                          {'fields': ['id', 'name', 'identification_id'], 'limit': 10})
+
+            results = [{'name': emp['name'], 'identification_id': emp['identification_id']} for emp in employees]
+
+        except Exception as e:
+            logger.error('Failed to fetch employees from Odoo', exc_info=True)
+
+    return JsonResponse({'results': results})
+
+#Enviar Asistentes Obligatorios a Odoo
+def send_assistants_to_odoo(capacitacion_id, employee_ids):
+    try:
+        common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+        uid = common.authenticate(database, user, password, {})
+        models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+        
+        capacitacion = CtrlCapacitaciones.objects.get(id=capacitacion_id)
+        
+        # Obtener el ID del departamento (area encargada) en Odoo
+        department_data = models.execute_kw(database, uid, password,
+                                            'hr.department', 'search_read',
+                                            [[['name', '=', capacitacion.area_encargada]]],
+                                            {'fields': ['id'], 'limit': 1})
+        
+        if not department_data:
+            raise ValueError(f"No se encontró el departamento '{capacitacion.area_encargada}' en Odoo.")
+        
+        department_id = department_data[0]['id']
+       # Loop sobre cada empleado seleccionado
+        print('ENVIANDO ASISTENTES A ODOO')
+        for name in employee_ids:
+            employee_data = models.execute_kw(database, uid, password,
+                                              'hr.employee', 'search_read',
+                                              [[['name', '=', name]]],
+                                              {'fields': ['id'], 'limit': 1})
+            if employee_data:
+                employee_id = employee_data[0]['id']  # Obtener el ID del empleado en Odoo
+                odoo_data = {
+                    'x_studio_tema': capacitacion.tema,
+                    'x_studio_many2one_field_iphhw': employee_id,  # ID del empleado en Odoo
+                    'x_studio_fecha_sesin': capacitacion.fecha.strftime('%Y-%m-%d'),
+                    'x_studio_hora_inicial': capacitacion.hora_inicial.strftime('%H:%M:%S'),
+                    'x_studio_hora_final': capacitacion.hora_final.strftime('%H:%M:%S'),                                                                                                                       
+                    'x_studio_estado':capacitacion.estado,
+                    'x_studio_many2one_field_ftouu': department_id,
+                    'x_studio_asisti': 'No',  # Marcamos asistencia en 'No'
+                    'x_studio_id_capacitacion': capacitacion_id,  # Relacionar con la capacitación
+                    'x_studio_responsable': capacitacion.responsable,
+                    'x_studio_moderador': capacitacion.moderador,
+                    'x_studio_tipo': capacitacion.tipo,
+                    'x_studio_modalidad': capacitacion.modalidad,
+                    'x_studio_ubicacin': capacitacion.ubicacion or '',
+                    'x_studio_url': capacitacion.url_reunion or ''
+                }
+                
+                # Crear el registro de asistente en Odoo
+                models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'create', [odoo_data])
+
+        logger.info(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}")
+        print(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}") 
+    except Exception as e:
+        logger.error('Failed to send assistants to Odoo', exc_info=True)
