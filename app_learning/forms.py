@@ -9,6 +9,12 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         required=True,
         label='Modalidad'
     )
+    
+    tipo = forms.ChoiceField(
+        choices=[('', 'Elija el tipo de evento')] + CtrlCapacitaciones.TIPO,
+        required= True,
+        label='Tipo de evento'
+    )
 
     class Meta:
         model = CtrlCapacitaciones
@@ -22,14 +28,15 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                   'area_encargada', 
                   'modalidad', 
                   'url_reunion', 
-                  'ubicacion', 
+                  'ubicacion',
+                  'tipo', 
                   'objetivo', 
                   'estado']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
             'hora_final': forms.TimeInput(attrs={'type': 'time'}),
-            'tema': forms.TextInput(attrs={'placeholder': 'Nombre de la capacitación'}),
+            'tema': forms.TextInput(attrs={'placeholder': 'Nombre del evento'}),
             'moderador': forms.TextInput(attrs={'placeholder': 'Nombre del Moderador'}),
             'responsable': forms.TextInput(attrs={'placeholder': 'Nombre del Responsable'}),
             'objetivo': forms.Textarea(attrs={
@@ -61,13 +68,13 @@ class CtrlCapacitacionesForm(forms.ModelForm):
 
         # Cambiar el widget según la modalidad seleccionada
         if modalidad == 'VIRTUAL':
-            self.fields['url_reunion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'})
+            self.fields['url_reunion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la URL del evento'})
             self.fields['url_reunion'].required = True
         elif modalidad == 'PRESENCIAL':
             self.fields['ubicacion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la ubicación'})
             self.fields['ubicacion'].required = True
         elif modalidad == 'MIXTA':
-            self.fields['url_reunion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'})
+            self.fields['url_reunion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la URL del evento'})
             self.fields['ubicacion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la ubicación'})
             self.fields['url_reunion'].required = True
             self.fields['ubicacion'].required = True
@@ -81,8 +88,9 @@ class RegistrationForm(forms.Form):
   start_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora inicial')
   end_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora final')
   mode = forms.CharField(max_length=10, label='Modalidad', required=True)
+  tipo = forms.CharField(max_length=15, label='Tipo de evento', required=False)
   location = forms.CharField(max_length=255, label='Ubicación', required=False)  # Solo requerido para ciertas modalidades
-  url_reunion = forms.CharField(max_length=255, label='URL de la Reunión', required=False)  # Solo requerido para ciertas modalidades
+  url_reunion = forms.CharField(max_length=255, label='URL del evento', required=False)  # Solo requerido para ciertas modalidades
   in_charge = forms.CharField(max_length=60, label='Responsable', widget=forms.TextInput(attrs={'readonly':'readonly'}))
   document_id = forms.CharField(
     max_length=20,

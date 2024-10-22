@@ -125,6 +125,7 @@ def send_to_odoo(data):
             'x_studio_ubicacin': data.get('location', ''),
             'x_studio_url': data.get('url_reunion', ''),
             'x_studio_asisti': 'Si',
+            'x_studio_tipo':data.get('tipo',''),
             'x_studio_fecha_hora_registro': data['registro_datetime'],
             'x_studio_ip_del_registro': data.get('ip_address'),
             'x_studio_user_agent': data.get('user_agent'),
@@ -161,13 +162,15 @@ def send_to_odoo(data):
 def create_capacitacion(request):
     
     if request.method == 'POST':
+        request.POST = request.POST.copy()
+        request.POST['estado'] = 'ACTIVA'
         form = CtrlCapacitacionesForm(request.POST)
         if form.is_valid():
             capacitacion = form.save(commit=False)
             capacitacion.estado = 'ACTIVA'
             capacitacion = form.save()
             
-            employee_names = request.POST.getlist('employee_names', '').split(',')
+            employee_names = request.POST.get('employee_names', '').split(',')
             print(f"Empleados seleccionados (POST): {employee_names}") 
             if employee_names:
                 print("Llamando a send_assistants_to_odoo...")  # Confirmar si entra aquí
@@ -193,6 +196,9 @@ def create_capacitacion(request):
             capacitacion.save()
 
             return HttpResponseRedirect(reverse('details_view', args=[capacitacion.id]))
+        else:
+            print("El formulario No es válido")
+            print(form.errors)
     else:
         form = CtrlCapacitacionesForm()
     return render(request, 'crear_capacitacion.html', {'form': form})
@@ -217,6 +223,7 @@ def registration_view(request):
         'objective': capacitacion.objetivo,
         'department': capacitacion.area_encargada,
         'moderator': capacitacion.moderador,
+        'tipo': capacitacion.tipo,
         'date': date_str,
         'start_time': capacitacion.hora_inicial,  # Formato de 24 horas
         'end_time': capacitacion.hora_final,      # Formato de 24 horas
@@ -381,14 +388,12 @@ def update_odoo_capacitacion (capacitacion):
         uid = common.authenticate(database, user, password, {})
         models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
         
-        odoo_capacitacion = models.execute_kw(database, uid, password,
-            'x_capacitacion_emplead', 'search_read',
-            [[['x_studio_id_capacitacion', '=', capacitacion.id]]],
-            {'fields': ['id'], 'limit': 1})
-        
-        if odoo_capacitacion:
-            odoo_capacitacion_id = odoo_capacitacion[0]['id']
+        odoo_capacitaciones_ids = models.execute_kw(database, uid, password,
+            'x_capacitacion_emplead', 'search',
+            [[['x_studio_id_capacitacion', '=', capacitacion.id]]])
             
+        
+        if odoo_capacitaciones_ids:
             update_data = {
                 'x_studio_tema': capacitacion.tema,
                 'x_studio_fecha_sesin': capacitacion.fecha.strftime('%Y-%m-%d'),
@@ -399,14 +404,15 @@ def update_odoo_capacitacion (capacitacion):
                 'x_studio_ubicacin': capacitacion.ubicacion or '',
                 'x_studio_url': capacitacion.url_reunion or '',
                 'x_studio_moderador': capacitacion.moderador,
+                'x_studio_tipo': capacitacion.tipo,
                 'x_studio_responsable': capacitacion.responsable
             }
             
             models.execute_kw(database, uid, password,
                               'x_capacitacion_emplead', 'write',
-                              [[odoo_capacitacion_id], update_data])
+                              [odoo_capacitaciones_ids, update_data])
             
-            logger.info(f"Capacitación con ID {capacitacion.id} actualizada en Odoo")
+            logger.info(f"Capacitación con ID {capacitacion.id} actualizada en Odoo para {len(odoo_capacitaciones_ids)} registros.")
             
         else:
             logger.warning(f"No se encontró la capacitación con ID {capacitacion.id} en Odoo")
@@ -644,6 +650,7 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
                     'x_studio_id_capacitacion': capacitacion_id,  # Relacionar con la capacitación
                     'x_studio_responsable': capacitacion.responsable,
                     'x_studio_moderador': capacitacion.moderador,
+                    'x_studio_tipo': capacitacion.tipo,
                     'x_studio_modalidad': capacitacion.modalidad,
                     'x_studio_ubicacin': capacitacion.ubicacion or '',
                     'x_studio_url': capacitacion.url_reunion or ''

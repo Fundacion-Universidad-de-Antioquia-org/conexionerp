@@ -63,7 +63,6 @@
     </script>
     <style>
       /* Ocultar el spinner inicialmente */
-
       #loading-spinner {
           display: none;
           position: fixed; /* Para que se quede fijo en la pantalla */
@@ -93,12 +92,13 @@
         </div>
 
         <div class="right-side">
-          <h3 class="mt-3">{{ capacitacion.tema }}</h3>
-          <h5 class="mt-2 mb-3">Registro Asistencia</h5>
+          <h5 class="mt-3">{{ capacitacion.tipo }}:</h5>
+          <h3 class="topic-tittle mt-1">{{ capacitacion.tema }}</h3>
+          <h5 class="mb-3">Registro Asistencia</h5>
           
           {% if not is_active %}
             <div class="alert alert-danger" role="alert">
-            Esta capacitación no admite registros.
+              Esta {{ capacitacion.tipo }} no admite registros.
             </div>
           {% endif %}
           {% if error_message %}

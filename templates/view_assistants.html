@@ -5,7 +5,7 @@
 {% block content %}
 <div class="header-section">
     <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
-    <h3>Asistentes a la Capacitación: {{ capacitacion.tema }}</h3>
+    <h3>Asistentes a la {{ capacitacion.tipo }} : {{ capacitacion.tema }}</h3>
 </div>
 
 <section class="attendants-data">
