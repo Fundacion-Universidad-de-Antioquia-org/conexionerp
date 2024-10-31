@@ -1,13 +1,13 @@
-{% extends 'base.html' %} {% block title %}Lista de Capacitaciones{% endblock %}
+{% extends 'base.html' %} {% block title %}Gestión de Asistencias{% endblock %}
 {% block content %}
 <section class="home">
   <div class="btn-center">
     <a class="btn-center" href="{% url 'create_capacitacion' %}">
-      <button class="btn btn-funda btn-success-f">Crear Capacitación</button>
+      <button class="btn btn-funda btn-success-f">Crear Evento</button>
     </a>
   </div>
 
-  <h3 class="subtitle">Capacitaciones Registradas:</h3>
+  <h3 class="subtitle">Eventos Registrados:</h3>
 
   <!-- Filtros -->
   <div class="accordion mb-3" id="accordionExample">
