@@ -150,6 +150,7 @@
             <div class="mb-3">
               <label><strong>Modalidad: </strong> {{ form.initial.mode}}</label>
               <input type="hidden" name="mode" value="{{ form.initial.mode }}">
+              <input type="hidden" name="tipo" value="{{ form.initial.tipo }}">
               <input type="hidden" name="location" value="{{ form.initial.location }}">
               <input type="hidden" name="url_reunion"  {% if form.initial.url_reunion %} value="{{ form.initial.url_reunion }}" {% else %} value="without-url" {% endif %}>
               <input type="hidden" name="in_charge" value="{{ form.initial.in_charge }}">
