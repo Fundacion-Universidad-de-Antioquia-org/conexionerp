@@ -132,7 +132,7 @@ def send_to_odoo(data):
             'x_studio_user_agent': data.get('user_agent'),
             'x_studio_longitud': data.get('longitude'),
             'x_studio_latitud': data.get('latitude'),
-            'x_studio_moderador': data.get('moderator', ''),
+            'x_studio_moderador': (data.get('moderator', '')),
             'x_studio_responsable': data.get('in_charge'),
             'x_studio_id_capacitacion': data['capacitacion_id']
         }
@@ -224,7 +224,7 @@ def registration_view(request):
         'topic': capacitacion.tema,
         'objective': capacitacion.objetivo,
         'department': capacitacion.area_encargada,
-        'moderator': capacitacion.moderador,
+        'moderator': capacitacion.moderador.upper(),
         'tipo': capacitacion.tipo,
         'date': date_str,
         'start_time': capacitacion.hora_inicial,  # Formato de 24 horas
@@ -232,7 +232,7 @@ def registration_view(request):
         'mode': capacitacion.modalidad,
         'location': capacitacion.ubicacion,
         'url_reunion': capacitacion.url_reunion,
-        'in_charge': capacitacion.responsable,
+        'in_charge': capacitacion.responsable.upper(),
         'document_id': ''  # Este campo se llenará por el usuario
     }
 
@@ -651,8 +651,8 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
                     'x_studio_many2one_field_ftouu': department_id,
                     'x_studio_asisti': 'No',  # Marcamos asistencia en 'No'
                     'x_studio_id_capacitacion': capacitacion_id,  # Relacionar con la capacitación
-                    'x_studio_responsable': capacitacion.responsable,
-                    'x_studio_moderador': capacitacion.moderador,
+                    'x_studio_responsable': capacitacion.responsable.upper(),
+                    'x_studio_moderador': capacitacion.moderador.upper(),
                     'x_studio_tipo': capacitacion.tipo,
                     'x_studio_modalidad': capacitacion.modalidad,
                     'x_studio_ubicacin': capacitacion.ubicacion or '',
