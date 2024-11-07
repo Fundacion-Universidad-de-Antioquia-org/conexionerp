@@ -20,6 +20,7 @@ class CtrlCapacitaciones(models.Model):
     TIPO = [
         ('Capacitación', 'Capacitación'),
         ('Reunión','Reunión'),
+        ('Bienestar','Bienestar')
     ]
     tema = models.CharField(max_length=60)
     modalidad = models.CharField(max_length=10, choices=MODALIDAD, default='')

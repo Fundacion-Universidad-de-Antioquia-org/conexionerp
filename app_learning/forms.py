@@ -37,8 +37,8 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
             'hora_final': forms.TimeInput(attrs={'type': 'time'}),
             'tema': forms.TextInput(attrs={'placeholder': 'Nombre del evento'}),
-            'moderador': forms.TextInput(attrs={'placeholder': 'Nombre del Moderador'}),
-            'responsable': forms.TextInput(attrs={'placeholder': 'Nombre del Responsable'}),
+            'moderador': forms.TextInput(attrs={'placeholder': 'Nombre del Moderador', 'style': 'text-transform: uppercase;'}),
+            'responsable': forms.TextInput(attrs={'placeholder': 'Nombre del Responsable','style': 'text-transform: uppercase;'}),
             'objetivo': forms.Textarea(attrs={
                 'rows': 4,
                 'cols': 40,
