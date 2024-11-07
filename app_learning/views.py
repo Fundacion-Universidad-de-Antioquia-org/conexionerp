@@ -20,6 +20,7 @@ from urllib.parse import unquote
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 logger = logging.getLogger(__name__)
@@ -159,6 +160,7 @@ def send_to_odoo(data):
 
 
 # Función para crear QR de Capacitación
+@csrf_exempt
 def create_capacitacion(request):
     
     if request.method == 'POST':
@@ -423,6 +425,7 @@ def update_odoo_capacitacion (capacitacion):
         
 
 # Vista para editar una capacitación existente
+@csrf_exempt
 def edit_capacitacion(request, id):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     
