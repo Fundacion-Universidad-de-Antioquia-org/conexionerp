@@ -71,7 +71,7 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_HEADERS = [
     "content-type",
 ]
-CSRF_TRUSTED_ORIGINS = ['https://app-conexionerp-prod-001.azurewebsites.net']
+CSRF_TRUSTED_ORIGINS = ['https://app-conexionerp-prod-001.azurewebsites.net','https://erp-apps.fundacionudea.net']
 
 CORS_ALLOW_METHODS = [
     "GET",
