@@ -20,7 +20,11 @@ class CtrlCapacitaciones(models.Model):
     TIPO = [
         ('Capacitación', 'Capacitación'),
         ('Reunión','Reunión'),
-        ('Bienestar', 'Bienestar')
+        ('Bienestar','Bienestar')
+    ]
+    PRIVACIDAD = [
+        ('ABIERTA', 'ABIERTA'),
+        ('CERRADA','CERRADA')
     ]
     tema = models.CharField(max_length=60)
     modalidad = models.CharField(max_length=10, choices=MODALIDAD, default='')
@@ -32,6 +36,8 @@ class CtrlCapacitaciones(models.Model):
     qr_base64 = models.TextField(blank=True, null=True)  # Campo para almacenar el QR en base64
     total_invitados = models.IntegerField(default=0, verbose_name='Total Asistentes')
     tipo = models.CharField(max_length=20, choices=TIPO, default='Capacitación', verbose_name='Tipo de evento')
-
+    privacidad = models.CharField(max_length=20, choices=PRIVACIDAD, default='ABIERTA', verbose_name= 'Privacidad')
+    
+    
     def __str__(self):
         return f"{self.tema} - {self.moderador}"

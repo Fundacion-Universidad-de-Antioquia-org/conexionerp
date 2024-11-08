@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,7 +85,7 @@
       <div class="registrer">
         <div class="left-side">
           <img
-          src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
+          src="{% static 'media/funda-logo-3.png' %}"
           class="logo"
           alt="Logo Fundacion"
           />
@@ -150,6 +150,7 @@
             <div class="mb-3">
               <label><strong>Modalidad: </strong> {{ form.initial.mode}}</label>
               <input type="hidden" name="mode" value="{{ form.initial.mode }}">
+              <input type="hidden" name="privacidad" value="{{ form.initial.privacidad }}">
               <input type="hidden" name="tipo" value="{{ form.initial.tipo }}">
               <input type="hidden" name="location" value="{{ form.initial.location }}">
               <input type="hidden" name="url_reunion"  {% if form.initial.url_reunion %} value="{{ form.initial.url_reunion }}" {% else %} value="without-url" {% endif %}>
