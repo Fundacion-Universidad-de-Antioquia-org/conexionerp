@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -29,11 +29,24 @@
     <title>Registro Asistencia</title>
   </head>
   <body>
-    <div class="alert alert-warning">
-        <h4>No estás inscrito para este evento</h4>
-        <p>Por favor, comunícate con el responsable: {{ responsable }}</p>
-        <a href="{% url 'home' %}">Volver al inicio</a>
-    </div>
+    <section class="succes">
+      <div class="central-div">
+        <img
+          src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
+          class="logo-end"
+          alt="Logo Fundacion"
+        />
+        <div class="separator desktop"></div>
+        <div class="text-central-div">
+          <div class="alert-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <h4>No estás inscrito para este evento el día de hoy</h4>
+          </div>
+          <p>Por favor, comunícate con el responsable y/o área encargada: {{ responsable }} - {{ area_encargada }}</p>
+          <a href="{% url 'registration_view' id=capacitacion_id %}">Volver al registro</a>
+        </div>
+      </div>
+    </section>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"

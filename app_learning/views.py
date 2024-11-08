@@ -211,9 +211,13 @@ def list_capacitaciones(request):
     return render(request, 'list_capacitaciones.html', {'capacitaciones': capacitaciones})
 
 # Función para registrar asistencia y actualizar registro en Odoo
-def registration_view(request):
-    capacitacion_id = request.GET.get('id')
-    capacitacion = get_object_or_404(CtrlCapacitaciones, id=capacitacion_id)
+def registration_view(request, id=None):
+    if(id):
+        capacitacion_id = id
+        capacitacion = get_object_or_404(CtrlCapacitaciones, id=capacitacion_id)
+    else:    
+        capacitacion_id = request.GET.get('id')
+        capacitacion = get_object_or_404(CtrlCapacitaciones, id=capacitacion_id)
 
     # Formatea la fecha correctamente
     date_str = capacitacion.fecha.strftime('%Y-%m-%d')
@@ -231,6 +235,7 @@ def registration_view(request):
         'location': capacitacion.ubicacion,
         'url_reunion': capacitacion.url_reunion,
         'in_charge': capacitacion.responsable,
+        'privacidad': capacitacion.privacidad,
         'document_id': ''  # Este campo se llenará por el usuario
     }
 
@@ -240,12 +245,13 @@ def registration_view(request):
     error_message = None  # Inicializa la variable error_message
 
     if request.method == 'POST' and is_active:
+        print('Privacidad: ', capacitacion.privacidad)
         if form.is_valid():
             document_id = form.cleaned_data['document_id']
 
             try:
                 # Verifica la privacidad del evento
-                if capacitacion.privacidad == "CERRADA":
+                if capacitacion.privacidad == "CERRADA": #priv
                     # Verifica si el documento existe en Odoo
                     employee_id = get_employee_id_by_name(document_id)
 
@@ -307,7 +313,11 @@ def registration_view(request):
 
                         else:
                             # Redirigir al template de alerta si no está inscrito
-                            return render(request, 'no_inscrito.html', {'responsable': capacitacion.responsable})
+                            return render(request, 'no_inscrito.html', {
+                                'responsable': capacitacion.responsable, 
+                                'capacitacion_id': capacitacion_id,
+                                'area_encargada':capacitacion.area_encargada
+                                })
 
                 else:  # Si la privacidad es 'ABIERTA', continuar con el flujo normal
                     common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
