@@ -15,6 +15,12 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         required= True,
         label='Tipo de evento'
     )
+    
+    privacidad = forms.ChoiceField(
+        choices=[('', 'Nivel de privacidad')] + CtrlCapacitaciones.PRIVACIDAD,
+        required=True,
+        label= 'Privacidad'
+    )
 
     class Meta:
         model = CtrlCapacitaciones
@@ -29,7 +35,8 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                   'modalidad', 
                   'url_reunion', 
                   'ubicacion',
-                  'tipo', 
+                  'tipo',
+                  'privacidad', 
                   'objetivo', 
                   'estado']
         widgets = {
@@ -37,8 +44,8 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
             'hora_final': forms.TimeInput(attrs={'type': 'time'}),
             'tema': forms.TextInput(attrs={'placeholder': 'Nombre del evento'}),
-            'moderador': forms.TextInput(attrs={'placeholder': 'Nombre del Moderador', 'style': 'text-transform: uppercase;'}),
-            'responsable': forms.TextInput(attrs={'placeholder': 'Nombre del Responsable','style': 'text-transform: uppercase;'}),
+            'moderador': forms.TextInput(attrs={'placeholder': 'Nombre del Moderador'}),
+            'responsable': forms.TextInput(attrs={'placeholder': 'Nombre del Responsable'}),
             'objetivo': forms.Textarea(attrs={
                 'rows': 4,
                 'cols': 40,
@@ -89,6 +96,7 @@ class RegistrationForm(forms.Form):
   end_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora final')
   mode = forms.CharField(max_length=10, label='Modalidad', required=True)
   tipo = forms.CharField(max_length=15, label='Tipo de evento', required=False)
+  privacidad = forms.CharField(max_length=20, label= 'Privacidad', required=True)
   location = forms.CharField(max_length=255, label='Ubicación', required=False)  # Solo requerido para ciertas modalidades
   url_reunion = forms.CharField(max_length=255, label='URL del evento', required=False)  # Solo requerido para ciertas modalidades
   in_charge = forms.CharField(max_length=60, label='Responsable', widget=forms.TextInput(attrs={'readonly':'readonly'}))
