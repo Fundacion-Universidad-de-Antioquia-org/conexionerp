@@ -6,17 +6,20 @@ import openpyxl
 import xmlrpc.client
 import unicodedata
 import os
+import traceback
+from django.contrib import messages
+from azure.storage.blob import BlobServiceClient
+from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CtrlCapacitacionesForm, RegistrationForm
-from .models import CtrlCapacitaciones
+from .models import CtrlCapacitaciones, EventImage
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from io import BytesIO
 from dotenv import load_dotenv
 from datetime import datetime
-from urllib.parse import quote
-from urllib.parse import unquote
+from urllib.parse import quote, unquote, urlparse
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.http import JsonResponse
@@ -32,6 +35,98 @@ user = os.getenv("ODOO_USER")
 password = os.getenv("PASSWORD")
 host = os.getenv("HOST")
 apphost = os.getenv('APP_HOST')
+
+def get_employee_names(request):
+    ids = request.GET.getlist('ids[]', [])
+    if ids:
+        try:
+            common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+            uid = common.authenticate(database, user, password, {})
+            models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+
+            # Buscar empleados por identificación
+            employees = models.execute_kw(database, uid, password,
+                                          'hr.employee', 'search_read',
+                                          [[['identification_id', 'in', ids]]],
+                                          {'fields': ['id', 'name', 'identification_id']})
+
+            results = [{'id': emp['identification_id'], 'name': emp['name']} for emp in employees]
+            return JsonResponse({'results': results})
+        except Exception as e:
+            logger.error('Failed to fetch employee names from Odoo', exc_info=True)
+            return JsonResponse({'error': 'Error fetching employee names'}, status=500)
+    else:
+        return JsonResponse({'results': []})
+
+
+# Función para cargar una imagen a Azure Blob Storage
+def upload_to_azure_blob(file, filename):
+    try:
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container_name = os.getenv("AZURE_CONTAINER_NAME")
+        
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
+        blob_client.upload_blob(file, overwrite=True)
+        
+        return blob_client.url
+    except Exception as e:
+        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+    except Exception as e:
+        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
+        return None
+    
+def delete_blob_from_azure(blob_url):
+    try:
+        # Obtener la cadena de conexión desde las variables de entorno
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        
+        # Extraer el nombre del contenedor y del blob desde la URL
+        parsed_url = urlparse(blob_url)
+        path_parts = parsed_url.path.lstrip('/').split('/', 1)
+        container_name = path_parts[0]
+        blob_name = unquote(path_parts[1])
+
+        print('Nombre del contenedor:', container_name)
+        print('Nombre del blob:', blob_name)
+        
+        # Obtener el cliente del blob
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        
+        # Eliminar el blob
+        blob_client.delete_blob()
+        
+        print("Blob eliminado exitosamente.")
+        return True
+    except Exception as e:
+        print(f"Error eliminando el blob de Azure Blob Storage: {e}")
+        traceback.print_exc()
+        return False
+
+# Vista para eliminar imagenes
+def delete_image(request, image_id):
+    image = get_object_or_404(EventImage, id=image_id)
+    capacitacion_id = image.capacitacion.id
+
+    if request.method == 'POST':
+        # Eliminar el blob de Azure Blob Storage
+        success = delete_blob_from_azure(image.image_url)
+        if success:
+            # Eliminar la instancia de la imagen
+            image.delete()
+            messages.success(request, "La imagen ha sido eliminada exitosamente.")
+        else:
+            messages.error(request, "Hubo un error al eliminar la imagen.")
+    else:
+        messages.error(request, "Solicitud inválida.")
+
+    return redirect('view_assistants', id=capacitacion_id)
+
 
 # Conversión a UTC asegurando que el objeto sea datetime
 def convert_to_utc(dt, timezone_str):
@@ -65,7 +160,7 @@ def get_department_id(department_name):
         return None
 
 # Función para obtener el ID del empleado por Nombre
-def get_employee_id_by_name(employee_name):
+def get_employee_id_by_name(name):
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
@@ -73,14 +168,14 @@ def get_employee_id_by_name(employee_name):
 
         employees = models.execute_kw(database, uid, password,
             'hr.employee', 'search_read',
-            [[['name', '=', employee_name]]],
-            {'fields': ['id', 'name'], 'limit': 1})
+            [[['name', '=', name]]],
+            {'fields': ['id'], 'limit': 1})
         
         if employees:
             return employees[0]['id']
         else:
             return None
-    
+        
     except Exception as e:
         logger.error('Failed to fetch employee ID from Odoo', exc_info=True)
         return None
@@ -98,15 +193,21 @@ def send_to_odoo(data):
         if not department_id:
             raise ValueError(f"Department '{data['department']}' not found in Odoo")
 
-        employee_data = models.execute_kw(database, uid, password,
-                                          'hr.employee', 'search_read',
-                                          [[['name', '=', data['document_id']]]],
-                                          {'fields': ['id', 'name'], 'limit': 1})
+        # Verificar si 'employee_id' está en 'data'; si no, buscarlo
+        if 'employee_id' in data and data['employee_id']:
+            employee_id = data['employee_id']
+        else:
+            # Buscar el empleado por 'document_id' si 'employee_id' no está disponible
+            employee_data = models.execute_kw(database, uid, password,
+                                              'hr.employee', 'search_read',
+                                              [[['name', '=', data['document_id']]]],
+                                              {'fields': ['id', 'name'], 'limit': 1})
+            print('DATOS: ', employee_data)
 
-        if not employee_data:
-            raise ValueError(f"Employee with name '{data['document_id']}' not found in Odoo")
+            if not employee_data:
+                raise ValueError(f"Empleado con documento '{data['document_id']}' no encontrado en Odoo")
 
-        employee_id = employee_data[0]['id']
+            employee_id = employee_data[0]['id']
 
        # Convertir fechas a cadenas en UTC
         date_str = data['date'].strftime('%Y-%m-%d')
@@ -154,7 +255,7 @@ def send_to_odoo(data):
         return record_id, employee_name, data.get('url_reunion', '')
 
     except Exception as e:
-        logger.error('Failed to send data to Odoo:', e)
+        logger.error('Failed to send data to Odoo', exc_info=True)
         return None, None, None
 
 
@@ -166,17 +267,19 @@ def create_capacitacion(request):
     if request.method == 'POST':
         request.POST = request.POST.copy()
         request.POST['estado'] = 'ACTIVA'
-        form = CtrlCapacitacionesForm(request.POST)
+        form = CtrlCapacitacionesForm(request.POST, request.FILES)
         if form.is_valid():
             capacitacion = form.save(commit=False)
             capacitacion.estado = 'ACTIVA'
             capacitacion = form.save()
+
+            employee_ids = request.POST.get('employee_names', '').split(',')
+            print(f"Empleados seleccionados (POST): {employee_ids}") 
             
-            employee_names = request.POST.get('employee_names', '').split(',')
-            print(f"Empleados seleccionados (POST): {employee_names}") 
-            if employee_names:
+                        
+            if employee_ids:
                 print("Llamando a send_assistants_to_odoo...")  # Confirmar si entra aquí
-                send_assistants_to_odoo(capacitacion.id, employee_names)
+                send_assistants_to_odoo(capacitacion.id, employee_ids)
                      
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
 
@@ -328,6 +431,7 @@ def registration_view(request, id=None):
                     if not employee_id:
                         error_message = f"No se encontró un empleado con el documento {document_id}. Por favor, verifique los datos."
                     else:
+                        # Obtener datos adicionales
                         timezone = pytz.timezone('America/Bogota')
                         registro_datetime = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S')
                         user_agent = request.META.get('HTTP_USER_AGENT', '')
@@ -340,20 +444,60 @@ def registration_view(request, id=None):
                         else:
                             ip_address = request.META.get('REMOTE_ADDR')
 
-                        data = form.cleaned_data
-                        data['registro_datetime'] = registro_datetime
-                        data['ip_address'] = ip_address
-                        data['user_agent'] = user_agent
-                        data['latitude'] = latitude
-                        data['longitude'] = longitude
-                        data['capacitacion_id'] = capacitacion_id
-                        
-                        record_id, employee_name, url_reunion = send_to_odoo(data)
-                        if record_id:
-                            encoded_url = quote(url_reunion, safe='')
-                            return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
+                        # Verificar si ya existe un registro del asistente en la capacitación en Odoo
+                        existing_records = models.execute_kw(database, uid, password,
+                            'x_capacitacion_emplead', 'search_read',
+                            [[
+                                ['x_studio_id_capacitacion', '=', capacitacion_id],
+                                ['x_studio_many2one_field_iphhw', '=', employee_id]
+                            ]],
+                            {'fields': ['id', 'x_studio_asisti']})
+
+                        if existing_records:
+                            # Si el registro ya existe
+                            record_id = existing_records[0]['id']
+                            asistencia_actual = existing_records[0]['x_studio_asisti']
+
+                            if asistencia_actual == 'No':
+                                update_data = {
+                                    'x_studio_asisti': 'Si',
+                                    'x_studio_fecha_hora_registro': registro_datetime,
+                                    'x_studio_ip_del_registro': ip_address,
+                                    'x_studio_user_agent': user_agent,
+                                    'x_studio_longitud': longitude,
+                                    'x_studio_latitud': latitude,
+                                }
+
+                                models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'write', [[record_id], update_data])
+                                print(f"Asistencia actualizada a 'Sí' para el empleado con documento {document_id}.")
+
+                                employee_name = models.execute_kw(database, uid, password,
+                                    'hr.employee', 'search_read',
+                                    [[['id', '=', employee_id]]],
+                                    {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
+
+                                encoded_url = quote(capacitacion.url_reunion or 'without-url', safe='')
+                                return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
+                            else:
+                                error_message = f"El usuario con documento {document_id} ya ha registrado su asistencia."
                         else:
-                            error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
+                            # Si no existe el registro, crear uno nuevo
+                            data = form.cleaned_data
+                            data['registro_datetime'] = registro_datetime
+                            data['ip_address'] = ip_address
+                            data['user_agent'] = user_agent
+                            data['latitude'] = latitude
+                            data['longitude'] = longitude
+                            data['capacitacion_id'] = capacitacion_id
+                            data['employee_id'] = employee_id  # Pasar el ID del empleado
+
+                            record_id, employee_name, url_reunion = send_to_odoo(data)
+                            if record_id:
+                                encoded_url = quote(url_reunion or 'without-url', safe='')
+                                return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
+                            else:
+                                error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
+
 
             except Exception as e:
                 logger.error('Error al registrar la asistencia en Odoo:', exc_info=True)
@@ -487,6 +631,34 @@ def edit_capacitacion(request, id):
 
 # Vista para ver los usuarios que asistieron a una capacitación
 def view_assistants(request, id):
+    capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    error_message = None
+    success_message = None
+    
+    if request.method == 'POST' and 'image' in request.FILES:
+        image_file = request.FILES['image']
+        
+        
+        #Verificar el tamaño de archivo
+        if image_file.size > 3 * 1024 *1024:
+            error_message = "La imagen excede los 3MB"
+        else:
+            filename = f"evidencia_{capacitacion.id}_{image_file.name}"
+            
+            #Cargar imagen a Azure Blob Storage
+            image_url = upload_to_azure_blob(image_file, filename)
+            
+            if image_url:
+                # Guardar la URL de la img en el modelo
+                capacitacion.image_url = image_url
+                capacitacion.save()
+                success_message = "Imagen cargada con éxito"
+            else:
+                error_message = "Erro al cargar la imagen"
+        if error_message:
+            messages.error(request, error_message)
+        if success_message:
+            messages.success(request, success_message)
     
     #Remover Acentos
     def remove_accents(input_str):
@@ -536,9 +708,32 @@ def view_assistants(request, id):
         total_invitados = capacitacion.total_invitados
         total_asistentes = len(assistant_data_yes)
         tasa_exito = 0
+        total_ausentes = total_invitados - total_asistentes
         
         if total_invitados > 0 :
             tasa_exito = (total_asistentes/total_invitados)*100
+        
+        if request.method == 'POST' and 'images' in request.FILES:
+            images = request.FILES.getlist('images')
+            total_existing_images = capacitacion.images.count()
+            total_images = total_existing_images + len(images)
+            
+            if total_images > 5:
+                messages.error(request, "No puede tener más de 5 imágenes en total")
+            else:
+                for image_file in images:
+                    if image_file.size > 3 * 1024 * 1024:
+                        messages.error(request, f"La imagen {image_file.name} excede el tamaño máximo de 3MB.")
+                        continue  # Saltar esta imagen y continuar con las demás
+
+                    filename = f"capacitacion_{capacitacion.id}_{image_file.name}"
+                    image_url = upload_to_azure_blob(image_file, filename)
+                    if image_url:
+                        EventImage.objects.create(capacitacion=capacitacion, image_url=image_url)
+                        messages.success(request, f"La imagen {image_file.name} ha sido cargada exitosamente.")
+                    else:
+                        messages.error(request, f"No se pudo subir la imagen {image_file.name}.")
+                    
         
         # Función para formatear los encabezados
         def format_excel_headers(ws):
@@ -566,9 +761,6 @@ def view_assistants(request, id):
                             max_length = max(max_length, len(str(cell.value)))  # Buscar el texto más largo en todas las filas
                 adjusted_width = max_length + 5  # Agregar un poco de espacio adicional
                 ws.column_dimensions[column_letter].width = adjusted_width  # Ajustar el ancho de la columna
-
-
-
 
         # Aplicación en el lugar correcto donde se crea el archivo Excel
         if request.GET.get('download') == 'excel':
@@ -621,7 +813,10 @@ def view_assistants(request, id):
         'assistants_yes': assistant_data_yes,
         'assistants_no': assistant_data_no,
         'total_invitados': total_invitados,
-        'tasa_exito': round(tasa_exito, 2) # Cifra redondeada
+        'tasa_exito': round(tasa_exito, 2), # Cifra redondeada
+        'total_ausentes': total_ausentes,
+        'error_message': error_message,
+        'success_message': success_message
     })
     
 # Buscar Empleados en Odoo
@@ -666,6 +861,9 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
             raise ValueError(f"No se encontró el departamento '{capacitacion.area_encargada}' en Odoo.")
         
         department_id = department_data[0]['id']
+        
+        
+        
        # Loop sobre cada empleado seleccionado
         print('ENVIANDO ASISTENTES A ODOO')
         for name in employee_ids:

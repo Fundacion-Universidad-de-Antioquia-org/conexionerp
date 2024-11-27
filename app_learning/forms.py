@@ -21,6 +21,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         required=True,
         label= 'Privacidad'
     )
+    
 
     class Meta:
         model = CtrlCapacitaciones
@@ -85,7 +86,6 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             self.fields['ubicacion'].widget = forms.TextInput(attrs={'placeholder': 'Ingrese la ubicación'})
             self.fields['url_reunion'].required = True
             self.fields['ubicacion'].required = True
-            
         
 class RegistrationForm(forms.Form):
   topic = forms.CharField(max_length= 250, label = 'Tema', widget=forms.TextInput(attrs={'readonly':'readonly'}))
