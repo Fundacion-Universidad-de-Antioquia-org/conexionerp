@@ -37,7 +37,14 @@ class CtrlCapacitaciones(models.Model):
     total_invitados = models.IntegerField(default=0, verbose_name='Total Asistentes')
     tipo = models.CharField(max_length=20, choices=TIPO, default='Capacitación', verbose_name='Tipo de evento')
     privacidad = models.CharField(max_length=20, choices=PRIVACIDAD, default='ABIERTA', verbose_name= 'Privacidad')
-    
+    image_url = models.URLField(null=True, blank=True)
     
     def __str__(self):
         return f"{self.tema} - {self.moderador}"
+    
+class EventImage(models.Model):
+    capacitacion = models.ForeignKey(CtrlCapacitaciones, on_delete=models.CASCADE, related_name='images')
+    image_url = models.URLField(max_length=500)
+    
+    def __str__(self):
+        return f"Imagen para {self.capacitacion.tema}"
