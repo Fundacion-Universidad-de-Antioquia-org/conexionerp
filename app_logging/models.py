@@ -21,5 +21,6 @@ class Log(models.Model):
             ('opcion3', 'Registro'),
        ],
     )
+    id_registro = models.CharField(blank=True)
     def __str__(self):
         return f'{self.email} - {self.date} - {self.status}'

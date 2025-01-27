@@ -24,7 +24,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+from .utils import registrar_log_interno
+ 
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,11 @@ user = os.getenv("ODOO_USER")
 password = os.getenv("PASSWORD")
 host = os.getenv("HOST")
 apphost = os.getenv('APP_HOST')
+
+@settings.AUTH.login_required
+def index(request, *, context):
+    user = context['user']
+    return HttpResponse(f"Hello, {user.get('name')}.")
 
 def get_employee_names(request):
     ids = request.GET.getlist('ids[]', [])
@@ -61,6 +67,7 @@ def get_employee_names(request):
 
 # Función para cargar una imagen a Azure Blob Storage
 def upload_to_azure_blob(file, filename):
+    print('Ingresa a upload_to_azure')
     try:
         connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         container_name = os.getenv("AZURE_CONTAINER_NAME")
@@ -69,15 +76,14 @@ def upload_to_azure_blob(file, filename):
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
         blob_client.upload_blob(file, overwrite=True)
         
+        print('STRING ENV: ', connection_string)
+        print('CONTAINER ENV: ', container_name)
+        
         return blob_client.url
     except Exception as e:
         print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
         import traceback
         traceback.print_exc()
-        return None
-
-    except Exception as e:
-        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
         return None
     
 def delete_blob_from_azure(blob_url):
@@ -262,8 +268,8 @@ def send_to_odoo(data):
 
 # Función para crear QR de Capacitación
 @csrf_exempt
-def create_capacitacion(request):
-    
+@settings.AUTH.login_required()
+def create_capacitacion(request, *, context):
     if request.method == 'POST':
         request.POST = request.POST.copy()
         request.POST['estado'] = 'ACTIVA'
@@ -299,6 +305,21 @@ def create_capacitacion(request):
             img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             capacitacion.qr_base64 = img_base64
             capacitacion.save()
+            
+            userdata = context['user']
+            print('User Data: ', userdata)
+            username = userdata.get('name')
+            email = userdata.get('preferred_username')
+            
+            #Log Data
+            username = email
+            observacion = (f"Creación de la capacitación: {capacitacion.id}")
+            id= capacitacion.id
+            tipo = "Creación"
+            
+            #Create Log
+            registrar_log_interno(username, observacion, tipo, id)
+            
 
             return HttpResponseRedirect(reverse('details_view', args=[capacitacion.id]))
         else:
@@ -526,7 +547,8 @@ def success_view(request, employee_name, url_reunion=None):
     return render(request, 'success.html', context)
 
 #Vista Detalles de la Capacitación
-def details_view(request, id):
+@settings.AUTH.login_required()
+def details_view(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     
      # Determinar si mostrar ubicación y/o URL de la reunión según la modalidad
@@ -552,7 +574,8 @@ def details_view(request, id):
     return render(request, 'details_view.html', context)
 
 # Vista Home que muestra todas las capacitaciones
-def home(request):
+@settings.AUTH.login_required()
+def home(request, *, context):
     capacitaciones = CtrlCapacitaciones.objects.all().order_by('estado','-fecha', '-hora_inicial')
     for capacitacion in capacitaciones:
         capacitacion.fecha_formateada = capacitacion.fecha.strftime('%Y-%m-%d')
@@ -571,7 +594,7 @@ def update_odoo_capacitacion (capacitacion):
         odoo_capacitaciones_ids = models.execute_kw(database, uid, password,
             'x_capacitacion_emplead', 'search',
             [[['x_studio_id_capacitacion', '=', capacitacion.id]]])
-            
+        
         
         if odoo_capacitaciones_ids:
             update_data = {
@@ -585,7 +608,7 @@ def update_odoo_capacitacion (capacitacion):
                 'x_studio_url': capacitacion.url_reunion or '',
                 'x_studio_moderador': capacitacion.moderador,
                 'x_studio_tipo': capacitacion.tipo,
-                'x_studio_responsable': capacitacion.responsable
+                'x_studio_responsable': capacitacion.responsable,
             }
             
             models.execute_kw(database, uid, password,
@@ -604,13 +627,19 @@ def update_odoo_capacitacion (capacitacion):
 
 # Vista para editar una capacitación existente
 @csrf_exempt
-def edit_capacitacion(request, id):
+@settings.AUTH.login_required()
+def edit_capacitacion(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    userdata = context['user']
+    print('User Data: ', userdata)
+    username = userdata.get('name')
+    email = userdata.get('preferred_username')
     
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST, instance=capacitacion)
         if form.is_valid():
             capacitacion = form.save(commit=False)
+            capacitacion.user = username
             form.save()
             
             # Obtener los empleados seleccionados del POST
@@ -622,6 +651,21 @@ def edit_capacitacion(request, id):
                 print("Enviando asistentes a Odoo desde la edición...")
                 send_assistants_to_odoo(capacitacion.id, employee_names)
             
+            #Log Data
+            username = email
+            id= capacitacion.id
+            
+            if capacitacion.estado == 'ACTIVA':
+                observacion = f"Modificación de la capacitación: {capacitacion.id}"
+                tipo = "Actualización"
+            else:
+                observacion = f"Cierre de la capacitación: {capacitacion.id}"
+                tipo = "Cierre"
+
+            
+            #Create Log
+            registrar_log_interno(username, observacion, tipo, id)
+            #Update Odoo
             update_odoo_capacitacion(capacitacion)
             return redirect('home')
     else:
@@ -630,7 +674,8 @@ def edit_capacitacion(request, id):
 
 
 # Vista para ver los usuarios que asistieron a una capacitación
-def view_assistants(request, id):
+@settings.AUTH.login_required()
+def view_assistants(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     error_message = None
     success_message = None
@@ -728,6 +773,7 @@ def view_assistants(request, id):
 
                     filename = f"capacitacion_{capacitacion.id}_{image_file.name}"
                     image_url = upload_to_azure_blob(image_file, filename)
+                    print('IMAGE-URL: ', image_url)
                     if image_url:
                         EventImage.objects.create(capacitacion=capacitacion, image_url=image_url)
                         messages.success(request, f"La imagen {image_file.name} ha sido cargada exitosamente.")

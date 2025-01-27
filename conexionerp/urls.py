@@ -21,6 +21,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    settings.AUTH.urlpattern,
     path('', TemplateView.as_view(template_name="vista.html"), name='home'),
     #migracion
     path('admin/', admin.site.urls),

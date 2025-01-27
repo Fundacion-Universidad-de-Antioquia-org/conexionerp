@@ -38,6 +38,7 @@ class CtrlCapacitaciones(models.Model):
     tipo = models.CharField(max_length=20, choices=TIPO, default='Capacitación', verbose_name='Tipo de evento')
     privacidad = models.CharField(max_length=20, choices=PRIVACIDAD, default='ABIERTA', verbose_name= 'Privacidad')
     image_url = models.URLField(null=True, blank=True)
+    user = models.CharField(max_length=250)
     
     def __str__(self):
         return f"{self.tema} - {self.moderador}"
