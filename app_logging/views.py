@@ -43,6 +43,7 @@ def registrar_log(request):
     observacion = data.get('observacion')
     nombre_aplicacion = data.get('nombre_aplicacion')
     tipo = data.get('tipo')
+    id_registro = data.get('id_registro')
 
     try:
         fecha = parser.isoparse(fecha_str)
@@ -58,7 +59,7 @@ def registrar_log(request):
         logger.error(f"Error al parsear la fecha: {e}")
         return JsonResponse({'error': 'Fecha inválida'}, status=400)
 
-    log = Log.objects.create(correo=correo, fecha=fecha, tipo_evento=tipo_evento, observacion=observacion, nombre_aplicacion=nombre_aplicacion, tipo=tipo)
+    log = Log.objects.create(correo=correo, fecha=fecha, tipo_evento=tipo_evento, observacion=observacion, nombre_aplicacion=nombre_aplicacion, tipo=tipo, id_registro=id_registro)
     return JsonResponse({'message': 'Log registrado correctamente'}, status=201)
 
 def update_log_date(request):

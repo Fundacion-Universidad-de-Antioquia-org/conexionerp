@@ -3,12 +3,12 @@ from django.http import JsonResponse
 from django.test import RequestFactory
 import json
 from dateutil import parser
-from django.utils.timezone import make_aware, is_naive
+from django.utils.timezone import make_aware, is_naive, now
 from app_logging.views import registrar_log
 
 logger = logging.getLogger(__name__)
 
-def registrar_log_interno(correo, observacion, tipo):
+def registrar_log_interno(username, observacion, tipo, id):
     
     """
     Registra un log en la base de datos.
@@ -22,20 +22,19 @@ def registrar_log_interno(correo, observacion, tipo):
     """
     try:
         factory = RequestFactory()
-        # Si no se proporciona fecha, usar la fecha actual
-        if fecha is None:
-            fecha = make_aware(parser.parse(fecha)) if is_naive(parser.parse(fecha)) else parser.parse(fecha)
- 
+        fecha = now()
         # Crear el registro de log
         log = {
-            "correo": correo,
-            "fecha": fecha,
+            "correo": username,
+            "fecha": fecha.isoformat(),
             "tipo_evento": "INFO",
             "observacion": observacion,
             "nombre_aplicacion": "Capacitaciones",
             "tipo": tipo,
+            "id_registro": id,
         }
-
+        
+        print('LOG a Enviar;', log)
         # Crear una solicitud POST simulada
         request = factory.post(
         "/app_logging/registrar_log/",
