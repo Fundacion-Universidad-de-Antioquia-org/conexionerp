@@ -24,8 +24,8 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-# from app_logging import registrar_log
-
+from .utils import registrar_log_interno
+ 
 
 logger = logging.getLogger(__name__)
 
@@ -636,6 +636,12 @@ def edit_capacitacion(request, id, *, context):
                 print("Enviando asistentes a Odoo desde la edición...")
                 send_assistants_to_odoo(capacitacion.id, employee_names)
             
+            correo = 'analistatic@fundacionudea.co'
+            observacion = 'Pruebas Logs'
+            tipo = "Actualización"
+            
+            
+            registrar_log_interno(correo, observacion, tipo)
             update_odoo_capacitacion(capacitacion)
             return redirect('home')
     else:
