@@ -26,6 +26,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 
+
 logger = logging.getLogger(__name__)
 
 # Cargar variables de entorno
@@ -35,6 +36,11 @@ user = os.getenv("ODOO_USER")
 password = os.getenv("PASSWORD")
 host = os.getenv("HOST")
 apphost = os.getenv('APP_HOST')
+
+@settings.AUTH.login_required
+def index(request, *, context):
+    user = context['user']
+    return HttpResponse(f"Hello, {user.get('name')}.")
 
 def get_employee_names(request):
     ids = request.GET.getlist('ids[]', [])
@@ -552,7 +558,8 @@ def details_view(request, id):
     return render(request, 'details_view.html', context)
 
 # Vista Home que muestra todas las capacitaciones
-def home(request):
+@settings.AUTH.login_required()
+def home(request, *, context):
     capacitaciones = CtrlCapacitaciones.objects.all().order_by('estado','-fecha', '-hora_inicial')
     for capacitacion in capacitaciones:
         capacitacion.fecha_formateada = capacitacion.fecha.strftime('%Y-%m-%d')
@@ -561,7 +568,8 @@ def home(request):
     return render(request, 'home.html', {'capacitaciones': capacitaciones})
 
 #Actualizar Capacitación en Odoo por ID:
-def update_odoo_capacitacion (capacitacion):
+@settings.AUTH.login_required()
+def update_odoo_capacitacion (request, capacitacion, *, context):
     try:
         #Conexión Odoo
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
@@ -571,7 +579,7 @@ def update_odoo_capacitacion (capacitacion):
         odoo_capacitaciones_ids = models.execute_kw(database, uid, password,
             'x_capacitacion_emplead', 'search',
             [[['x_studio_id_capacitacion', '=', capacitacion.id]]])
-            
+        
         
         if odoo_capacitaciones_ids:
             update_data = {
@@ -585,7 +593,8 @@ def update_odoo_capacitacion (capacitacion):
                 'x_studio_url': capacitacion.url_reunion or '',
                 'x_studio_moderador': capacitacion.moderador,
                 'x_studio_tipo': capacitacion.tipo,
-                'x_studio_responsable': capacitacion.responsable
+                'x_studio_responsable': capacitacion.responsable,
+                #'x_studio_cap_ultima_actualizacion': user.get('name'),
             }
             
             models.execute_kw(database, uid, password,
@@ -604,13 +613,17 @@ def update_odoo_capacitacion (capacitacion):
 
 # Vista para editar una capacitación existente
 @csrf_exempt
-def edit_capacitacion(request, id):
+@settings.AUTH.login_required()
+def edit_capacitacion(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    userdata = context['user']
+    username = userdata.get('name')
     
     if request.method == 'POST':
         form = CtrlCapacitacionesForm(request.POST, instance=capacitacion)
         if form.is_valid():
             capacitacion = form.save(commit=False)
+            capacitacion.user = username
             form.save()
             
             # Obtener los empleados seleccionados del POST

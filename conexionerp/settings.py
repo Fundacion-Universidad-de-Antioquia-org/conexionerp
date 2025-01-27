@@ -12,10 +12,21 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from identity.django import Auth
 from dotenv import load_dotenv
 
 # Cargar las variables de entorno desde el archivo .env
 load_dotenv()
+
+#AUTENTICACIÓN:
+AUTH = Auth(
+    os.getenv('CLIENT_ID'),
+    client_credential=os.getenv('CLIENT_SECRET'),
+    redirect_uri=os.getenv('REDIRECT_URI'),
+    #scopes=os.getenv('SCOPE', "").split(),
+    #scopes= ["User.Read", "GroupMember.Read.All", "Directory.Read.All", "User.Read.All", "User.ReadBasic.All"],
+    authority=os.getenv('AUTHORITY'),
+    )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +59,7 @@ INSTALLED_APPS = [
     'app_pdf_management', # Genera archivos PDF con informacion de registros de listas en sharepoint
     'app_logging',  # Control de logs de la ejecucion de tareas de sincronizacion y automatizaciones
     'app_learning', # Control de asistencia a capacitaciones
+    'identity', # Control de Login con Microsoft
 ]
 
 MIDDLEWARE = [
