@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'app_logging',  # Control de logs de la ejecucion de tareas de sincronizacion y automatizaciones
     'app_learning', # Control de asistencia a capacitaciones
     'identity', # Control de Login con Microsoft
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
