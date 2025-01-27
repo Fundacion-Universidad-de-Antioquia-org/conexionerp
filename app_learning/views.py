@@ -24,7 +24,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-
+# from app_logging import registrar_log
 
 
 logger = logging.getLogger(__name__)
@@ -268,7 +268,8 @@ def send_to_odoo(data):
 
 # Función para crear QR de Capacitación
 @csrf_exempt
-def create_capacitacion(request):
+@settings.AUTH.login_required()
+def create_capacitacion(request, *, context):
     
     if request.method == 'POST':
         request.POST = request.POST.copy()
@@ -532,7 +533,8 @@ def success_view(request, employee_name, url_reunion=None):
     return render(request, 'success.html', context)
 
 #Vista Detalles de la Capacitación
-def details_view(request, id):
+@settings.AUTH.login_required()
+def details_view(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     
      # Determinar si mostrar ubicación y/o URL de la reunión según la modalidad
@@ -568,8 +570,7 @@ def home(request, *, context):
     return render(request, 'home.html', {'capacitaciones': capacitaciones})
 
 #Actualizar Capacitación en Odoo por ID:
-@settings.AUTH.login_required()
-def update_odoo_capacitacion (request, capacitacion, *, context):
+def update_odoo_capacitacion (capacitacion):
     try:
         #Conexión Odoo
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
@@ -643,7 +644,8 @@ def edit_capacitacion(request, id, *, context):
 
 
 # Vista para ver los usuarios que asistieron a una capacitación
-def view_assistants(request, id):
+@settings.AUTH.login_required()
+def view_assistants(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     error_message = None
     success_message = None
