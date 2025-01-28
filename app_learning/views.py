@@ -9,6 +9,7 @@ import os
 import traceback
 from django.contrib import messages
 from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -67,29 +68,36 @@ def get_employee_names(request):
 
 # Función para cargar una imagen a Azure Blob Storage
 def upload_to_azure_blob(file, filename):
-    print('Ingresa a upload_to_azure')
-    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    
+    print('Identidad Administrada para autenticar en Azure Blob Storage')
     container_name = os.getenv("AZURE_CONTAINER_NAME")
     
-    print('STRING ENV: ', connection_string)
-    print('CONTAINER ENV: ', container_name)
-    
     try:
-        if not connection_string or not container_name:
+        if not container_name:
             raise ValueError("Cadena de conexión o nombre del contenedor no configurados correctamente.")
         
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string, credential=None)
-        containers = list(blob_service_client.list_containers())
-        print("📦 Contenedores accesibles:")
-        for container in containers:
-            print(f" - {container['name']}")
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
+        # Identidad administrada para autenticar
+        credential = DefaultAzureCredential()
+        blob_service_client = BlobServiceClient(account_url="https://waconexionerpprod001.blob.core.windows.net", credential=credential)
+        container_client = blob_service_client.get_container_client(container_name)
+        
+        print(f"Intentando acceder al contenedor '{container_name}' con Identidad Administrada...")
+        if container_client.exists():
+            print(f"✅ Contenedor '{container_name}' accesible con Identidad Administrada.")
+            blobs = list(container_client.list_blobs())
+            print(f"📂 Lista de blobs en '{container_name}':")
+            for blob in blobs:
+                print(f" - {blob.name}")
+        else:
+            print(f"⚠️ No se pudo acceder al contenedor '{container_name}', verificar permisos.")
+
+        
+        blob_client = container_client.get_blob_client(filename)
         blob_client.upload_blob(file, overwrite=True)
         
         return blob_client.url
     except Exception as e:
-        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
-        traceback.print_exc()
+        print(f"❌ Error subiendo el archivo a Azure Blob Storage con Identidad Administrada: {e}")
         return None
     
 def delete_blob_from_azure(blob_url):
@@ -686,6 +694,7 @@ def view_assistants(request, id, *, context):
     error_message = None
     success_message = None
     
+    #Cargar una sola imagen:
     if request.method == 'POST' and 'image' in request.FILES:
         image_file = request.FILES['image']
         
@@ -764,6 +773,7 @@ def view_assistants(request, id, *, context):
         if total_invitados > 0 :
             tasa_exito = (total_asistentes/total_invitados)*100
         
+        #Cargar multiples imágenes
         if request.method == 'POST' and 'images' in request.FILES:
             images = request.FILES.getlist('images')
             total_existing_images = capacitacion.images.count()
