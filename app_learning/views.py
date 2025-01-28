@@ -68,21 +68,26 @@ def get_employee_names(request):
 # Función para cargar una imagen a Azure Blob Storage
 def upload_to_azure_blob(file, filename):
     print('Ingresa a upload_to_azure')
+    connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    container_name = os.getenv("AZURE_CONTAINER_NAME")
+    
+    print('STRING ENV: ', connection_string)
+    print('CONTAINER ENV: ', container_name)
+    
     try:
-        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-        container_name = os.getenv("AZURE_CONTAINER_NAME")
+        if not connection_string or not container_name:
+            raise ValueError("Cadena de conexión o nombre del contenedor no configurados correctamente.")
         
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
         blob_client.upload_blob(file, overwrite=True)
         
-        print('STRING ENV: ', connection_string)
-        print('CONTAINER ENV: ', container_name)
+        print('STRING ENV en try: ', connection_string)
+        print('CONTAINER ENV en try: ', container_name)
         
         return blob_client.url
     except Exception as e:
         print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
-        import traceback
         traceback.print_exc()
         return None
     
