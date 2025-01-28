@@ -78,12 +78,13 @@ def upload_to_azure_blob(file, filename):
         if not connection_string or not container_name:
             raise ValueError("Cadena de conexión o nombre del contenedor no configurados correctamente.")
         
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string, credential=None)
+        containers = list(blob_service_client.list_containers())
+        print("📦 Contenedores accesibles:")
+        for container in containers:
+            print(f" - {container['name']}")
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
         blob_client.upload_blob(file, overwrite=True)
-        
-        print('STRING ENV en try: ', connection_string)
-        print('CONTAINER ENV en try: ', container_name)
         
         return blob_client.url
     except Exception as e:
