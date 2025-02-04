@@ -77,7 +77,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "https://app-softwareids-prod-001-ahgyajb0ejfwbwa9.eastus-01.azurewebsites.net",
     "https://aseo.fundacionudea.net",
-    "https://erp-apps.fundacionudea.net".
+    "https://erp-apps.fundacionudea.net",
     "https://app-softwareids-dev-001-hvbfatg2hhevgdfr.eastus-01.azurewebsites.net"
 ]
 CORS_ALLOW_HEADERS = [
