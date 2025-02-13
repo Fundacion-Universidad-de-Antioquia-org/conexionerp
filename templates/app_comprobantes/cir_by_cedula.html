@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="{% static 'css/search_certificates.css' %}">
+<link rel="stylesheet" href="https://cdnfuadesarrollo.blob.core.windows.net/appcomprobantesestilos/search_certificates.css"/>
 {% endblock %}
 
 {% block content %}
@@ -82,7 +82,7 @@
   {% endif %}
 </div>
 
-<script src="{% static 'js/cir_by_cedula.js' %}"></script>
+<script src="https://cdnfuadesarrollo.blob.core.windows.net/appcomprobantesestilos/cir_by_cedula.js"></script>
 <script>
     const downloadUrl = "{% url 'download_cir' %}";
     const deleteUrl = "{% url 'delete_cir' %}";
