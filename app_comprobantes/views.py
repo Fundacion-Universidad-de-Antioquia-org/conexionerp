@@ -571,7 +571,7 @@ def download_cir(request):
 
     response = HttpResponse(memory_file, content_type="application/zip")
     response["Content-Disposition"] = 'attachment; filename="certificados.zip"'
-
+    return response
 
 @settings.AUTH.login_required()
 def home(request, *, context):
