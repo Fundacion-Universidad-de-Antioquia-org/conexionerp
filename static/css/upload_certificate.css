@@ -1,0 +1,73 @@
+/* upload_certificate.css */
+
+/* Fondo general (ya definido en el base, pero se puede reforzar) */
+body {
+    background-color: #f8f9fa;
+  }
+  
+  /* Limitar ancho de contenedor */
+  .container {
+    max-width: 800px;
+  }
+  
+  /* Estilo para el contenedor del formulario (card) */
+
+/* Estilo para el contenedor del formulario (card) */
+.card-form {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+  margin-bottom: 2rem;
+}
+.card-form:hover {
+  transform: scale(1.02);
+}
+
+/* Estilo para el título */
+.card-form h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #343a40;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  border-bottom: 3px solid #5c9c31;
+  padding-bottom: 0.5rem;
+  text-align: center;
+}
+
+  
+  /* Estilo personalizado para los campos del formulario */
+  .form-control {
+    border-radius: 0.25rem;
+  }
+  
+  /* Botón personalizado en tono verde (para mantener la línea con el header) */
+  .btn-custom {
+    background-color: #5c9c31 !important; /* Color verde similar al header */
+    border-color: #5c9c31 !important;
+    color: #fff !important;
+    font-weight: bold;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+  
+  .btn-custom:hover {
+    background-color: #4a8c2a !important;
+    border-color: #4a8c2a !important;
+  }
+  
+  /* Estilo para el contenedor de errores */
+  #errorContainer {
+    margin-bottom: 1rem;
+  }
+
+.modal.fade .modal-dialog {
+    transform: translate(0, -50px);
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: translate(0, 0);
+}
+/* Estilos para el spinner de carga */

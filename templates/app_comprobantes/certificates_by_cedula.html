@@ -1,0 +1,94 @@
+{% extends 'app_comprobantes/base.html' %}
+{% load static %}
+
+{% block title %}Buscar Comprobantes de Pago{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="{% static 'css/search_certificates.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Título con nuevo diseño -->
+    <div class="title-container">
+      <h1 class="title-text">📄 Buscar Comprobantes de Pago</h1>
+    </div>
+  <div class="card-form search-form-container">
+
+    <form method="get" action="{% url 'certificates_by_cedula' %}" class="row g-2">
+      <div class="col-12">
+        <input type="text" id="filterInput" name="cedula" class="form-control" placeholder="Ingrese la cédula" value="{{ cedula|default:'' }}" required>
+      </div>
+      <div class="col-12">
+        <input type="text" id="companyFilter" name="company" class="form-control" placeholder="Filtrar por Compañía" value="{{ company|default:'' }}">
+      </div>
+      <div class="col-md-6">
+        <input type="date" id="startDate" name="start_date" class="form-control" placeholder="Desde">
+      </div>
+      <div class="col-md-6">
+        <input type="date" id="endDate" name="end_date" class="form-control" placeholder="Hasta">
+      </div>
+      <div class="col-12 d-flex justify-content-between">
+        <button type="submit" class="btn btn-success w-50"><i class="bi bi-search"></i> Buscar</button>
+        <button type="button" class="btn btn-secondary w-50" id="resetFilters">
+          <i class="bi bi-arrow-counterclockwise"></i> Borrar Filtros
+        </button>      </div>
+    </form>
+  </div>
+
+  {% if certificates %}
+  <div class="table-responsive">
+    <div class="d-flex gap-2 mb-3">
+      <button class="btn btn-primary" onclick="downloadFiltered()"><i class="bi bi-download"></i> </button>
+      <button class="btn btn-danger" onclick="deleteFiltered()"><i class="bi bi-trash"></i> </button>
+    </div>
+    <table class="table table-bordered table-hover" id="certificatesTable">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAll" onclick="toggleSelection()"></th>
+          <th>ID</th>
+          <th>Fecha</th>
+          <th>Compañía</th>
+          <th>Cédula</th>
+          <th>Observaciones</th>
+          <th>PDF</th>
+          <th>Subido</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cert in certificates %}
+        <tr>
+          <td><input type="checkbox" class="select-item" value="{{ cert.id }}"></td>
+          <td>{{ cert.id }}</td>
+          <td>{{ cert.comprobante_date|date:"Y-m-d" }}</td>
+          <td>{{ cert.company }}</td>
+          <td>{{ cert.cedula }}</td>
+          <td>{{ cert.observations }}</td>
+          <td>
+            <a href="{{ cert.blob_url }}" target="_blank" class="btn btn-outline-dark btn-sm"><i class="bi bi-file-earmark-pdf"></i> Ver</a>          </td>
+          <td>{{ cert.uploaded_at|date:"Y-m-d H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif cedula or company or start_date or end_date %}
+  <div class="alert alert-warning text-center" role="alert">
+    No se encontraron comprobantes de pago con los filtros aplicados.
+  </div>
+  {% endif %}
+</div>
+
+<script src="{% static 'js/certificates_by_cedula.js' %}"></script>
+<script>
+    const downloadUrl = "{% url 'download_certificates' %}";
+    const deleteUrl = "{% url 'delete_certificates' %}";
+
+    function toggleSelection() {
+        let checkboxes = document.querySelectorAll(".select-item");
+        let selectAll = document.getElementById("selectAll");
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    }
+</script>
+{% endblock %}

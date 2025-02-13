@@ -31,4 +31,6 @@ urlpatterns = [
     path('pdf/', include('app_pdf_management.urls')),
     path('logs/', include('app_logging.urls')),
     path('learn/', include('app_learning.urls')),
+    path('employee/', include('app_comprobantes.urls')),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
