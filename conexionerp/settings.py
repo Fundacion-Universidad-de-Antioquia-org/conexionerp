@@ -78,10 +78,12 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:8001",
+    "http://localhost:3000",
     "https://app-softwareids-prod-001-ahgyajb0ejfwbwa9.eastus-01.azurewebsites.net",
     "https://aseo.fundacionudea.net",
     "https://erp-apps.fundacionudea.net",
-    "https://app-softwareids-dev-001-hvbfatg2hhevgdfr.eastus-01.azurewebsites.net"
+    "https://app-softwareids-dev-001-hvbfatg2hhevgdfr.eastus-01.azurewebsites.net",
+    "https://empleados.fundacionudea.org"
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",

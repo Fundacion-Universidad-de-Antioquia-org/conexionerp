@@ -51,27 +51,32 @@ def certificate_upload(request, *, context):
             observations = form.cleaned_data['observations']
 
             extracted_files = {}
-
             # Validar archivos dentro del ZIP y extraer las cédulas antes de subir a Azure
             try:
                 with zipfile.ZipFile(zip_file) as z:
                     for file_info in z.infolist():
                         if file_info.filename.lower().endswith('.pdf'):
-                            match = re.search(r'-([\d]+)\.pdf$', file_info.filename)
+                            match = re.search(r'-(\d{7,10})\.pdf$', file_info.filename)
                             if not match:
                                 error_messages.append(f"Formato incorrecto en: {file_info.filename}")
                                 continue
 
-                            cedula = match.group(1)
+                            cedula = match.group(1)  # Extrae la cédula correctamente
 
-                            if cedula in extracted_files:
+                            # 🔴 Nuevo identificador único: combinación de fechas y cédula
+                            file_key = f"{file_info.filename.split('-')[0]}-{file_info.filename.split('-')[1]}-{cedula}"
+
+                            if file_key in extracted_files:
                                 error_messages.append(f"Archivo duplicado en ZIP: {file_info.filename}")
                                 continue
 
-                            extracted_files[cedula] = {
+                            extracted_files[file_key] = {  # Se usa file_key para validar duplicados, pero guardamos cédula
                                 'filename': file_info.filename,
-                                'data': z.read(file_info)
+                                'data': z.read(file_info),
+                                'cedula': cedula  # Agregamos la cédula separadamente
                             }
+
+
             except zipfile.BadZipFile:
                 return JsonResponse({"success": False, "error": "El archivo ZIP no es válido."}, status=400)
 
@@ -90,7 +95,7 @@ def certificate_upload(request, *, context):
             success_count = 0
             
             # Subir archivos a Azure y registrar en BD
-            for cedula, file_info in extracted_files.items():
+            for file_key, file_info in extracted_files.items():
                 blob_name = file_info['filename'].split('/')[-1]
                 blob_client = container_client.get_blob_client(blob_name)
 
@@ -104,7 +109,7 @@ def certificate_upload(request, *, context):
                     certificate = LaborCertificate(
                         comprobante_date=comprobante_date,
                         company=company,
-                        cedula=cedula,
+                        cedula=file_info['cedula'],  # 🔴 Guardamos SOLO la cédula en la BD
                         observations=observations,
                         blob_url=blob_url
                     )
@@ -335,26 +340,33 @@ def cir_upload(request, *, context):
 
             logger.info(f"Procesando archivo CIR para fecha: {comprobante_date}, compañía: {company}")
 
-            # Validar archivos dentro del ZIP y extraer las cédulas antes de subir a Azure
+           # Validar archivos dentro del ZIP y extraer las cédulas antes de subir a Azure
             try:
                 with zipfile.ZipFile(zip_file) as z:
                     for file_info in z.infolist():
                         if file_info.filename.lower().endswith('.pdf'):
-                            match = re.search(r'CIR \d{4} .*-(\d+)\.pdf$', file_info.filename)
+                            match = re.search(r'CIR (\d{4}) (.+)-(\d{7,10})\.pdf$', file_info.filename)
                             if not match:
                                 error_messages.append(f"Formato incorrecto en: {file_info.filename}")
                                 continue
 
-                            cedula = match.group(1)
+                            year = match.group(1)  # Extrae el año (2024, 2025, etc.)
+                            full_name = match.group(2).strip()  # Extrae el nombre completo
+                            cedula = match.group(3)  # Extrae la cédula
 
-                            if cedula in extracted_files:
+                            # 🔴 Nuevo identificador único basado en Año + Nombre + Cédula
+                            file_key = f"{year}-{full_name}-{cedula}"
+
+                            if file_key in extracted_files:
                                 error_messages.append(f"Archivo duplicado en ZIP: {file_info.filename}")
                                 continue
 
-                            extracted_files[cedula] = {
+                            extracted_files[file_key] = {  # Se usa file_key para evitar duplicados
                                 'filename': file_info.filename,
-                                'data': z.read(file_info)
+                                'data': z.read(file_info),
+                                'cedula': cedula  # Guardamos la cédula por separado para la BD
                             }
+
             except zipfile.BadZipFile:
                 return JsonResponse({"success": False, "error": "El archivo ZIP no es válido."}, status=400)
 
@@ -373,7 +385,7 @@ def cir_upload(request, *, context):
             success_count = 0
             
             # Subir archivos a Azure y registrar en BD
-            for cedula, file_info in extracted_files.items():
+            for file_key, file_info in extracted_files.items():
                 blob_name = file_info['filename'].split('/')[-1]
                 blob_client = container_client.get_blob_client(blob_name)
 
@@ -387,7 +399,7 @@ def cir_upload(request, *, context):
                     certificate = CIRCertificate(
                         comprobante_date=comprobante_date,
                         company=company,
-                        cedula=cedula,
+                        cedula=file_info['cedula'],  # 🔴 Guardamos SOLO la cédula en la BD
                         observations=observations,
                         blob_url=blob_url
                     )
