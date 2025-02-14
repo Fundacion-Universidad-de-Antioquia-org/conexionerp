@@ -586,7 +586,7 @@ def download_cir(request):
     return response
 
 @settings.AUTH.login_required()
-def home(request, *, context):
+def home_appcomprobantes(request, *, context):
     month = request.GET.get('month')
     year = request.GET.get('year')
 
@@ -642,7 +642,7 @@ def home(request, *, context):
         .filter(total_comprobantes__gt=0)
     )
 
-    return render(request, 'app_comprobantes/home.html', {
+    return render(request, 'app_comprobantes/home_appcomprobantes.html', {
         'certificate_stats': certificate_stats,
         'comprobante_stats': comprobante_stats,
         'months': months,

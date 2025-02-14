@@ -15,7 +15,7 @@ urlpatterns = [
     path("download_cir/", views.download_cir, name="download_cir"),
     path("delete_comprobantes/", views.delete_certificates, name="delete_certificates"),
     path("download_comprobantes/", views.download_certificates, name="download_certificates"),
-    path("home/", views.home, name="home"),
+    path("home/", views.home_appcomprobantes, name="home_appcomprobantes"),
 
     
 ]
