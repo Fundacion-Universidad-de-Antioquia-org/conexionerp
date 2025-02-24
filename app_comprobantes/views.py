@@ -56,7 +56,7 @@ def certificate_upload(request, *, context):
                 with zipfile.ZipFile(zip_file) as z:
                     for file_info in z.infolist():
                         if file_info.filename.lower().endswith('.pdf'):
-                            match = re.search(r'-(\d{7,10})\.pdf$', file_info.filename)
+                            match = re.search(r'-(\d{1,11})\.pdf$', file_info.filename)
                             if not match:
                                 error_messages.append(f"Formato incorrecto en: {file_info.filename}")
                                 continue
