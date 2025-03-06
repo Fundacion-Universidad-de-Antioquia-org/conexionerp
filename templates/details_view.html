@@ -17,6 +17,14 @@
         <p><strong> {{ topic }} </strong></p>
       </div>
       <p><strong>Objetivo:</strong> {{ objective }}</p>
+      <p><strong>Documento Adjunto:</strong> {{ pdf_url }} </p>
+      <div class="separator-sm desktop"></div>
+      {% if topics %}
+        <p><strong>Temas: </strong></p>
+        <pre>{{ topics }}</pre>
+        {% else %}
+        <p><strong>Temas: </strong> No se han definido temas.</p>
+      {% endif %}
       <div class="separator-sm desktop"></div>
     </div>
     <div class="detail-info">

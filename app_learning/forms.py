@@ -22,6 +22,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         label= 'Privacidad'
     )
     
+    archivo_pdf = forms.FileField(required=False, label='Archivo PDF (opcional)')
 
     class Meta:
         model = CtrlCapacitaciones
@@ -38,7 +39,8 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                   'ubicacion',
                   'tipo',
                   'privacidad', 
-                  'objetivo', 
+                  'objetivo',
+                  'temas', 
                   'estado']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
@@ -56,6 +58,10 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'url_reunion': forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'}),
             'ubicacion': forms.TextInput(attrs={'placeholder': 'Ingrese la ubicación'}),
             'total_invitados': forms.NumberInput(attrs={'min':1, 'placeholder': 'Cantidad de invitados'}),
+            'temas': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Escriba los temas de la capacitación',
+            }),
         }
     
     def __init__(self, *args, **kwargs):
