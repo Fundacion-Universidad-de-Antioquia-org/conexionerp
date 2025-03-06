@@ -67,38 +67,29 @@ def get_employee_names(request):
 
 
 def upload_to_azure_blob(file, filename):
-    
-    print('Identidad Administrada para autenticar en Azure Blob Storage')
-    container_name = os.getenv("AZURE_CONTAINER_NAME")
-    
+    print('Intentando subir archivo a Azure Blob Storage...')
     try:
-        if not container_name:
-            raise ValueError("Cadena de conexión o nombre del contenedor no configurados correctamente.")
-        
-        # Identidad administrada para autenticar
-        credential = DefaultAzureCredential()
-        blob_service_client = BlobServiceClient(account_url="https://waconexionerpprod001.blob.core.windows.net", credential=credential)
-        container_client = blob_service_client.get_container_client(container_name)
-        
-        print(f"Intentando acceder al contenedor '{container_name}' con Identidad Administrada...")
-        if container_client.exists():
-            print(f"✅ Contenedor '{container_name}' accesible con Identidad Administrada.")
-            blobs = list(container_client.list_blobs())
-            print(f"📂 Lista de blobs en '{container_name}':")
-            for blob in blobs:
-                print(f" - {blob.name}")
-        else:
-            print(f"⚠️ No se pudo acceder al contenedor '{container_name}', verificar permisos.")
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container_name = os.getenv("AZURE_CONTAINER_NAME")
 
-        
-        blob_client = container_client.get_blob_client(filename)
+        if not connection_string or not container_name:
+            print("Error: La cadena de conexión o el nombre del contenedor no están configurados.")
+            return None
+
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
+
+        # Subir el archivo
         blob_client.upload_blob(file, overwrite=True)
-        
+        print(f"Archivo subido a: {blob_client.url}")
+
         return blob_client.url
     except Exception as e:
-        print(f"❌ Error subiendo el archivo a Azure Blob Storage con Identidad Administrada: {e}")
+        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
+        import traceback
+        traceback.print_exc()
         return None
-    
+
 def delete_blob_from_azure(blob_url):
     try:
         # Obtener la cadena de conexión desde las variables de entorno
@@ -606,7 +597,9 @@ def details_view(request, id, *, context):
         'ubicacion': capacitacion.ubicacion if show_ubicacion else None,  # Condicionalmente según la modalidad
         'url_reunion': capacitacion.url_reunion if show_url else None,  # Condicionalmente según la modalidad
         'qr_url': f"{apphost}/learn/register/?id={capacitacion.id}",
-        'qr_base64': capacitacion.qr_base64
+        'qr_base64': capacitacion.qr_base64,
+        'topics': capacitacion.temas,
+        'pdf_url': capacitacion.pdf_url,
     }
     
     return render(request, 'details_view.html', context)

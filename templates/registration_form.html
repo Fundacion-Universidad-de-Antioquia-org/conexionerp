@@ -97,13 +97,15 @@
           <h5 class="mb-3">Registro Asistencia</h5>
           
           {% if not is_active %}
-            <div class="alert alert-danger" role="alert">
-              Esta {{ capacitacion.tipo }} no admite registros.
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              Ya no se admiten registros para este evento.
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
           {% endif %}
           {% if error_message %}
-            <div class="alert alert-warning" role="alert">
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
               {{ error_message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
           {% endif %}
 
@@ -149,6 +151,10 @@
 
             <div class="mb-3">
               <label><strong>Modalidad: </strong> {{ form.initial.mode}}</label>
+              <div class="alert alert-info alert-dismissible fade show" role="alert">
+                Luego de ingresar tu documento de identidad, debes <strong>permitir</strong> el acceso a tu  <strong>ubicación</strong> para completar el registro.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
               <input type="hidden" name="mode" value="{{ form.initial.mode }}">
               <input type="hidden" name="privacidad" value="{{ form.initial.privacidad }}">
               <input type="hidden" name="tipo" value="{{ form.initial.tipo }}">

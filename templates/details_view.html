@@ -4,8 +4,6 @@
 {% endblock %} 
 {% block content %}
 
-
-
 <section class="details">
   <div class="header-section d-flex align-items-center">
     <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
@@ -17,7 +15,7 @@
         <p><strong> {{ topic }} </strong></p>
       </div>
       <p><strong>Objetivo:</strong> {{ objective }}</p>
-      <p><strong>Documento Adjunto:</strong> {{ pdf_url }} </p>
+      <p><strong>Presentación: </strong><a href="{{ pdf_url }}"> Descargar Presentación de Temas</a></p>
       <div class="separator-sm desktop"></div>
       {% if topics %}
         <p><strong>Temas: </strong></p>
