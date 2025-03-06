@@ -37,14 +37,16 @@ document.addEventListener("DOMContentLoaded", function () {
         filterCompany.value = "";
         filterDateFrom.value = "";
         filterDateTo.value = "";
-        applyFilters();
-
-        // Refrescar la página para cargar los datos completos
+        // Mostrar todas las filas de la tabla
+        tableRows.forEach(row => {
+            row.style.display = "";
+        });
         window.location.href = window.location.pathname;
-    }
 
-    filterCedula.addEventListener("keyup", applyFilters);
-    filterCompany.addEventListener("keyup", applyFilters);
+    }
+    
+
+
     filterDateFrom.addEventListener("change", applyFilters);
     filterDateTo.addEventListener("change", applyFilters);
     resetFiltersBtn.addEventListener("click", resetFilters);

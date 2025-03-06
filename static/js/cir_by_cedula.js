@@ -43,8 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = window.location.pathname;
     }
 
-    filterCedula.addEventListener("keyup", applyFilters);
-    filterCompany.addEventListener("keyup", applyFilters);
+
     filterDateFrom.addEventListener("change", applyFilters);
     filterDateTo.addEventListener("change", applyFilters);
     resetFiltersBtn.addEventListener("click", resetFilters);
