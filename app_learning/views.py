@@ -9,6 +9,7 @@ import os
 import traceback
 from django.contrib import messages
 from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
 from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -65,25 +66,37 @@ def get_employee_names(request):
         return JsonResponse({'results': []})
 
 
-# Función para cargar una imagen a Azure Blob Storage
 def upload_to_azure_blob(file, filename):
-    print('Ingresa a upload_to_azure')
+    
+    print('Identidad Administrada para autenticar en Azure Blob Storage')
+    container_name = os.getenv("AZURE_CONTAINER_NAME")
+    
     try:
-        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-        container_name = os.getenv("AZURE_CONTAINER_NAME")
+        if not container_name:
+            raise ValueError("Cadena de conexión o nombre del contenedor no configurados correctamente.")
         
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
+        # Identidad administrada para autenticar
+        credential = DefaultAzureCredential()
+        blob_service_client = BlobServiceClient(account_url="https://waconexionerpprod001.blob.core.windows.net", credential=credential)
+        container_client = blob_service_client.get_container_client(container_name)
+        
+        print(f"Intentando acceder al contenedor '{container_name}' con Identidad Administrada...")
+        if container_client.exists():
+            print(f"✅ Contenedor '{container_name}' accesible con Identidad Administrada.")
+            blobs = list(container_client.list_blobs())
+            print(f"📂 Lista de blobs en '{container_name}':")
+            for blob in blobs:
+                print(f" - {blob.name}")
+        else:
+            print(f"⚠️ No se pudo acceder al contenedor '{container_name}', verificar permisos.")
+
+        
+        blob_client = container_client.get_blob_client(filename)
         blob_client.upload_blob(file, overwrite=True)
-        
-        print('STRING ENV: ', connection_string)
-        print('CONTAINER ENV: ', container_name)
         
         return blob_client.url
     except Exception as e:
-        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Error subiendo el archivo a Azure Blob Storage con Identidad Administrada: {e}")
         return None
     
 def delete_blob_from_azure(blob_url):
@@ -278,6 +291,31 @@ def create_capacitacion(request, *, context):
             capacitacion = form.save(commit=False)
             capacitacion.estado = 'ACTIVA'
             capacitacion = form.save()
+            
+            if capacitacion.tipo in ['Reunión', 'Capacitación']:
+                # Procesar archivo PDF si se envió
+                if 'archivo_pdf' in request.FILES:
+                    print("Se detectó un archivo PDF en request.FILES")  # Debugging
+                    pdf_file = request.FILES['archivo_pdf']
+
+                    if pdf_file.content_type == 'application/pdf':
+                        filename = f"pdf_evento_{capacitacion.id}_{pdf_file.name}"
+                        print(f"Subiendo archivo PDF: {filename}")  # Debugging
+
+                        pdf_url = upload_to_azure_blob(pdf_file, filename)
+
+                        if pdf_url:
+                            print(f"PDF subido correctamente: {pdf_url}")  # Debugging
+                            capacitacion.pdf_url = pdf_url
+                            capacitacion.save()
+                        else:
+                            print("Error: pdf_url es None")  # Debugging
+                            messages.error(request, "Error al subir el archivo PDF a Azure.")
+                    else:
+                        print(f"Archivo inválido: {pdf_file.content_type}")  # Debugging
+                        messages.error(request, "El archivo debe ser un PDF.")
+                else:
+                    print("No se detectó archivo PDF en request.FILES")  # Debugging
 
             employee_ids = request.POST.get('employee_names', '').split(',')
             print(f"Empleados seleccionados (POST): {employee_ids}") 
@@ -641,6 +679,31 @@ def edit_capacitacion(request, id, *, context):
             capacitacion = form.save(commit=False)
             capacitacion.user = username
             form.save()
+            
+            if capacitacion.tipo in ['Reunión', 'Capacitación']:
+                # Procesar archivo PDF si se envió
+                if 'archivo_pdf' in request.FILES:
+                    print("Se detectó un archivo PDF en request.FILES")  # Debugging
+                    pdf_file = request.FILES['archivo_pdf']
+
+                    if pdf_file.content_type == 'application/pdf':
+                        filename = f"pdf_evento_{capacitacion.id}_{pdf_file.name}"
+                        print(f"Subiendo archivo PDF: {filename}")  # Debugging
+
+                        pdf_url = upload_to_azure_blob(pdf_file, filename)
+
+                        if pdf_url:
+                            print(f"PDF subido correctamente: {pdf_url}")  # Debugging
+                            capacitacion.pdf_url = pdf_url
+                            capacitacion.save()
+                        else:
+                            print("Error: pdf_url es None")  # Debugging
+                            messages.error(request, "Error al subir el archivo PDF a Azure.")
+                    else:
+                        print(f"Archivo inválido: {pdf_file.content_type}")  # Debugging
+                        messages.error(request, "El archivo debe ser un PDF.")
+                else:
+                    print("No se detectó archivo PDF en request.FILES")  # Debugging
             
             # Obtener los empleados seleccionados del POST
             employee_names = request.POST.get('employee_names', '').split(',')
