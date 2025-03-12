@@ -21,8 +21,6 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         required=True,
         label= 'Privacidad'
     )
-    
-    archivo_pdf = forms.FileField(required=False, label='Archivo PDF (opcional)')
 
     class Meta:
         model = CtrlCapacitaciones

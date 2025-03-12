@@ -43,15 +43,10 @@
     {{ form.estado.label_tag }} {{ form.estado }}
 
     <div id="temas-fields" class="presencial-f" style="display: none;">
-      {{ form.temas.label_tag }} 
+      {{ form.temas.label_tag }}
       <div>
         {{ form.temas }}
       </div>
-    </div>
-
-    <div id="archivo-field" class="presencial-f" style="display: none;">
-      <label for="archivo_pdf">Adjuntar soporte de temas(opcional):</label>
-      <input type="file" name="archivo_pdf" id="archivo_pdf" class="form-control" accept="application/pdf">
     </div>
 
     <!-- Campo oculto para almacenar los IDs de los asistentes seleccionados -->
@@ -208,13 +203,11 @@
     var virtualFields = document.getElementById('virtual-fields');
     var presencialFields = document.getElementById('presencial-fields');
     var temasFields = document.getElementById('temas-fields');
-    var archivoField = document.getElementById('archivo-field');
-
+   
     // Ocultar todos los campos al inicio
     virtualFields.style.display = 'none';
     presencialFields.style.display = 'none';
     temasFields.style.display = 'none';
-    archivoField.style.display = 'none';
 
     // Mostrar los campos según la modalidad seleccionada
     if (modalidad === 'VIRTUAL') {
@@ -228,7 +221,6 @@
 
     if(tipoEvento === 'Capacitación' || tipoEvento === 'Reunión') {
       temasFields.style.display = 'inherit';
-      archivoField.style.display = 'inherit';
     }
   }
 

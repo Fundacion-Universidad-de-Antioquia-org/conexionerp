@@ -599,7 +599,6 @@ def details_view(request, id, *, context):
         'qr_url': f"{apphost}/learn/register/?id={capacitacion.id}",
         'qr_base64': capacitacion.qr_base64,
         'topics': capacitacion.temas,
-        'pdf_url': capacitacion.pdf_url,
     }
     
     return render(request, 'details_view.html', context)
