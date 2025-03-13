@@ -25,10 +25,11 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.views.decorators.csrf import csrf_exempt
 from .utils import registrar_log_interno
-from reportlab.lib.pagesizes import LETTER
-from reportlab.pdfgen import canvas
-from reportlab.lib.units import inch
-from reportlab.lib.utils import ImageReader
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib import colors
 
  
 
@@ -919,127 +920,185 @@ def view_assistants(request, id, *, context):
     
 # Vista para generar PDF de una capacitación
 def generar_pdf(request, id):
-    # 1. Obtener datos de la capacitación
+    # 1. Obtener la capacitación y los asistentes
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    asistentes_data = get_asistentes_odoo(capacitacion.id)  # Función que consulta Odoo
 
-    # 2. Conectar a Odoo y obtener asistentes
-    asistentes_data = get_asistentes_odoo(capacitacion.id)
-
-    # 3. Crear PDF en memoria
+    # 2. Crear buffer y documento base
     buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=LETTER)
-    width, height = LETTER
-    y = height - inch  # posición inicial en la página
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=40,
+        rightMargin=40,
+        topMargin=50,
+        bottomMargin=50
+    )
 
-    # TITULO
-    c.setFont("Helvetica-Bold", 16)
-    c.drawString(inch, y, f"Evento: {capacitacion.tema}")
-    y -= 25
+    # 3. Definir estilos
+    styles = getSampleStyleSheet()
 
-    # Responsable - Moderador
-    c.setFont("Helvetica", 12)
-    c.drawString(inch, y, f"Responsable: {capacitacion.responsable} - Moderador: {capacitacion.moderador}")
-    y -= 20
+    # Ajustar estilo Normal: fuente Helvetica, tamaño 12, interlineado 14
+    styles['Normal'].fontName = 'Helvetica'
+    styles['Normal'].fontSize = 12
+    styles['Normal'].leading = 14
 
-    # Objetivo
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(inch, y, "Objetivo:")
-    y -= 15
-    c.setFont("Helvetica", 11)
-    for line in capacitacion.objetivo.splitlines():
-        c.drawString(inch + 10, y, line)
-        y -= 15
-    y -= 10
+    # Estilo para texto en negrita
+    bold_style = ParagraphStyle(
+        'BoldStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold'
+    )
 
-    # Fecha y horario
-    c.setFont("Helvetica", 12)
-    c.drawString(inch, y, f"Fecha: {capacitacion.fecha.strftime('%Y-%m-%d')}")
-    y -= 15
-    c.drawString(inch, y, f"Hora: {capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")
-    y -= 15
+    # Estilo para título centrado y negrita
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER,
+        fontSize=12,
+        leading=14
+    )
 
-    # Lugar
+    # Estilo para forzar el “wrapping” en las celdas
+    wrapped_style = ParagraphStyle(
+        'WrappedStyle',
+        parent=styles['Normal'],
+        wordWrap='CJK',  # Alternativas: 'RTL', 'LTR' o 'CJK'
+    )
+    
+    bullet_style = ParagraphStyle(
+        'BulletStyle',
+        parent=styles['Normal'],
+        leading=18,
+    )
+
+    # Helper para crear párrafos con word-wrap
+    def P(text, style=wrapped_style):
+        return Paragraph(text, style)
+
+    elements = []
+
+    # 4. Título principal (centrado y negrita)
+    title_paragraph = Paragraph(
+        f"FUNDACIÓN UNIVERSIDAD DE ANTIOQUIA<br/><br/>INFORME - {capacitacion.tema}",
+        title_style
+    )
+    elements.append(title_paragraph)
+    elements.append(Spacer(1, 12))
+
+    # 5. Objetivo
+    elements.append(Paragraph("Objetivo:", bold_style))
+    elements.append(Spacer(1, 4))
+    elements.append(P(capacitacion.objetivo))
+    elements.append(Spacer(1, 12))
+
+    # 6. Tabla con datos principales (Evento, Responsable, etc.)
+    info_data = [
+        [P("<b>Evento:</b>"), P(capacitacion.tema)],
+        [P("<b>Responsable:</b>"), P(capacitacion.responsable)],
+        [P("<b>Moderador:</b>"), P(capacitacion.moderador)],
+        [P("<b>Fecha:</b>"), P(capacitacion.fecha.strftime('%Y-%m-%d'))],
+        [
+            P("<b>Hora:</b>"),
+            P(f"{capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")
+        ],
+    ]
     if capacitacion.modalidad in ["PRESENCIAL", "MIXTA"] and capacitacion.ubicacion:
-        c.drawString(inch, y, f"Lugar: {capacitacion.ubicacion}")
-        y -= 15
-
-    # URL
+        info_data.append([P("<b>Lugar:</b>"), P(capacitacion.ubicacion)])
     if capacitacion.modalidad in ["VIRTUAL", "MIXTA"] and capacitacion.url_reunion:
-        c.drawString(inch, y, f"URL Reunión: {capacitacion.url_reunion}")
-        y -= 15
+        info_data.append([P("<b>URL Reunión:</b>"), P(capacitacion.url_reunion)])
 
-    # Temas
+    info_table = Table(info_data, colWidths=[120, 420])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        # Alineación y rellenos
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        # Para asegurar el wrap
+        ('WORDWRAP', (0, 0), (-1, -1), True), #Forzar ajuste de línea si el txt es muy largo
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 12))
+
+    # 7. Temas
     if capacitacion.temas:
-        c.setFont("Helvetica-Bold", 13)
-        c.drawString(inch, y, "Temas:")
-        y -= 15
-        c.setFont("Helvetica", 11)
+        elements.append(Paragraph("Temas:", bold_style))
+        elements.append(Spacer(1, 4))
         for tema_line in capacitacion.temas.splitlines():
-            c.drawString(inch + 10, y, f"- {tema_line}")
-            y -= 15
-        y -= 10
+            elements.append(Paragraph(f"• {tema_line}", bullet_style))
+        elements.append(Spacer(1, 12))
 
-    # Presentación
+    # 8. Lista de asistentes
+    elements.append(Paragraph("Lista de Asistentes:", bold_style))
+    elements.append(Spacer(1, 4))
+
+    # Encabezado de la tabla
+    asistentes_table_data = [
+        [P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
+    ]
+    for assistant in asistentes_data:
+        asistentes_table_data.append([
+            P(assistant.get('username', '')),
+            P(assistant.get('jobTitle', '')),
+            P(assistant.get('employeeDepartment', ''))
+        ])
+
+    asistentes_table = Table(asistentes_table_data, colWidths=[150, 150, 180])
+    asistentes_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        # Cuadros y fondo en la primera fila
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        # Habilitar wrap en celdas
+        ('WORDWRAP', (0, 0), (-1, -1), True),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(asistentes_table)
+    elements.append(Spacer(1, 12))
+
+    # 9. Evidencias del Evento
+    elements.append(Paragraph("Evidencias del Evento:", bold_style))
+    elements.append(Spacer(1, 6))
+
+    # 9a. Presentación (mostrar “ver aquí”)
     if capacitacion.archivo_presentacion:
-        c.setFont("Helvetica-Bold", 13)
-        c.drawString(inch, y, "Presentación del evento:")
-        y -= 15
-        c.setFont("Helvetica", 11)
-        c.drawString(inch + 10, y, capacitacion.archivo_presentacion)
-        y -= 15
+        presentacion_paragraph = Paragraph(
+        f'Presentación del evento: '
+        f'<font color="blue"><u><link href="{capacitacion.archivo_presentacion}">ver aquí</link></u></font>',
+        styles['Normal']  # O el estilo que uses por defecto
+    )
 
-    y -= 10
-    c.setFont("Helvetica-Bold", 13)
-    c.drawString(inch, y, "Lista de Asistentes:")
-    y -= 20
-    c.setFont("Helvetica", 11)
+    elements.append(presentacion_paragraph)
+    elements.append(Spacer(1, 12))  # Espacio debajo, opcional
 
-    if asistentes_data:
-        for assistant in asistentes_data:
-            # Ajustar nombre y cargo como quieras:
-            username = assistant.get('username', '')
-            job_title = assistant.get('jobTitle', '')
-            department = assistant.get('employeeDepartment', '')
-            c.drawString(inch + 10, y, f"- {username} | {job_title} | {department}")
-            y -= 15
-            if y < inch:  # Crear nueva página si no hay espacio
-                c.showPage()
-                y = height - inch
-    else:
-        c.drawString(inch + 10, y, "No hay asistentes disponibles.")
-        y -= 15
-
-    # Imágenes (Evidencias) si existen
+    # 9b. Imágenes
     event_images = capacitacion.images.all()
     if event_images.exists():
-        y -= 20
-        c.setFont("Helvetica-Bold", 13)
-        c.drawString(inch, y, "Evidencias del Evento:")
-        y -= 25
+        elements.append(Paragraph("Imágenes de evidencia:", bold_style))
+        elements.append(Spacer(1, 4))
+
         for image in event_images:
             try:
                 resp = requests.get(image.image_url)
                 if resp.status_code == 200:
-                    img = ImageReader(io.BytesIO(resp.content))
-                    # Ajustar tamaño y mantener relación de aspecto
-                    img_width = 3 * inch
-                    img_height = 2 * inch
-                    if y - img_height < inch:  # Si no hay espacio, siguiente página
-                        c.showPage()
-                        y = height - inch
-                    c.drawImage(img, inch, y - img_height, width=img_width, height=img_height, preserveAspectRatio=True, anchor='sw')
-                    y -= (img_height + 20)
+                    img_data = io.BytesIO(resp.content)
+                    img_obj = Image(img_data)
+                    # Ajusta tamaño máximo si es necesario
+                    img_obj._restrictSize(500, 300)
+                    elements.append(img_obj)
+                    elements.append(Spacer(1, 12))
                 else:
-                    c.drawString(inch, y, f"No se pudo cargar imagen: {image.image_url}")
-                    y -= 15
-            except Exception as e:
-                c.drawString(inch, y, f"Error al cargar imagen: {e}")
-                y -= 15
+                    elements.append(P(f"Error al cargar imagen: {image.image_url}"))
+            except Exception:
+                elements.append(P(f"Error al cargar imagen: {image.image_url}"))
+            elements.append(Spacer(1, 6))
 
-    # Cerrar la página y guardar
-    c.showPage()
-    c.save()
-
+    # 10. Generar PDF y retornar
+    doc.build(elements)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema}.pdf")
     

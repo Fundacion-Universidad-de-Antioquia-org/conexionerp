@@ -45,18 +45,20 @@
         <div class="download-zone">
             <a href="?download=excel" class="btn btn-success-f">
                 Descargar Asistencia
-            </a>
-
-            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f">
-                Descargar PDF del Evento
-            </a>          
+            </a>      
             
+            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f">
+                Descargar Resumen
+            </a>    
+    
+            {% if capacitacion.archivo_presentacion %}
+                <a href="{{ capacitacion.archivo_presentacion }}"  class="btn btn-success-f" target="_blank">
+                    Descargar Presentación
+                </a>
+            {% endif %}
         </div>
-        {% if capacitacion.archivo_presentacion %}
-            <a href="{{ capacitacion.archivo_presentacion }}"  class="btn btn-success-f" target="_blank">
-                Descargar Presentación
-            </a>
-        {% endif %}
+
+        
     </section>
 
     <div class="accordion" id="accordionExample">
