@@ -43,16 +43,20 @@
     <!-- Conf Evidencia -->
     <section class="download-section">
         <div class="download-zone">
+            
             <a href="?download=excel" class="btn btn-success-f">
+                <i class="bi bi-cloud-download"></i>
                 Descargar Asistencia
             </a>      
-            
+
             <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f">
+                <i class="bi bi-cloud-download"></i>
                 Descargar Resumen
             </a>    
     
             {% if capacitacion.archivo_presentacion %}
                 <a href="{{ capacitacion.archivo_presentacion }}"  class="btn btn-success-f" target="_blank">
+                    <i class="bi bi-cloud-download"></i>
                     Descargar Presentación
                 </a>
             {% endif %}
