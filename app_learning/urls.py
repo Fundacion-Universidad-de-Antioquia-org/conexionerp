@@ -16,4 +16,5 @@ urlpatterns = [
     path('search_employees/', views.search_employees, name='search_employees'),
     path('capacitacion/imagen/eliminar/<int:image_id>/', views.delete_image, name='delete_image'),
     path('get_employee_names/', views.get_employee_names, name='get_employee_names'),
+    path('capacitacion/<int:id>/generar_pdf/', views.generar_pdf, name='generar_pdf'),
 ]

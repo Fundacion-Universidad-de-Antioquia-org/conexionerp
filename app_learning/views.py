@@ -5,17 +5,17 @@ import base64
 import openpyxl
 import xmlrpc.client
 import unicodedata
+import requests
 import os
+import io
 import traceback
 from django.contrib import messages
 from azure.storage.blob import BlobServiceClient
-from azure.identity import DefaultAzureCredential
 from django.conf import settings
-from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CtrlCapacitacionesForm, RegistrationForm
 from .models import CtrlCapacitaciones, EventImage
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, FileResponse
 from django.urls import reverse
 from io import BytesIO
 from dotenv import load_dotenv
@@ -23,9 +23,13 @@ from datetime import datetime
 from urllib.parse import quote, unquote, urlparse
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .utils import registrar_log_interno
+from reportlab.lib.pagesizes import LETTER
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
+
  
 
 logger = logging.getLogger(__name__)
@@ -671,32 +675,7 @@ def edit_capacitacion(request, id, *, context):
             capacitacion = form.save(commit=False)
             capacitacion.user = username
             form.save()
-            
-            if capacitacion.tipo in ['Reunión', 'Capacitación']:
-                # Procesar archivo PDF si se envió
-                if 'archivo_pdf' in request.FILES:
-                    print("Se detectó un archivo PDF en request.FILES")  # Debugging
-                    pdf_file = request.FILES['archivo_pdf']
 
-                    if pdf_file.content_type == 'application/pdf':
-                        filename = f"pdf_evento_{capacitacion.id}_{pdf_file.name}"
-                        print(f"Subiendo archivo PDF: {filename}")  # Debugging
-
-                        pdf_url = upload_to_azure_blob(pdf_file, filename)
-
-                        if pdf_url:
-                            print(f"PDF subido correctamente: {pdf_url}")  # Debugging
-                            capacitacion.pdf_url = pdf_url
-                            capacitacion.save()
-                        else:
-                            print("Error: pdf_url es None")  # Debugging
-                            messages.error(request, "Error al subir el archivo PDF a Azure.")
-                    else:
-                        print(f"Archivo inválido: {pdf_file.content_type}")  # Debugging
-                        messages.error(request, "El archivo debe ser un PDF.")
-                else:
-                    print("No se detectó archivo PDF en request.FILES")  # Debugging
-            
             # Obtener los empleados seleccionados del POST
             employee_names = request.POST.get('employee_names', '').split(',')
             print(f"Asistentes seleccionados en edición: {employee_names}")  # Verificar si los datos llegan aquí
@@ -734,6 +713,24 @@ def view_assistants(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     error_message = None
     success_message = None
+    
+    
+    if request.method == 'POST' and 'archivo_presentacion' in request.FILES:
+        archivo = request.FILES['archivo_presentacion']
+        
+        #Verficar el tipo de archivo
+        if archivo.content_type not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation']:
+            messages.error(request, "Formato no permitido. Solo se aceptan archivos PDF o PPTX.")
+        else:
+            filename = f"presentacion_{capacitacion.id}_{archivo.name}"
+            file_url = upload_to_azure_blob(archivo, filename)
+
+            if file_url:
+                capacitacion.archivo_presentacion = file_url
+                capacitacion.save()
+                messages.success(request, "Archivo cargado correctamente.")
+            else:
+                messages.error(request, "Error al subir el archivo.")
     
     if request.method == 'POST' and 'image' in request.FILES:
         image_file = request.FILES['image']
@@ -920,6 +917,132 @@ def view_assistants(request, id, *, context):
         'success_message': success_message
     })
     
+# Vista para generar PDF de una capacitación
+def generar_pdf(request, id):
+    # 1. Obtener datos de la capacitación
+    capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+
+    # 2. Conectar a Odoo y obtener asistentes
+    asistentes_data = get_asistentes_odoo(capacitacion.id)
+
+    # 3. Crear PDF en memoria
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=LETTER)
+    width, height = LETTER
+    y = height - inch  # posición inicial en la página
+
+    # TITULO
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(inch, y, f"Evento: {capacitacion.tema}")
+    y -= 25
+
+    # Responsable - Moderador
+    c.setFont("Helvetica", 12)
+    c.drawString(inch, y, f"Responsable: {capacitacion.responsable} - Moderador: {capacitacion.moderador}")
+    y -= 20
+
+    # Objetivo
+    c.setFont("Helvetica-Bold", 13)
+    c.drawString(inch, y, "Objetivo:")
+    y -= 15
+    c.setFont("Helvetica", 11)
+    for line in capacitacion.objetivo.splitlines():
+        c.drawString(inch + 10, y, line)
+        y -= 15
+    y -= 10
+
+    # Fecha y horario
+    c.setFont("Helvetica", 12)
+    c.drawString(inch, y, f"Fecha: {capacitacion.fecha.strftime('%Y-%m-%d')}")
+    y -= 15
+    c.drawString(inch, y, f"Hora: {capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")
+    y -= 15
+
+    # Lugar
+    if capacitacion.modalidad in ["PRESENCIAL", "MIXTA"] and capacitacion.ubicacion:
+        c.drawString(inch, y, f"Lugar: {capacitacion.ubicacion}")
+        y -= 15
+
+    # URL
+    if capacitacion.modalidad in ["VIRTUAL", "MIXTA"] and capacitacion.url_reunion:
+        c.drawString(inch, y, f"URL Reunión: {capacitacion.url_reunion}")
+        y -= 15
+
+    # Temas
+    if capacitacion.temas:
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(inch, y, "Temas:")
+        y -= 15
+        c.setFont("Helvetica", 11)
+        for tema_line in capacitacion.temas.splitlines():
+            c.drawString(inch + 10, y, f"- {tema_line}")
+            y -= 15
+        y -= 10
+
+    # Presentación
+    if capacitacion.archivo_presentacion:
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(inch, y, "Presentación del evento:")
+        y -= 15
+        c.setFont("Helvetica", 11)
+        c.drawString(inch + 10, y, capacitacion.archivo_presentacion)
+        y -= 15
+
+    y -= 10
+    c.setFont("Helvetica-Bold", 13)
+    c.drawString(inch, y, "Lista de Asistentes:")
+    y -= 20
+    c.setFont("Helvetica", 11)
+
+    if asistentes_data:
+        for assistant in asistentes_data:
+            # Ajustar nombre y cargo como quieras:
+            username = assistant.get('username', '')
+            job_title = assistant.get('jobTitle', '')
+            department = assistant.get('employeeDepartment', '')
+            c.drawString(inch + 10, y, f"- {username} | {job_title} | {department}")
+            y -= 15
+            if y < inch:  # Crear nueva página si no hay espacio
+                c.showPage()
+                y = height - inch
+    else:
+        c.drawString(inch + 10, y, "No hay asistentes disponibles.")
+        y -= 15
+
+    # Imágenes (Evidencias) si existen
+    event_images = capacitacion.images.all()
+    if event_images.exists():
+        y -= 20
+        c.setFont("Helvetica-Bold", 13)
+        c.drawString(inch, y, "Evidencias del Evento:")
+        y -= 25
+        for image in event_images:
+            try:
+                resp = requests.get(image.image_url)
+                if resp.status_code == 200:
+                    img = ImageReader(io.BytesIO(resp.content))
+                    # Ajustar tamaño y mantener relación de aspecto
+                    img_width = 3 * inch
+                    img_height = 2 * inch
+                    if y - img_height < inch:  # Si no hay espacio, siguiente página
+                        c.showPage()
+                        y = height - inch
+                    c.drawImage(img, inch, y - img_height, width=img_width, height=img_height, preserveAspectRatio=True, anchor='sw')
+                    y -= (img_height + 20)
+                else:
+                    c.drawString(inch, y, f"No se pudo cargar imagen: {image.image_url}")
+                    y -= 15
+            except Exception as e:
+                c.drawString(inch, y, f"Error al cargar imagen: {e}")
+                y -= 15
+
+    # Cerrar la página y guardar
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema}.pdf")
+    
 # Buscar Empleados en Odoo
 def search_employees(request):
     query = request.GET.get('q', '')
@@ -999,3 +1122,35 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
         print(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}") 
     except Exception as e:
         logger.error('Failed to send assistants to Odoo', exc_info=True)
+        
+def get_asistentes_odoo(capacitacion_id):
+    try:
+        # Conexión a Odoo
+        common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+        uid = common.authenticate(database, user, password, {})
+        models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+
+        # Buscar asistentes
+        records = models.execute_kw(
+            database, uid, password,
+            'x_capacitacion_emplead', 'search_read',
+            [[['x_studio_id_capacitacion', '=', capacitacion_id]]],
+            {
+                'fields': ['x_studio_nombre_empleado', 'x_studio_cargo', 'x_studio_departamento_empleado'],
+                'limit': 999
+            }
+        )
+
+        # Ajustar data
+        asistentes_data = []
+        for record in records:
+            asistentes_data.append({
+                'username': record.get('x_studio_nombre_empleado', ''),
+                'jobTitle': record.get('x_studio_cargo', ''),
+                'employeeDepartment': record.get('x_studio_departamento_empleado', '')
+            })
+        return asistentes_data
+
+    except Exception as e:
+        print("Error obteniendo asistentes de Odoo:", e)
+        return []

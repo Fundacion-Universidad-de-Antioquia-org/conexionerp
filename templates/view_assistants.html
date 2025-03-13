@@ -46,7 +46,17 @@
             <a href="?download=excel" class="btn btn-success-f">
                 Descargar Asistencia
             </a>
+
+            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f">
+                Descargar PDF del Evento
+            </a>          
+            
         </div>
+        {% if capacitacion.archivo_presentacion %}
+            <a href="{{ capacitacion.archivo_presentacion }}"  class="btn btn-success-f" target="_blank">
+                Descargar Presentación
+            </a>
+        {% endif %}
     </section>
 
     <div class="accordion" id="accordionExample">
@@ -130,22 +140,35 @@
         </div>
     </div>
 
-    {% if capacitacion.estado == 'ACTIVA' %}
-    <!-- Formulario para la imagen -->
-    <form class="load-image-form" method="POST" enctype="multipart/form-data">
-        <h5>Cargar Evidencia: </h5>
-        <div class="load-image-settings">
-            {% csrf_token %}
-            <div class="load-image-tool">	
-                <label for="images">Elige máximo 5 imágenes (Máximo 3MB): </label>
-                <input type="file" name="images" accept="image/*" multiple required>
-            </div>
-            <div class="load-image-button">
-                <button type="submit" class="btn btn-success-f"> Cargar evidencia</button>
-            </div>
-        </div>
-    </form>
-    {% endif %}
+    <br />
+    <h5>Cargar Evidencia: </h5>
+    <div class="evidence-zone">
+        {% if capacitacion.estado == 'ACTIVA' %}
+            <!-- Formulario para la imagen -->
+            <form class="load-image-form" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
+                <div class="load-image-settings">
+                    {% csrf_token %}
+                    <div class="load-image-tool">	
+                        <label for="images">Elige máximo 5 imágenes (Máximo 3MB): </label>
+                        <input type="file" name="images" class="form-control" accept="image/*" multiple required>
+                    </div>
+                    <div class="load-image-button">
+                        <button type="submit" class="btn btn-success-f"> Cargar Imágenes</button>
+                    </div>
+                </div>
+            </form>
+        
+            <!-- Formulario para subir presentación -->
+            <form class="load-file-form" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="archivo_presentacion">Subir Presentación (PDF o PPTX):</label>
+                    <input type="file" name="archivo_presentacion" id="archivo_presentacion" class="form-control" accept=".pdf, .pptx" required>
+                </div>
+                <button type="submit" class="btn btn-success-f mt-2">Cargar Presentación</button>
+            </form>
+        {% endif %}
+    </div>
 
     {% if messages %}
         {% for message in messages %}
@@ -193,6 +216,50 @@
         {% endif %}
         </div>
     </section>
+    <!-- Spinner de carga -->
+<div id="background-spinner" class="background-spinner" style="display: none;">
+    <h5>Cargando archivo &#8987;</h5>
+</div>
+<div id="loading-spinner" class="spinner-border text-light" role="status" style="display: none;">
+    <span class="visually-hidden">Loading...</span>
+</div>
+
+<script>
+    function showSpinner() {
+        document.getElementById('background-spinner').style.display = 'block';
+        document.getElementById('loading-spinner').style.display = 'block';
+
+        // Deshabilitar todos los botones de envío para evitar múltiples envíos
+        let buttons = document.querySelectorAll("form button[type='submit']");
+        buttons.forEach(button => button.disabled = true);
+    }
+
+    function hideSpinner() {
+        document.getElementById('background-spinner').style.display = 'none';
+        document.getElementById('loading-spinner').style.display = 'none';
+
+        // Habilitar botones nuevamente
+        let buttons = document.querySelectorAll("form button[type='submit']");
+        buttons.forEach(button => button.disabled = false);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        let forms = document.querySelectorAll("form.load-image-form, form.load-file-form");
+
+        forms.forEach(form => {
+            form.addEventListener("submit", function() {
+                showSpinner();
+            });
+        });
+
+        // Asegurar que se oculte si el usuario regresa atrás en la navegación
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) { 
+                hideSpinner();
+            }
+        });
+    });
+</script>
 
 {% endblock %}
 
