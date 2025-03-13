@@ -5,17 +5,17 @@ import base64
 import openpyxl
 import xmlrpc.client
 import unicodedata
+import requests
 import os
+import io
 import traceback
 from django.contrib import messages
 from azure.storage.blob import BlobServiceClient
-from azure.identity import DefaultAzureCredential
 from django.conf import settings
-from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import CtrlCapacitacionesForm, RegistrationForm
 from .models import CtrlCapacitaciones, EventImage
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, FileResponse
 from django.urls import reverse
 from io import BytesIO
 from dotenv import load_dotenv
@@ -23,9 +23,14 @@ from datetime import datetime
 from urllib.parse import quote, unquote, urlparse
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .utils import registrar_log_interno
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib import colors
+
  
 
 logger = logging.getLogger(__name__)
@@ -66,40 +71,30 @@ def get_employee_names(request):
         return JsonResponse({'results': []})
 
 
-# Función para cargar una imagen a Azure Blob Storage
 def upload_to_azure_blob(file, filename):
-    
-    print('Identidad Administrada para autenticar en Azure Blob Storage')
-    container_name = os.getenv("AZURE_CONTAINER_NAME")
-    
+    print('Intentando subir archivo a Azure Blob Storage...')
     try:
-        if not container_name:
-            raise ValueError("Cadena de conexión o nombre del contenedor no configurados correctamente.")
-        
-        # Identidad administrada para autenticar
-        credential = DefaultAzureCredential()
-        blob_service_client = BlobServiceClient(account_url="https://waconexionerpprod001.blob.core.windows.net", credential=credential)
-        container_client = blob_service_client.get_container_client(container_name)
-        
-        print(f"Intentando acceder al contenedor '{container_name}' con Identidad Administrada...")
-        if container_client.exists():
-            print(f"✅ Contenedor '{container_name}' accesible con Identidad Administrada.")
-            blobs = list(container_client.list_blobs())
-            print(f"📂 Lista de blobs en '{container_name}':")
-            for blob in blobs:
-                print(f" - {blob.name}")
-        else:
-            print(f"⚠️ No se pudo acceder al contenedor '{container_name}', verificar permisos.")
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        container_name = os.getenv("AZURE_CONTAINER_NAME")
 
-        
-        blob_client = container_client.get_blob_client(filename)
+        if not connection_string or not container_name:
+            print("Error: La cadena de conexión o el nombre del contenedor no están configurados.")
+            return None
+
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
+
+        # Subir el archivo
         blob_client.upload_blob(file, overwrite=True)
-        
+        print(f"Archivo subido a: {blob_client.url}")
+
         return blob_client.url
     except Exception as e:
-        print(f"❌ Error subiendo el archivo a Azure Blob Storage con Identidad Administrada: {e}")
+        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
+        import traceback
+        traceback.print_exc()
         return None
-    
+
 def delete_blob_from_azure(blob_url):
     try:
         # Obtener la cadena de conexión desde las variables de entorno
@@ -292,6 +287,31 @@ def create_capacitacion(request, *, context):
             capacitacion = form.save(commit=False)
             capacitacion.estado = 'ACTIVA'
             capacitacion = form.save()
+            
+            if capacitacion.tipo in ['Reunión', 'Capacitación']:
+                # Procesar archivo PDF si se envió
+                if 'archivo_pdf' in request.FILES:
+                    print("Se detectó un archivo PDF en request.FILES")  # Debugging
+                    pdf_file = request.FILES['archivo_pdf']
+
+                    if pdf_file.content_type == 'application/pdf':
+                        filename = f"pdf_evento_{capacitacion.id}_{pdf_file.name}"
+                        print(f"Subiendo archivo PDF: {filename}")  # Debugging
+
+                        pdf_url = upload_to_azure_blob(pdf_file, filename)
+
+                        if pdf_url:
+                            print(f"PDF subido correctamente: {pdf_url}")  # Debugging
+                            capacitacion.pdf_url = pdf_url
+                            capacitacion.save()
+                        else:
+                            print("Error: pdf_url es None")  # Debugging
+                            messages.error(request, "Error al subir el archivo PDF a Azure.")
+                    else:
+                        print(f"Archivo inválido: {pdf_file.content_type}")  # Debugging
+                        messages.error(request, "El archivo debe ser un PDF.")
+                else:
+                    print("No se detectó archivo PDF en request.FILES")  # Debugging
 
             employee_ids = request.POST.get('employee_names', '').split(',')
             print(f"Empleados seleccionados (POST): {employee_ids}") 
@@ -582,7 +602,8 @@ def details_view(request, id, *, context):
         'ubicacion': capacitacion.ubicacion if show_ubicacion else None,  # Condicionalmente según la modalidad
         'url_reunion': capacitacion.url_reunion if show_url else None,  # Condicionalmente según la modalidad
         'qr_url': f"{apphost}/learn/register/?id={capacitacion.id}",
-        'qr_base64': capacitacion.qr_base64
+        'qr_base64': capacitacion.qr_base64,
+        'topics': capacitacion.temas,
     }
     
     return render(request, 'details_view.html', context)
@@ -655,7 +676,7 @@ def edit_capacitacion(request, id, *, context):
             capacitacion = form.save(commit=False)
             capacitacion.user = username
             form.save()
-            
+
             # Obtener los empleados seleccionados del POST
             employee_names = request.POST.get('employee_names', '').split(',')
             print(f"Asistentes seleccionados en edición: {employee_names}")  # Verificar si los datos llegan aquí
@@ -694,7 +715,24 @@ def view_assistants(request, id, *, context):
     error_message = None
     success_message = None
     
-    #Cargar una sola imagen:
+    
+    if request.method == 'POST' and 'archivo_presentacion' in request.FILES:
+        archivo = request.FILES['archivo_presentacion']
+        
+        #Verficar el tipo de archivo
+        if archivo.content_type not in ['application/pdf', 'application/vnd.openxmlformats-officedocument.presentationml.presentation']:
+            messages.error(request, "Formato no permitido. Solo se aceptan archivos PDF o PPTX.")
+        else:
+            filename = f"presentacion_{capacitacion.id}_{archivo.name}"
+            file_url = upload_to_azure_blob(archivo, filename)
+
+            if file_url:
+                capacitacion.archivo_presentacion = file_url
+                capacitacion.save()
+                messages.success(request, "Archivo cargado correctamente.")
+            else:
+                messages.error(request, "Error al subir el archivo.")
+    
     if request.method == 'POST' and 'image' in request.FILES:
         image_file = request.FILES['image']
         
@@ -773,7 +811,6 @@ def view_assistants(request, id, *, context):
         if total_invitados > 0 :
             tasa_exito = (total_asistentes/total_invitados)*100
         
-        #Cargar multiples imágenes
         if request.method == 'POST' and 'images' in request.FILES:
             images = request.FILES.getlist('images')
             total_existing_images = capacitacion.images.count()
@@ -881,6 +918,190 @@ def view_assistants(request, id, *, context):
         'success_message': success_message
     })
     
+# Vista para generar PDF de una capacitación
+def generar_pdf(request, id):
+    # 1. Obtener la capacitación y los asistentes
+    capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    asistentes_data = get_asistentes_odoo(capacitacion.id)  # Función que consulta Odoo
+
+    # 2. Crear buffer y documento base
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=40,
+        rightMargin=40,
+        topMargin=50,
+        bottomMargin=50
+    )
+
+    # 3. Definir estilos
+    styles = getSampleStyleSheet()
+
+    # Ajustar estilo Normal: fuente Helvetica, tamaño 12, interlineado 14
+    styles['Normal'].fontName = 'Helvetica'
+    styles['Normal'].fontSize = 12
+    styles['Normal'].leading = 14
+
+    # Estilo para texto en negrita
+    bold_style = ParagraphStyle(
+        'BoldStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold'
+    )
+
+    # Estilo para título centrado y negrita
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER,
+        fontSize=12,
+        leading=14
+    )
+
+    # Estilo para forzar el “wrapping” en las celdas
+    wrapped_style = ParagraphStyle(
+        'WrappedStyle',
+        parent=styles['Normal'],
+        wordWrap='CJK',  # Alternativas: 'RTL', 'LTR' o 'CJK'
+    )
+    
+    bullet_style = ParagraphStyle(
+        'BulletStyle',
+        parent=styles['Normal'],
+        leading=18,
+    )
+
+    # Helper para crear párrafos con word-wrap
+    def P(text, style=wrapped_style):
+        return Paragraph(text, style)
+
+    elements = []
+
+    # 4. Título principal (centrado y negrita)
+    title_paragraph = Paragraph(
+        f"FUNDACIÓN UNIVERSIDAD DE ANTIOQUIA<br/><br/>INFORME - {capacitacion.tema}",
+        title_style
+    )
+    elements.append(title_paragraph)
+    elements.append(Spacer(1, 12))
+
+    # 5. Objetivo
+    elements.append(Paragraph("Objetivo:", bold_style))
+    elements.append(Spacer(1, 4))
+    elements.append(P(capacitacion.objetivo))
+    elements.append(Spacer(1, 12))
+
+    # 6. Tabla con datos principales (Evento, Responsable, etc.)
+    info_data = [
+        [P("<b>Evento:</b>"), P(capacitacion.tema)],
+        [P("<b>Responsable:</b>"), P(capacitacion.responsable)],
+        [P("<b>Moderador:</b>"), P(capacitacion.moderador)],
+        [P("<b>Fecha:</b>"), P(capacitacion.fecha.strftime('%Y-%m-%d'))],
+        [
+            P("<b>Hora:</b>"),
+            P(f"{capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")
+        ],
+    ]
+    if capacitacion.modalidad in ["PRESENCIAL", "MIXTA"] and capacitacion.ubicacion:
+        info_data.append([P("<b>Lugar:</b>"), P(capacitacion.ubicacion)])
+    if capacitacion.modalidad in ["VIRTUAL", "MIXTA"] and capacitacion.url_reunion:
+        info_data.append([P("<b>URL Reunión:</b>"), P(capacitacion.url_reunion)])
+
+    info_table = Table(info_data, colWidths=[120, 420])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        # Alineación y rellenos
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        # Para asegurar el wrap
+        ('WORDWRAP', (0, 0), (-1, -1), True), #Forzar ajuste de línea si el txt es muy largo
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 12))
+
+    # 7. Temas
+    if capacitacion.temas:
+        elements.append(Paragraph("Temas:", bold_style))
+        elements.append(Spacer(1, 4))
+        for tema_line in capacitacion.temas.splitlines():
+            elements.append(Paragraph(f"• {tema_line}", bullet_style))
+        elements.append(Spacer(1, 12))
+
+    # 8. Lista de asistentes
+    elements.append(Paragraph("Lista de Asistentes:", bold_style))
+    elements.append(Spacer(1, 4))
+
+    # Encabezado de la tabla
+    asistentes_table_data = [
+        [P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
+    ]
+    for assistant in asistentes_data:
+        asistentes_table_data.append([
+            P(assistant.get('username', '')),
+            P(assistant.get('jobTitle', '')),
+            P(assistant.get('employeeDepartment', ''))
+        ])
+
+    asistentes_table = Table(asistentes_table_data, colWidths=[150, 150, 180])
+    asistentes_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        # Cuadros y fondo en la primera fila
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+        # Habilitar wrap en celdas
+        ('WORDWRAP', (0, 0), (-1, -1), True),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(asistentes_table)
+    elements.append(Spacer(1, 12))
+
+    # 9. Evidencias del Evento
+    elements.append(Paragraph("Evidencias del Evento:", bold_style))
+    elements.append(Spacer(1, 6))
+
+    # 9a. Presentación (mostrar “ver aquí”)
+    if capacitacion.archivo_presentacion:
+        presentacion_paragraph = Paragraph(
+        f'Presentación del evento: '
+        f'<font color="blue"><u><link href="{capacitacion.archivo_presentacion}">ver aquí</link></u></font>',
+        styles['Normal']  # O el estilo que uses por defecto
+    )
+
+    elements.append(presentacion_paragraph)
+    elements.append(Spacer(1, 12))  # Espacio debajo, opcional
+
+    # 9b. Imágenes
+    event_images = capacitacion.images.all()
+    if event_images.exists():
+        elements.append(Paragraph("Imágenes de evidencia:", bold_style))
+        elements.append(Spacer(1, 4))
+
+        for image in event_images:
+            try:
+                resp = requests.get(image.image_url)
+                if resp.status_code == 200:
+                    img_data = io.BytesIO(resp.content)
+                    img_obj = Image(img_data)
+                    # Ajusta tamaño máximo si es necesario
+                    img_obj._restrictSize(500, 300)
+                    elements.append(img_obj)
+                    elements.append(Spacer(1, 12))
+                else:
+                    elements.append(P(f"Error al cargar imagen: {image.image_url}"))
+            except Exception:
+                elements.append(P(f"Error al cargar imagen: {image.image_url}"))
+            elements.append(Spacer(1, 6))
+
+    # 10. Generar PDF y retornar
+    doc.build(elements)
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema}.pdf")
+    
 # Buscar Empleados en Odoo
 def search_employees(request):
     query = request.GET.get('q', '')
@@ -960,3 +1181,35 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
         print(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}") 
     except Exception as e:
         logger.error('Failed to send assistants to Odoo', exc_info=True)
+        
+def get_asistentes_odoo(capacitacion_id):
+    try:
+        # Conexión a Odoo
+        common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+        uid = common.authenticate(database, user, password, {})
+        models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+
+        # Buscar asistentes
+        records = models.execute_kw(
+            database, uid, password,
+            'x_capacitacion_emplead', 'search_read',
+            [[['x_studio_id_capacitacion', '=', capacitacion_id]]],
+            {
+                'fields': ['x_studio_nombre_empleado', 'x_studio_cargo', 'x_studio_departamento_empleado'],
+                'limit': 999
+            }
+        )
+
+        # Ajustar data
+        asistentes_data = []
+        for record in records:
+            asistentes_data.append({
+                'username': record.get('x_studio_nombre_empleado', ''),
+                'jobTitle': record.get('x_studio_cargo', ''),
+                'employeeDepartment': record.get('x_studio_departamento_empleado', '')
+            })
+        return asistentes_data
+
+    except Exception as e:
+        print("Error obteniendo asistentes de Odoo:", e)
+        return []

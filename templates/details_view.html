@@ -4,8 +4,6 @@
 {% endblock %} 
 {% block content %}
 
-
-
 <section class="details">
   <div class="header-section d-flex align-items-center">
     <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
@@ -17,6 +15,13 @@
         <p><strong> {{ topic }} </strong></p>
       </div>
       <p><strong>Objetivo:</strong> {{ objective }}</p>
+      <div class="separator-sm desktop"></div>
+      {% if topics %}
+        <p><strong>Temas: </strong></p>
+        <pre>{{ topics }}</pre>
+        {% else %}
+        <p><strong>Temas: </strong> No se han definido temas.</p>
+      {% endif %}
       <div class="separator-sm desktop"></div>
     </div>
     <div class="detail-info">

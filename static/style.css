@@ -21,6 +21,15 @@ body {
   font-size: 1rem;
 }
 
+.evidence-zone{
+  display: flex;
+  gap: 15px;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  border-left: 5px solid #e79e0f;
+}
+
 .items-h button {
   color: #e3e3e3;
   border: 0px;

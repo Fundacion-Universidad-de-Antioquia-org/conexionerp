@@ -56,11 +56,8 @@ INSTALLED_APPS = [
     'app_task_sync', # Sincroniza tareas de planner en microsoft 365
     'app_pdf_management', # Genera archivos PDF con informacion de registros de listas en sharepoint
     'app_logging',  # Control de logs de la ejecucion de tareas de sincronizacion y automatizaciones
-    'app_learning',
-    'app_comprobantes',# Control de asistencia a capacitaciones
+    'app_learning', # Control de asistencia a capacitaciones
     'identity', # Control de Login con Microsoft
-    'corsheaders',
-    
 ]
 
 MIDDLEWARE = [

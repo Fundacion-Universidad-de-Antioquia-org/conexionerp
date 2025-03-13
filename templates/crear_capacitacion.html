@@ -11,7 +11,7 @@
   </div>
   
 
-  <form id="createCapForm" class="form-create-cap" method="post" onsubmit="showSpinner();">
+  <form id="createCapForm" class="form-create-cap" method="post" enctype="multipart/form-data" onsubmit="showSpinner();">
     {% csrf_token %}
     {{ form.fecha.label_tag }} {{ form.fecha }}
     {{ form.tipo.label_tag }} {{ form.tipo }}
@@ -41,6 +41,13 @@
 
     {{ form.objetivo.label_tag }} {{ form.objetivo }}
     {{ form.estado.label_tag }} {{ form.estado }}
+
+    <div id="temas-fields" class="presencial-f" style="display: none;">
+      {{ form.temas.label_tag }}
+      <div>
+        {{ form.temas }}
+      </div>
+    </div>
 
     <!-- Campo oculto para almacenar los IDs de los asistentes seleccionados -->
     <input type="hidden" name="employee_names" id="selectedEmployeeIds">
@@ -192,24 +199,35 @@
   // Mostrar campos según modalidad
   function toggleFields() {
     var modalidad = document.getElementById('id_modalidad').value;
+    var tipoEvento = document.getElementById('id_tipo').value;
     var virtualFields = document.getElementById('virtual-fields');
     var presencialFields = document.getElementById('presencial-fields');
-
+    var temasFields = document.getElementById('temas-fields');
+   
     // Ocultar todos los campos al inicio
     virtualFields.style.display = 'none';
     presencialFields.style.display = 'none';
+    temasFields.style.display = 'none';
 
     // Mostrar los campos según la modalidad seleccionada
     if (modalidad === 'VIRTUAL') {
       virtualFields.style.display = 'inherit';
-      
     } else if (modalidad === 'PRESENCIAL') {
       presencialFields.style.display = 'inherit';
     } else if (modalidad === 'MIXTA') {
       virtualFields.style.display = 'inherit';
       presencialFields.style.display = 'inherit';
     }
+
+    if(tipoEvento === 'Capacitación' || tipoEvento === 'Reunión') {
+      temasFields.style.display = 'inherit';
+    }
   }
+
+
+  document.getElementById('id_tipo').addEventListener('change', toggleFields);
+  document.getElementById('id_modalidad').addEventListener('change', toggleFields);
+  window.onload = toggleFields;  // Para inicializar el estado de los campos al cargar la página
 
   //Restaurar Spinner al none
   window.addEventListener('pageshow', function(event){
@@ -219,8 +237,6 @@
     }
   })
 
-  document.getElementById('id_modalidad').addEventListener('change', toggleFields);
-  window.onload = toggleFields;  // Para inicializar el estado de los campos al cargar la página
 
   //Manejar carga archivo de Excel:
 
