@@ -30,7 +30,9 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib import colors
-
+from PyPDF2 import PdfReader
+from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
  
 
 logger = logging.getLogger(__name__)
@@ -919,7 +921,7 @@ def view_assistants(request, id, *, context):
     })
     
 # Vista para generar PDF de una capacitación
-def generar_pdf(request, id):
+"""def generar_pdf(request, id):
     # 1. Obtener la capacitación y los asistentes
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     asistentes_data = get_asistentes_odoo(capacitacion.id)  # Función que consulta Odoo
@@ -1101,8 +1103,170 @@ def generar_pdf(request, id):
     doc.build(elements)
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema}.pdf")
-    
-# Buscar Empleados en Odoo
+    """
+
+def generar_pdf(request, id):
+    # 1. Obtener la capacitación y los asistentes
+    capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
+    asistentes_data = get_asistentes_odoo(capacitacion.id) or []
+
+    # 2. Obtener la ruta correcta del membrete
+
+    membrete_path = os.path.join(settings.MEDIA_ROOT, "membrete", "Membrete.pdf")
+
+    # 3. Crear buffer y documento base
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=letter,
+        leftMargin=40,
+        rightMargin=40,
+        topMargin=110,  # Aumentamos la margen superior para el membrete
+        bottomMargin=50
+    )
+
+    # 4. Definir estilos
+    styles = getSampleStyleSheet()
+    styles['Normal'].fontName = 'Helvetica'
+    styles['Normal'].fontSize = 12
+    styles['Normal'].leading = 14
+
+    bold_style = ParagraphStyle('BoldStyle', parent=styles['Normal'], fontName='Helvetica-Bold')
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Normal'], fontName='Helvetica-Bold', alignment=1, fontSize=12, leading=14)
+    bullet_style = ParagraphStyle('BulletStyle', parent=styles['Normal'], leading=18)
+
+    def P(text, style=styles['Normal']):
+        return Paragraph(text if text else "No disponible", style)
+
+    elements = []
+
+    # 5. Título principal
+    elements.append(Paragraph(f"FUNDACIÓN UNIVERSIDAD DE ANTIOQUIA<br/><br/>INFORME - {capacitacion.tema or 'No disponible'}", title_style))
+    elements.append(Spacer(1, 12))
+
+    # 6. Objetivo
+    elements.append(Paragraph("Objetivo:", bold_style))
+    elements.append(Spacer(1, 4))
+    elements.append(P(capacitacion.objetivo or "No disponible"))
+    elements.append(Spacer(1, 12))
+
+    # 7. Tabla con datos principales
+    info_data = [
+        [P("<b>Evento:</b>"), P(capacitacion.tema)],
+        [P("<b>Responsable:</b>"), P(capacitacion.responsable)],
+        [P("<b>Moderador:</b>"), P(capacitacion.moderador)],
+        [P("<b>Fecha:</b>"), P(capacitacion.fecha.strftime('%Y-%m-%d') if capacitacion.fecha else "No disponible")],
+        [P("<b>Hora:</b>"), P(f"{capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")]
+    ]
+
+    if capacitacion.modalidad in ["PRESENCIAL", "MIXTA"] and capacitacion.ubicacion:
+        info_data.append([P("<b>Lugar:</b>"), P(capacitacion.ubicacion)])
+    if capacitacion.modalidad in ["VIRTUAL", "MIXTA"] and capacitacion.url_reunion:
+        info_data.append([P("<b>URL Reunión:</b>"), P(capacitacion.url_reunion)])
+
+    info_table = Table(info_data, colWidths=[120, 420])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 12))
+
+    # 8. Temas
+    if capacitacion.temas:
+        elements.append(Paragraph("Temas:", bold_style))
+        elements.append(Spacer(1, 4))
+        for tema in capacitacion.temas.split(","):
+            elements.append(Paragraph(f"• {tema.strip()}", bullet_style))
+        elements.append(Spacer(1, 12))
+
+    # 9. Lista de asistentes
+    # 1️⃣ Lista de asistentes (solo si hay datos)
+    if asistentes_data:
+        elements.append(Paragraph("Lista de Asistentes:", bold_style))
+        elements.append(Spacer(1, 4))
+
+        asistentes_table_data = [
+            [P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
+        ]
+        for assistant in asistentes_data:
+            asistentes_table_data.append([
+                P(assistant.get('username', 'No disponible')),
+                P(assistant.get('jobTitle', 'No disponible')),
+                P(assistant.get('employeeDepartment', 'No disponible'))
+            ])
+        total_width = letter[0] - 80  
+
+        asistentes_table = Table(asistentes_table_data, colWidths=[total_width * 0.35, total_width * 0.35, total_width * 0.3])
+        asistentes_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#D4EDDA")),  # Verde claro
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),  # Texto negro
+            ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(asistentes_table)
+        elements.append(Spacer(1, 12))
+
+        # 10. Evidencias del Evento
+        
+
+
+    # 10a. Presentación (mostrar “ver aquí”)
+    if capacitacion.archivo_presentacion:
+        elements.append(Paragraph("Evidencias del Evento:", bold_style))
+        elements.append(Spacer(1, 6))
+        presentacion_paragraph = Paragraph(
+            f'Presentación del evento: <font color="blue"><u><link href="{capacitacion.archivo_presentacion}">ver aquí</link></u></font>',
+            styles['Normal']
+        )
+        elements.append(presentacion_paragraph)
+        elements.append(Spacer(1, 12))
+
+    # 10b. Imágenes
+    event_images = capacitacion.images.all()
+    if event_images.exists():
+        elements.append(Paragraph("Imágenes de evidencia:", bold_style))
+        elements.append(Spacer(1, 4))
+        for image in event_images:
+            try:
+                resp = requests.get(image.image_url)
+                if resp.status_code == 200:
+                    img_data = io.BytesIO(resp.content)
+                    img_obj = Image(img_data)
+                    img_obj._restrictSize(500, 300)
+                    elements.append(img_obj)
+                    elements.append(Spacer(1, 12))
+                else:
+                    elements.append(P(f"Error al cargar imagen: {image.image_url}"))
+            except Exception:
+                elements.append(P(f"Error al cargar imagen: {image.image_url}"))
+            elements.append(Spacer(1, 6))
+
+    # 11. Función para agregar membrete
+    def add_membrete(canvas, doc):
+        try:
+            with open(membrete_path, "rb") as f:
+                reader = PdfReader(f)
+                page = reader.pages[0]
+                membrete_img = ImageReader(io.BytesIO(page.images[0].data))
+
+            canvas.drawImage(membrete_img, 0, 0, width=612, height=792, preserveAspectRatio=True)
+        except Exception as e:
+            print(f"Error cargando membrete: {e}")
+
+    # 12. Generar PDF con membrete en todas las páginas
+    doc.build(elements, onFirstPage=add_membrete, onLaterPages=add_membrete)
+
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema or 'Reporte'}.pdf")# Buscar Empleados en Odoo
+
+
+
 def search_employees(request):
     query = request.GET.get('q', '')
     results = []
