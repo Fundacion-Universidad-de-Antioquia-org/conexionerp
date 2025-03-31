@@ -9,6 +9,8 @@ from .utils import (
     fetch_x_talla_camisa,
     fetch_x_talla_calzado,
     fetch_x_talla_pantalon,
+    fetch_x_paises
+
 )
 
 def odoo_data_endpoint(request):
@@ -25,6 +27,7 @@ def odoo_data_endpoint(request):
     - Talla Pantalón (x_talla_pantalon)
     """
     response_data = {
+        "paises":fetch_x_paises(),
         "municipios": fetch_x_bancos(),
         "eps": fetch_x_eps(),
         "arl": fetch_x_arl(),

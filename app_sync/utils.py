@@ -24,6 +24,22 @@ def get_odoo_uid():
         logger.error("Error autenticando en Odoo", exc_info=True)
         return None
 
+
+def fetch_x_paises():
+    uid = get_odoo_uid()
+    if uid is None:
+        return []
+    models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+    try:
+        return models.execute_kw(
+            database, uid, password,
+            'x_paises', 'search_read',
+            [[]],
+            {'fields': ['x_name', 'id']}
+        )
+    except Exception as e:
+        logger.error("Error al obtener x_paises", exc_info=True)
+        return []
 def fetch_x_bancos():
     """
     Modelo MUNICIPIOS: x_bancos
