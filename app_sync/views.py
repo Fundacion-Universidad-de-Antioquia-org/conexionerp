@@ -9,7 +9,8 @@ from .utils import (
     fetch_x_talla_camisa,
     fetch_x_talla_calzado,
     fetch_x_talla_pantalon,
-    fetch_x_paises
+    fetch_x_paises,
+    fetch_x_cesantias
 
 )
 
@@ -37,5 +38,6 @@ def odoo_data_endpoint(request):
         "talla_camisa": fetch_x_talla_camisa(),
         "talla_calzado": fetch_x_talla_calzado(),
         "talla_pantalon": fetch_x_talla_pantalon(),
+        "cesantias":fetch_x_cesantias(),
     }
     return JsonResponse(response_data)
