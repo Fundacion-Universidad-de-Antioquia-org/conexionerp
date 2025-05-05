@@ -61,7 +61,7 @@ def registrar_log(request):
 
     log = Log.objects.create(correo=correo, fecha=fecha, tipo_evento=tipo_evento, observacion=observacion, nombre_aplicacion=nombre_aplicacion, tipo=tipo, id_registro=id_registro)
     return JsonResponse({'message': 'Log registrado correctamente'}, status=201)
-
+"""
 def update_log_date(request):
     logger.debug("Request received for update_log_date")
 
@@ -73,46 +73,38 @@ def update_log_date(request):
 
     now = timezone.now()
     today = now.date()
-    yesterday = today - timedelta(days=1)
 
     logger.debug(f"Searching for logs with correo: {correo}")
-    logs = Log.objects.filter(correo=correo, tipo_evento='SUCCESS')
-    logger.debug(f"Logs found: {logs.count()}")
 
-    if not logs.exists():
-        # No hay logs con ese correo, es el primer registro, asignar la fecha actual
+    # Obtener el último log registrado por el usuario (sin importar la fecha)
+    last_log = Log.objects.filter(correo=correo, tipo_evento='SUCCESS').order_by('-fecha').first()
+
+    if not last_log:
+        # No hay logs registrados, asignamos la fecha de hoy
         logger.debug("No logs found for the given correo, assigning today's date.")
         return JsonResponse({'message': 'First log entry, using today\'s date', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
 
-    log_yesterday = logs.filter(fecha__date=yesterday).first()
-    log_today = logs.filter(fecha__date=today).first()
+    last_reported_date = last_log.fecha.date()  # Extraer solo la fecha del último log registrado
+    logger.debug(f"Last reported date: {last_reported_date}")
 
-    if log_yesterday:
-        logger.debug(f"Log found for yesterday with log id: {log_yesterday.id}")
-        if log_today:
-            # Si ya hay un registro para hoy, usamos la fecha de hoy y no se requiere justificación
-            logger.debug(f"Log already exists for today with log id: {log_today.id}")
-            return JsonResponse({'message': 'Log already exists for today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
-        else:
-            # No hay registro para hoy, pero hay registro para ayer
-            logger.debug("No log found for today, but log found for yesterday. Using today's date.")
-            return JsonResponse({'message': 'Log date is today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
+    # Determinar la próxima fecha pendiente
+    expected_next_date = last_reported_date + timedelta(days=1)
+    logger.debug(f"Expected next reporting date: {expected_next_date}")
+
+    if expected_next_date >= today:
+        # Si la próxima fecha a reportar es hoy o futura, usar esa fecha
+        logger.debug(f"Next reporting date is today or future ({expected_next_date}), assigning today's date.")
+        return JsonResponse({'message': 'Log already exists for today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
     else:
-        # No hay registro para ayer
-        logger.debug("No log found for yesterday. Using yesterday's date.")
-        if now.hour < 12:
-            # Antes de las 12:00 pm, usamos la fecha de ayer y no se requiere justificación
-            return JsonResponse({'message': 'Log date is yesterday, no justification required', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': False})
-        else:
-            # Después de las 12:00 pm, usamos la fecha de ayer y se requiere justificación
-            return JsonResponse({'message': 'Log date is yesterday, justification required', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': True})
+        # Si hay días pendientes de reporte, asignar la primera fecha sin registrar
+        requires_justification = now.hour >= 12  # Si es después del mediodía, se requiere justificación
+        logger.debug(f"Pending date to be reported: {expected_next_date}, requires justification: {requires_justification}")
 
-    # En caso de cualquier otro escenario, usamos la fecha de hoy y no se requiere justificación
-    logger.debug("Using today's date without requiring justification.")
-    return JsonResponse({'message': 'Log date is today, no justification required', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
+        return JsonResponse({'message': 'Pending log date', 'new_date': expected_next_date.strftime('%Y-%m-%d'), 'requires_justification': requires_justification})
+"""
 
-    
-"""def update_log_date(request):
+
+def update_log_date(request):
     logger.debug("Request received for update_log_date")
 
     if not (correo := request.GET.get('correo')):
@@ -121,41 +113,56 @@ def update_log_date(request):
 
     logger.debug(f"Correo received: {correo}")
 
-    now = timezone.now()
+    now = timezone.now()  # Fecha y hora actual con zona horaria
     today = now.date()
-    yesterday = today - timedelta(days=1)
 
     logger.debug(f"Searching for logs with correo: {correo}")
-    logs = Log.objects.filter(correo=correo, tipo_evento='SUCCESS')
-    logger.debug(f"Logs found: {logs.count()}")
 
-    if not logs.exists():
-        logger.error(f"No logs found for correo: {correo}")
-        return JsonResponse({'error': 'No logs found for this correo'}, status=404)
+    # Obtener el último log registrado por el usuario
+    last_log = Log.objects.filter(correo=correo, tipo_evento='SUCCESS').order_by('-fecha').first()
 
-    log_yesterday = logs.filter(fecha__date=yesterday).first()
-    log_today = logs.filter(fecha__date=today).first()
+    if not last_log:
+        logger.debug("No logs found for the given correo, assigning today's date.")
+        return JsonResponse({
+            'message': 'First log entry, using today\'s date',
+            'new_date': today.strftime('%Y-%m-%d'),
+            'requires_justification': False
+        })
 
-    if log_yesterday:
-        logger.debug(f"Log found for yesterday with log id: {log_yesterday.id}")
-        if log_today:
-            # Si ya hay un registro para hoy, usamos la fecha de hoy y no se requiere justificación
-            logger.debug(f"Log already exists for today with log id: {log_today.id}")
-            return JsonResponse({'message': 'Log already exists for today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
-        else:
-            # No hay registro para hoy, pero hay registro para ayer
-            logger.debug("No log found for today, but log found for yesterday. Using today's date.")
-            return JsonResponse({'message': 'Log date is today', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})
+    last_reported_date = last_log.fecha.date()
+    logger.debug(f"Last reported date: {last_reported_date}")
+
+    # Determinar la próxima fecha pendiente
+    expected_next_date = last_reported_date + timedelta(days=1)
+    logger.debug(f"Expected next reporting date: {expected_next_date}")
+
+    # Calcular el mediodía del día siguiente después del último reporte
+    justification_deadline = last_reported_date + timedelta(days=2)  # Día siguiente + 12 horas
+    justification_deadline = timezone.make_aware(
+        timezone.datetime.combine(justification_deadline, timezone.datetime.min.time()) + timedelta(hours=12),
+        timezone.get_current_timezone()
+    )
+
+    # Asegurar que `now` sea `aware`
+    if timezone.is_naive(now):
+        now = timezone.make_aware(now, timezone.get_current_timezone())
+
+    # Determinar si se requiere justificación
+    requires_justification = now >= justification_deadline
+    logger.debug(f"Justification deadline: {justification_deadline}, Requires justification: {requires_justification}")
+
+    if expected_next_date >= today:
+        logger.debug(f"Next reporting date is today or future ({expected_next_date}), assigning today's date.")
+        return JsonResponse({
+            'message': 'Log already exists for today',
+            'new_date': today.strftime('%Y-%m-%d'),
+            'requires_justification': requires_justification
+        })
     else:
-        # No hay registro para ayer
-        logger.debug("No log found for yesterday. Using yesterday's date.")
-        if now.hour < 12:
-            # Antes de las 12:00 pm, usamos la fecha de ayer y no se requiere justificación
-            return JsonResponse({'message': 'Log date is yesterday, no justification required', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': False})
-        else:
-            # Después de las 12:00 pm, usamos la fecha de ayer y se requiere justificación
-            return JsonResponse({'message': 'Log date is yesterday, justification required', 'new_date': yesterday.strftime('%Y-%m-%d'), 'requires_justification': True})
-
-    # En caso de cualquier otro escenario, usamos la fecha de hoy y no se requiere justificación
-    logger.debug("Using today's date without requiring justification.")
-    return JsonResponse({'message': 'Log date is today, no justification required', 'new_date': today.strftime('%Y-%m-%d'), 'requires_justification': False})"""
+        logger.debug(f"Pending date to be reported: {expected_next_date}, requires justification: {requires_justification}")
+        return JsonResponse({
+            'message': 'Pending log date',
+            'new_date': expected_next_date.strftime('%Y-%m-%d'),
+            'requires_justification': requires_justification
+        })
+    

@@ -1,0 +1,80 @@
+
+/* Tarjeta del resumen */
+.card.shadow-sm {
+    background-color: #f8f9fa;
+    border-left: 5px solid #838181e1;
+}
+
+/* Línea separadora */
+hr.my-4 {
+    border-top: 2px solid #ddd;
+}
+
+/* Estilos del título principal */
+.summary-title {
+    color: #5c9c31;
+}
+
+/* Bordes laterales para secciones */
+.border-certificados {
+    
+    border-left: 5px solid #8FBF48 !important;
+}
+
+.border-comprobantes {
+    border-left: 5px solid #F4A261 !important;
+}
+
+/* Títulos de las secciones */
+.section-title {
+    color: #5c9c31;
+    font-size: 1.2rem;
+}
+
+/* Estilos de las listas */
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1rem;
+    color: #444;
+}
+
+/* Badges personalizados */
+.badge {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 10px;
+}
+
+.badge-certificados {
+    background-color: #8FBF48 !important;
+    color: white;
+}
+
+.badge-comprobantes {
+    background-color: #F4A261 !important;
+    color: white;
+}
+
+/* Alertas de "No hay datos" */
+.no-data-alert {
+    background-color: #EAF5DC;
+    color: #5c9c31;
+}
+/* Botón de Filtrar */
+.btn-filter {
+    background-color: #6c757d !important; /* Gris Bootstrap */
+    border: 2px solid #6c757d !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    background-color: #545b62 !important; /* Un tono más oscuro al pasar el mouse */
+    border-color: #4e555b !important;
+    transform: scale(1.05);
+}

@@ -14,7 +14,7 @@ import os
 from identity.django import Auth
 from dotenv import load_dotenv
 
-# Cargar las variables de entorno desde el archivo .env
+# Cargar las variables de entode el archivo .env
 load_dotenv()
 
 #AUTENTICACIÓN:
@@ -56,8 +56,10 @@ INSTALLED_APPS = [
     'app_task_sync', # Sincroniza tareas de planner en microsoft 365
     'app_pdf_management', # Genera archivos PDF con informacion de registros de listas en sharepoint
     'app_logging',  # Control de logs de la ejecucion de tareas de sincronizacion y automatizaciones
+    'app_comprobantes',# Control de asistencia a capacitaciones
     'app_learning', # Control de asistencia a capacitaciones
     'identity', # Control de Login con Microsoft
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -74,14 +76,18 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
+    "http://localhost:8001",
+    "http://localhost:3000",
     "https://app-softwareids-prod-001-ahgyajb0ejfwbwa9.eastus-01.azurewebsites.net",
     "https://aseo.fundacionudea.net",
-    "https://erp-apps.fundacionudea.net"
+    "https://erp-apps.fundacionudea.net",
+    "https://app-softwareids-dev-001-hvbfatg2hhevgdfr.eastus-01.azurewebsites.net",
+    "https://empleados.fundacionudea.org"
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",
 ]
-CSRF_TRUSTED_ORIGINS = ['https://app-conexionerp-prod-001.azurewebsites.net','https://erp-apps.fundacionudea.net']
+CSRF_TRUSTED_ORIGINS = ['https://app-conexionerp-prod-001.azurewebsites.net','https://erp-apps.fundacionudea.net','https://app-softwareids-dev-001-hvbfatg2hhevgdfr.eastus-01.azurewebsites.net']
 
 CORS_ALLOW_METHODS = [
     "GET",
@@ -111,10 +117,15 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'conexionerp.wsgi.application'
-
+# settings.py
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
+AZURE_CONNECTION_STRING = os.getenv("AZURE_CONNECTION_STRING")
+AZURE_CONTAINER = os.getenv("AZURE_CONTAINER")
+AZURE_CONTAINER_CIR = os.getenv("AZURE_CONTAINER_CIR")
+
+
 
 DATABASES = {
     'default': {
@@ -179,6 +190,22 @@ USE_TZ = False
 #         },
 #     },
 # }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+    },
+}
+
 
 
 # Static files (CSS, JavaScript, Images)

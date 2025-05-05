@@ -1,0 +1,87 @@
+{% extends 'app_comprobantes/base_appcomprobantes.html' %}
+{% load static %}
+
+{% block title %}Cargue Comprobantes Pago{% endblock %}
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnfuadesarrollo.blob.core.windows.net/appcomprobantesestilos/upload_certificate.js"></script>
+
+<link rel="stylesheet" href="https://cdnfuadesarrollo.blob.core.windows.net/appcomprobantesestilos/upload_certificate.css"/>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <!-- Contenedor para mostrar mensajes de error -->
+
+    <div class="container mt-5">
+      
+     
+      <div class="card-form">
+        <h1 class="mb-4">Cargue Comprobantes Pago</h1>
+        <div id="errorContainer" class="alert alert-danger" style="display: none;">
+          <ul id="errorMessages">
+              {% for error in error_messages %}
+                  <li>{{ error }}</li>
+              {% endfor %}
+          </ul>
+        </div>
+        
+      <form id="uploadForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="comprobante_date" class="form-label">Fecha de Comprobantes</label>
+          <input type="date" class="form-control" id="comprobante_date" name="comprobante_date" required>
+        </div>
+        <div class="mb-3">
+          <label for="company" class="form-label">Compañía</label>
+          <select class="form-select" id="company" name="company" required>
+            <option value="">Seleccione una compañía</option>
+            {% for company in companies %}
+              <option value="{{ company.name }}">{{ company.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="observations" class="form-label">Observaciones</label>
+          <input type="input" class="form-control" id="observations" name="observations" required>
+        </div>
+        <div class="mb-3">
+          <label for="zip_file" class="form-label">Archivo ZIP</label>
+          <input type="file" class="form-control" id="zip_file" name="zip_file" accept=".zip" required>
+        </div>
+        <button type="submit" class="btn btn-custom">Subir</button>
+      </form>
+    </div>
+  </div>  
+</div>
+
+{% if success_message %}
+<div class="modal fade show" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="false" style="display:block;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="successModalLabel">Operación Exitosa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        El comprobante se cargó exitosamente.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="hideSuccessModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function hideSuccessModal() {
+    window.location.href = window.location.pathname; // Elimina el parámetro de la URL sin recargar
+  }
+</script>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+  <!-- Archivo JS específico para esta página -->
+  <script src="https://cdnfuadesarrollo.blob.core.windows.net/appcomprobantesestilos/upload_certificate.js"></script>
+  {% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'app_comprobantes/base_appcomprobantes.html' %}
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnfuadesarrollo.blob.core.windows.net/appcomprobantesestilos/home.css"/>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm p-4 mb-4 rounded">
+        <h2 class="text-center mb-4 fw-bold text-dark">Resumen de Cargues Realizados</h2>
+    </div>
+
+    <hr class="my-4">
+
+    <!-- Filtros por Mes y Año -->
+    <form method="GET" action="" class="mb-4">
+        <div class="row">
+            <div class="col-md-5">
+                <label for="filterMonth" class="form-label fw-bold">Filtrar por Mes</label>
+                <select name="month" id="filterMonth" class="form-select">
+                    <option value="">Todos</option>
+                    {% for month in months %}
+                        <option value="{{ month.value }}" {% if selected_month == month.value %}selected{% endif %}>{{ month.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label for="filterYear" class="form-label fw-bold">Filtrar por Año</label>
+                <select name="year" id="filterYear" class="form-select">
+                    <option value="">Todos</option>
+                    {% for year in years %}
+                        <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-filter w-100">Filtrar</button>
+            </div>
+            
+        </div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 mb-4 rounded border-certificados">
+                <h4 class="text-center fw-bold certificados-title">Certificados Ingresos y Retención</h4>
+                <div class="card-body">
+                    {% if certificate_stats %}
+                        <ul class="list-group list-group-flush">
+                            {% for company in certificate_stats %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-secondary">{{ company.company }}</span>
+                                    <span class="badge badge-certificados">{{ company.total_certificates }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert text-center fw-semibold no-data-alert">No hay certificados cargados.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm p-4 mb-4 rounded border-comprobantes">
+                <h4 class="text-center fw-bold comprobantes-title">Comprobantes Pago</h4>
+                <div class="card-body">
+                    {% if comprobante_stats %}
+                        <ul class="list-group list-group-flush">
+                            {% for company in comprobante_stats %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold text-secondary">{{ company.company }}</span>
+                                    <span class="badge badge-comprobantes">{{ company.total_comprobantes }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert text-center fw-semibold no-data-alert">No hay comprobantes cargados.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

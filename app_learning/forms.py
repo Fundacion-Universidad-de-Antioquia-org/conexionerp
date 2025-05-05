@@ -21,6 +21,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         required=True,
         label= 'Privacidad'
     )
+    
 
     class Meta:
         model = CtrlCapacitaciones

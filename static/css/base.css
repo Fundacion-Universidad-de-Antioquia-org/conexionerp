@@ -1,0 +1,119 @@
+/* base.css */
+
+header {
+    margin-bottom: 15px;
+    background-color: #5c9c31;
+  }
+  
+  body {
+    background-color: #e0e0e0 !important;
+    font-family: "Open Sans", sans-serif !important;
+  }
+  
+  .items-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+  }
+  
+  .items-header a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 1rem;
+  }
+  
+  .items-h button {
+    color: #e3e3e3;
+    border: 0;
+    background-color: transparent;
+  }
+  
+  .items-h button:hover {
+    border-radius: 6px;
+    color: #fff;
+    text-decoration: underline;
+  }
+  
+  .items-h {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  
+  .logo-picture {
+    min-width: 100px;
+    max-width: 140px;
+    margin: 8px 0;
+  }
+/* Estilos para los botones del menú desplegable */
+.dropdown .btn-secondary {
+  background-color: #5c9c31 !important; /* Color verde en lugar de gris */
+  border: none;
+  color: white;
+  font-weight: bold;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.dropdown .btn-secondary:hover,
+.dropdown .btn-secondary:focus,
+.dropdown .btn-secondary:active {
+  background-color: #4a8227 !important; /* Un tono más oscuro al pasar el mouse */
+  box-shadow: none;
+  transform: scale(1.05); /* Ligera animación al hacer hover */
+}
+
+/* Estilos para los elementos del dropdown */
+.dropdown-menu {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  font-weight: 500;
+  color: black !important; /* Texto negro por defecto */
+
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #5c9c31 !important;
+  color: white !important;
+}
+
+/* Evitar subrayado en los enlaces */
+.dropdown-item:focus,
+.dropdown-item:active {
+  background-color: #4a8227 !important;
+  color: white !important;
+  text-decoration: none !important;
+}
+
+/* Estilos para el spinner de carga */
+/* Estilos para el spinner de carga */
+/* Estilos para el spinner de carga */
+#loadingSpinner {
+  display: none; /* Oculto por defecto */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1050;
+  width: 4rem; /* Tamaño ajustado para mejor visibilidad */
+  height: 4rem;
+  border: 4px solid white;
+  border-top: 4px solid #007bff; /* Color azul */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  background: transparent; /* Asegurar que no se duplique */
+  display: flex; /* Asegurar que esté centrado siempre */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Animación de giro */
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+

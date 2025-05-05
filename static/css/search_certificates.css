@@ -1,0 +1,108 @@
+/* search_certificates.css */
+
+/* Fondo general */
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Contenedor del formulario */
+.search-form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Ajuste para los inputs y botones */
+.search-form-container .form-control {
+    width: 100%;
+}
+
+.search-form-container button {
+    width: 100%;
+}
+
+/* Botón de búsqueda */
+.btn-custom {
+    background-color: #3b7c20 !important;
+    border: 2px solid #3b7c20 !important;
+    color: #fff !important;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+.btn-custom:hover {
+    background-color: #2e6118 !important;
+    border-color: #2e6118 !important;
+    transform: scale(1.05);
+}
+
+/* Botón secundario */
+.search-form-container .btn-secondary {
+    background-color: #6c757d !important;
+    border: 2px solid #6c757d !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px;
+    margin-left: 10%;
+    transition: all 0.3s ease;
+}
+.search-form-container .btn-secondary:hover {
+    background-color: #545b62 !important;
+    border-color: #4e555b !important;
+}
+
+/* Diseño del título */
+.title-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.title-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: inline-block;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Alineación de botones con iconos */
+.btn i {
+    margin-right: 5px;
+}
+
+/* Estilos para la tabla */
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #ffffff;
+}
+.table thead {
+    background-color: #5c9c31;
+    color: white;
+}
+.table tbody tr:hover {
+    background-color: #e0e0e0;
+}
+
+/* Botón PDF */
+.btn-pdf {
+    background-color: #5c9c31;
+    border: 2px solid #5c9c31;
+    color: #fff;
+    border-radius: 8px;
+}
+.btn-pdf:hover {
+    background-color: #4a812c;
+}
+
+/* Modales */
+.modal-content {
+    border-radius: 10px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+}
