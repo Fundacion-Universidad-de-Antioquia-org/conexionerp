@@ -1331,25 +1331,33 @@ def generar_pdf(request, id):
 
 def search_employees(request):
     query = request.GET.get('q', '')
-    results = []
+    search_type = request.GET.get('search_type', 'id') #Por defecto busca por ID
     
-    if query:
-        try:
-            common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
-            uid = common.authenticate(database, user, password, {})
-            models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+    if not query:
+        return JsonResponse({'results': []})
+    
+    common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+    uid = common.authenticate(database, user, password, {})
+    models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-            employees = models.execute_kw(database, uid, password,
-                                          'hr.employee', 'search_read',
-                                          [[['name', 'ilike', query]]],  # Filtrar por número de identificación
-                                          {'fields': ['id', 'name', 'identification_id'], 'limit': 10})
+    # Construir el dominio de busqueda segun el tipo de busqueda
+    if search_type == 'id':
+        # Buscar solo por numero de identificacion 
+        domain = [('identification_id', 'ilike', query)]
+    elif search_type == 'name':
+        # buscar solo por nombre
+        domain = [('name', 'ilike', query)]
+    else: # 'both'
+        # Buscar por nommbre como por identificacion
+        domain =['|', ('identification_id', 'ilike', query), ('name', 'ilike', query)]
+    # Esto ejecuta la busqueda en Odoo y obtiene los resultados en forma de diccionarios
+    employee_ids = models.execute_kw(database, uid, password,
+        'hr.employee', 'search_read',
+        [domain],
+        {'fields': ['name', 'identification_id'], 'limit': 10})
 
-            results = [{'name': emp['name'], 'identification_id': emp['identification_id']} for emp in employees]
+    return JsonResponse({'results': employee_ids})
 
-        except Exception as e:
-            logger.error('Failed to fetch employees from Odoo', exc_info=True)
-
-    return JsonResponse({'results': results})
 
 #Enviar Asistentes Obligatorios a Odoo
 def send_assistants_to_odoo(capacitacion_id, employee_ids):

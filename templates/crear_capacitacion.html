@@ -212,8 +212,10 @@
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="numero_identificacion" class="form-label">Número de Identificación</label>
-          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese número de cédula" autocomplete="off">
+          <label for="numero_identificacion" class="form-label">Búsqueda de Empleado</label>
+          <!-- se modifico el placeholder para indicar que se pueda buscar por nombre o ID -->
+          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese Nombre o Número de cédula" autocomplete="off">
+          <small class="form-text text-muted"> Buscar por nombre o número de identificación</small>
           <div id="sugerencias" class="mt-2"></div> <!-- Donde se mostrarán las sugerencias -->
         </div>
         <div id="selected-employees-list"></div>
@@ -275,7 +277,7 @@
     const query = this.value;
 
     if (query.length >= 2) {  // Buscar después de 2 caracteres
-      fetch(`/learn/search_employees/?q=${query}`)
+      fetch(`/learn/search_employees/?q=${query}&search_type=both`)
         .then(response => response.json())
         .then(data => {
           const sugerencias = document.getElementById('sugerencias');
@@ -303,7 +305,8 @@
     setTimeout(() => {  // Asegurar que se ejecute después de que el valor se haya pegado
       const query = this.value.trim();
       if (query.length >= 2) {
-        fetch(`/learn/search_employees/?q=${query}`)
+        // modificado para buscar por nombre como por ID
+        fetch(`/learn/search_employees/?q=${query}&search_type=both`)
           .then(response => response.json())
           .then(data => {
             const sugerencias = document.getElementById('sugerencias');
