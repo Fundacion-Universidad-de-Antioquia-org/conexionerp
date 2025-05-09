@@ -1,194 +1,961 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/style.css" />
-    <!-- Bootstrap -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
-    />
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
-      rel="stylesheet"
-    />
-     <!-- FAVICON -->
-     <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png"/>
-    <title>Registro Asistencia</title>
-    <script>
-      function getLocationAndSend() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                document.getElementById('latitude').value = position.coords.latitude;
-                document.getElementById('longitude').value = position.coords.longitude;
-                document.getElementById('error-message').innerHTML = ''; // Limpiar mensajes de error previos
-                showSpinner();  // Mostrar el spinner antes de enviar el formulario
-                document.getElementById('registrationForm').submit(); // Enviar el formulario
-            }, function(error) {
-                console.log("Error obteniendo la ubicación: ", error);
-                if (error.code === error.PERMISSION_DENIED) {
-                    document.getElementById('error-message').innerHTML = '<div class="alert alert-danger" role="alert"> Para continuar con el registro, es necesario permitir el acceso a su ubicación. </div>';
-                } else {
-                    document.getElementById('error-message').innerHTML = '<div class="alert alert-warning" role="alert"> Hubo un problema al obtener su ubicación. Por favor, intente nuevamente. </div>';
-                }
-            });
-        } else {
-            console.log("Geolocalización no es soportada por este navegador.");
-            document.getElementById('error-message').innerHTML = 'Su navegador no soporta geolocalización.';
-        }
-      }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/style.css" />
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+    crossorigin="anonymous"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
+  />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+    rel="stylesheet"
+  />
+  <!-- FAVICON -->
+  <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png"/>
+  <title>Registro Asistencia</title>
+  <style>
+    :root {
+      --primary-color: #5c9c31;
+      --secondary-color: #f8f9fa;
+      --accent-color: #e67e22;
+      --text-color: #333;
+      --light-text: #6c757d;
+      --border-radius: 10px;
+      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --transition-speed: 0.3s;
+    }
+    
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: #f5f5f5;
+      color: var(--text-color);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    
+    .registrer {
+      display: flex;
+      min-height: 100vh;
+      background-color: #fff;
+      box-shadow: var(--box-shadow);
+      animation: fadeIn 1s ease-in-out;
+    }
+    
+    .left-side {
+      flex: 1;
+      background: linear-gradient(135deg, #68a339 0%, #5c9c31 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .left-side::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/pattern.png');
+      background-size: cover;
+      opacity: 0.1;
+      animation: pulse 15s infinite alternate;
+    }
 
-      function showSpinner() {
-          // Mostrar el spinner al usuario
-          document.getElementById('loading-spinner').style.display = 'block';
+    @keyframes pulse {
+      0% {
+        opacity: 0.05;
+        transform: scale(1);
       }
+      50% {
+        opacity: 0.1;
+        transform: scale(1.05);
+      }
+      100% {
+        opacity: 0.15;
+        transform: scale(1);
+      }
+    }
+    
+    .logo {
+      max-width: 80%;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+      animation: float 6s ease-in-out infinite;
+    }
 
-      // Restaurar el spinner a none si el usuario regresa usando el botón 'atrás' del navegador
-      window.addEventListener('pageshow', function(event) {
-          if (event.persisted) {  // Detecta si la página se carga desde la caché
-              document.getElementById('loading-spinner').style.display = 'none';
-          }
-      });
-    </script>
-    <style>
-      /* Ocultar el spinner inicialmente */
-      #loading-spinner {
-          display: none;
-          position: fixed; /* Para que se quede fijo en la pantalla */
-          top: 40%;
-          left: 40%;
-          width: 10rem;
-          height: 10rem;
-          z-index: 1000; /* Asegurarse de que esté sobre otros elementos */
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
       }
+      50% {
+        transform: translateY(-10px);
+      }
+      100% {
+        transform: translateY(0px);
+      }
+    }
+    
+    .right-side {
+      flex: 1.5;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    
+    .topic-tittle {
+      color: var(--primary-color);
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 0.5rem;
+      animation: slideInRight 0.8s ease-in-out;
+    }
 
-      @media (max-width: 768px){
-        #loading-spinner{
-          top: 30%;
-          left: 32%;
-        }
+    @keyframes slideInRight {
+      from {
+        transform: translateX(50px);
+        opacity: 0;
       }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    .form-card {
+      background-color: var(--secondary-color);
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      box-shadow: var(--box-shadow);
+      margin-bottom: 2rem;
+      animation: fadeInUp 1s ease-out;
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    }
+
+    .form-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1,
+      }
+    }
+    
+    .form-section {
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 1rem;
+      animation-duration: 0.8;
+      animation-fill-mode: both;
+      animation-name: fadeIn;
+      animation-delay: calc(var(--animation-order) * 00.1s);
+    }
+    
+    .form-section:last-child {
+      border-bottom: none;
+    }
+    
+    .form-section-title {
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+      position:relative;
+      display: inline-block;
+    }
+
+    .form-section-title::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -5px;
+      left: 0;
+      background-color: var(--primary-color);
+      transition: width 0.3s ease;
+    }
+
+    .form-section:hover .form-section-title::after {
+      width: 100%;
+    }
+    
+    .form-label {
+      font-weight: 600;
+      color: var(--light-text);
+      margin-bottom: 0.5rem;
+      transition: color var(--transition-speed);
+    }
+    
+    .form-value {
+      font-weight: 400;
+      color: var(--text-color);
+      transition: transform var(--transition-speed);
+    }
+
+    .form-section:hover .form-value {
+      transform: translateY(5px);
+    }
+    
+    .btn-funda {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(92, 156, 49, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-funda:hover {
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.6s;
+    }
+    
+    .btn-funda:hover {
+      background-color: #4a8026;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(92, 156, 49, 0.4);
+    }
+
+    .btn-funda:hover::before {
+      left: 100%;
+    }
+    
+    .btn-funda:disabled {
+      background-color: #a5c791;
+      cursor: not-allowed;
+    }
+    
+    .id-capture {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 1.5rem;
+      box-shadow: var(--box-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      animation: fadeInUp 1.2s ease-out;
+      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    }
+
+    .id-capture:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Animacion para los inputs */
+    input.form-control {
+      transition: all 0.3s ease;
+      border: 1px solid #ced4da;
+    }
+
+    input.form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.25rem rgba(92, 156, 50, 0.25);
+      transform: translateY(-2px);
+    }
+
+    /* Animacion para las alertas */
+    .alert {
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      animation: slideInDown 0.5s ease-out;
+    }
+
+    @keyframes slideInDown {
+      from {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .alert:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    
+    /* Spinner de carga con hámster */
+    #loading-spinner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    .spinner-container {
+      text-align: center;
+    }
+    
+    /* Estilos del hámster */
+    .wheel-and-hamster {
+      --dur: 1s;
+      position: relative;
+      width: 12em;
+      height: 12em;
+      font-size: 14px;
+      margin: 0 auto;
+    }
+    
+    .wheel,
+    .hamster,
+    .hamster div,
+    .spoke {
+      position: absolute;
+    }
+    
+    .wheel,
+    .spoke {
+      border-radius: 50%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    
+    .wheel {
+      background: radial-gradient(100% 100% at center,hsla(0,0%,60%,0) 47.8%,hsl(0,0%,60%) 48%);
+      z-index: 2;
+    }
+    
+    .hamster {
+      animation: hamster var(--dur) ease-in-out infinite;
+      top: 50%;
+      left: calc(50% - 3.5em);
+      width: 7em;
+      height: 3.75em;
+      transform: rotate(4deg) translate(-0.8em,1.85em);
+      transform-origin: 50% 0;
+      z-index: 1;
+    }
+    
+    .hamster__head {
+      animation: hamsterHead var(--dur) ease-in-out infinite;
+      background: hsl(30,90%,55%);
+      border-radius: 70% 30% 0 100% / 40% 25% 25% 60%;
+      box-shadow: 0 -0.25em 0 hsl(30,90%,80%) inset,
+              0.75em -1.55em 0 hsl(30,90%,90%) inset;
+      top: 0;
+      left: -2em;
+      width: 2.75em;
+      height: 2.5em;
+      transform-origin: 100% 50%;
+    }
+    
+    .hamster__ear {
+      animation: hamsterEar var(--dur) ease-in-out infinite;
+      background: hsl(0,90%,85%);
+      border-radius: 50%;
+      box-shadow: -0.25em 0 hsl(30,90%,55%) inset;
+      top: -0.25em;
+      right: -0.25em;
+      width: 0.75em;
+      height: 0.75em;
+      transform-origin: 50% 75%;
+    }
+    
+    .hamster__eye {
+      animation: hamsterEye var(--dur) linear infinite;
+      background-color: hsl(0,0%,0%);
+      border-radius: 50%;
+      top: 0.375em;
+      left: 1.25em;
+      width: 0.5em;
+      height: 0.5em;
+    }
+    
+    .hamster__nose {
+      background: hsl(0,90%,75%);
+      border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%;
+      top: 0.75em;
+      left: 0;
+      width: 0.2em;
+      height: 0.25em;
+    }
+    
+    .hamster__body {
+      animation: hamsterBody var(--dur) ease-in-out infinite;
+      background: hsl(30,90%,90%);
+      border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%;
+      box-shadow: 0.1em 0.75em 0 hsl(30,90%,55%) inset,
+              0.15em -0.5em 0 hsl(30,90%,80%) inset;
+      top: 0.25em;
+      left: 2em;
+      width: 4.5em;
+      height: 3em;
+      transform-origin: 17% 50%;
+      transform-style: preserve-3d;
+    }
+    
+    .hamster__limb--fr,
+    .hamster__limb--fl {
+      clip-path: polygon(0 0,100% 0,70% 80%,60% 100%,0% 100%,40% 80%);
+      top: 2em;
+      left: 0.5em;
+      width: 1em;
+      height: 1.5em;
+      transform-origin: 50% 0;
+    }
+    
+    .hamster__limb--fr {
+      animation: hamsterFRLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30,90%,80%) 80%,hsl(0,90%,75%) 80%);
+      transform: rotate(15deg) translateZ(-1px);
+    }
+    
+    .hamster__limb--fl {
+      animation: hamsterFLLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30,90%,90%) 80%,hsl(0,90%,85%) 80%);
+      transform: rotate(15deg);
+    }
+    
+    .hamster__limb--br,
+    .hamster__limb--bl {
+      border-radius: 0.75em 0.75em 0 0;
+      clip-path: polygon(0 0,100% 0,100% 30%,70% 90%,70% 100%,30% 100%,40% 90%,0% 30%);
+      top: 1em;
+      left: 2.8em;
+      width: 1.5em;
+      height: 2.5em;
+      transform-origin: 50% 30%;
+    }
+    
+    .hamster__limb--br {
+      animation: hamsterBRLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30,90%,80%) 90%,hsl(0,90%,75%) 90%);
+      transform: rotate(-25deg) translateZ(-1px);
+    }
+    
+    .hamster__limb--bl {
+      animation: hamsterBLLimb var(--dur) linear infinite;
+      background: linear-gradient(hsl(30,90%,90%) 90%,hsl(0,90%,85%) 90%);
+      transform: rotate(-25deg);
+    }
+    
+    .hamster__tail {
+      animation: hamsterTail var(--dur) linear infinite;
+      background: hsl(0,90%,85%);
+      border-radius: 0.25em 50% 50% 0.25em;
+      box-shadow: 0 -0.2em 0 hsl(0,90%,75%) inset;
+      top: 1.5em;
+      right: -0.5em;
+      width: 1em;
+      height: 0.5em;
+      transform: rotate(30deg) translateZ(-1px);
+      transform-origin: 0.25em 0.25em;
+    }
+    
+    .spoke {
+      animation: spoke var(--dur) linear infinite;
+      background: radial-gradient(100% 100% at center,hsl(0,0%,60%) 4.8%,hsla(0,0%,60%,0) 5%),
+              linear-gradient(hsla(0,0%,55%,0) 46.9%,hsl(0,0%,65%) 47% 52.9%,hsla(0,0%,65%,0) 53%) 50% 50% / 99% 99% no-repeat;
+    }
+    
+    /* Animaciones del hámster */
+    @keyframes hamster {
+      from, to {
+        transform: rotate(4deg) translate(-0.8em,1.85em);
+      }
+    
+      50% {
+        transform: rotate(0) translate(-0.8em,1.85em);
+      }
+    }
+    
+    @keyframes hamsterHead {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(0);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(8deg);
+      }
+    }
+    
+    @keyframes hamsterEye {
+      from, 90%, to {
+        transform: scaleY(1);
+      }
+    
+      95% {
+        transform: scaleY(0);
+      }
+    }
+    
+    @keyframes hamsterEar {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(0);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(12deg);
+      }
+    }
+    
+    @keyframes hamsterBody {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(0);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(-2deg);
+      }
+    }
+    
+    @keyframes hamsterFRLimb {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(50deg) translateZ(-1px);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(-30deg) translateZ(-1px);
+      }
+    }
+    
+    @keyframes hamsterFLLimb {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(-30deg);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(50deg);
+      }
+    }
+    
+    @keyframes hamsterBRLimb {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(-60deg) translateZ(-1px);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(-30deg) translateZ(-1px);
+      }
+    }
+    
+    @keyframes hamsterBLLimb {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(-30deg);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(-60deg);
+      }
+    }
+    
+    @keyframes hamsterTail {
+      from, 25%, 50%, 75%, to {
+        transform: rotate(30deg) translateZ(-1px);
+      }
+    
+      12.5%, 37.5%, 62.5%, 87.5% {
+        transform: rotate(10deg) translateZ(-1px);
+      }
+    }
+    
+    @keyframes spoke {
+      from {
+        transform: rotate(0);
+      }
+    
+      to {
+        transform: rotate(-1turn);
+      }
+    }
+    
+    .spinner-text {
+      margin-top: 1rem;
+      color: white;
+      font-weight: 600;
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        opacity: 0.6;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0.6;
+      }
+    }
+    
+    /* Efecto de revelacion para las filas */ 
+    .row {
+      opacity: 0;
+      animation: fadeInRow 0.8s forwards;
+    }
+    
+    .row:nth-child(1) {
+      animation-delay: 0.2s;
+    }
+
+    .row:nth-child(2) {
+      animation-delay: 0.4s;
+    }
+
+    .row:nth-child(3) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes fadeInRow {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      from {
+        opacity: 0;
+        transform: translateY(20px)
+      }
+    }
+
+
+    /* Estilos para alertas */
+    .alert {
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .alert-info {
+      background-color: #e8f4fd;
+      border-color: #bee5eb;
+      color: #0c5460;
+    }
+    
+    .alert-danger {
+      background-color: #f8d7da;
+      border-color: #f5c6cb;
+      color: #721c24;
+    }
+    
+    .alert-warning {
+      background-color: #fff3cd;
+      border-color: #ffeeba;
+      color: #856404;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+      .registrer {
+        flex-direction: column;
+      }
+      
+      .left-side {
+        min-height: 200px;
+      }
+      
+      .right-side {
+        padding: 2rem 1.5rem;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .right-side {
+        padding: 1.5rem 1rem;
+      }
+      
+      .form-card {
+        padding: 1.5rem;
+      }
+      
+      .topic-tittle {
+        font-size: 1.5rem;
+      }
+      
+      .spinner-container {
+        width: 80%;
+        padding: 1.5rem;
+      }
+    }
   </style>
-  </head>
-  <body>
-      <div class="registrer">
-        <div class="left-side">
-          <img
-          src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
-          class="logo"
-          alt="Logo Fundacion"
-          />
+</head>
+<body>
+  <div class="registrer">
+    <div class="left-side">
+      <img
+        src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
+        class="logo"
+        alt="Logo Fundación"
+      />
+    </div>
+
+    <div class="right-side">
+      <h5 class="mt-3">{{ capacitacion.tipo }}:</h5>
+      <h3 class="topic-tittle">{{ capacitacion.tema }}</h3>
+      
+      {% if not is_active %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Ya no se admiten registros para este evento.
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+      {% endif %}
+      
+      {% if error_message %}
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <i class="bi bi-info-circle-fill me-2"></i>
+          {{ error_message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
 
-        <div class="right-side">
-          <h5 class="mt-3">{{ capacitacion.tipo }}:</h5>
-          <h3 class="topic-tittle mt-1">{{ capacitacion.tema }}</h3>
-          <h5 class="mb-3">Registro Asistencia</h5>
+      <!-- Contenedor para mensajes de error -->
+      <div id="error-message" class="mt-3"></div>
+
+      <div class="form-card">
+        <h4 class="mb-4 text-center text-black">Registro de Asistencia</h4>
+        
+        <form id="registrationForm" method="post" onsubmit="event.preventDefault(); getLocationAndSend();">
+          {% csrf_token %}
           
-          {% if not is_active %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-              Ya no se admiten registros para este evento.
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <input type="hidden" name="topic" value="{{ form.initial.topic }}">
+          <input type="hidden" name="mode" value="{{ form.initial.mode }}">
+          <input type="hidden" name="privacidad" value="{{ form.initial.privacidad }}">
+          <input type="hidden" name="tipo" value="{{ form.initial.tipo }}">
+          <input type="hidden" name="location" value="{{ form.initial.location }}">
+          <input type="hidden" name="url_reunion" {% if form.initial.url_reunion %} value="{{ form.initial.url_reunion }}" {% else %} value="without-url" {% endif %}>
+          <input type="hidden" name="in_charge" value="{{ form.initial.in_charge }}">
+          <input type="hidden" id="latitude" name="latitude" value="">
+          <input type="hidden" id="longitude" name="longitude" value="">
+          
+          <div class="form-section">
+            <h5 class="form-section-title">Información del Evento</h5>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <div class="form-label">Objetivo:</div>
+                  <div class="form-value">{{ form.initial.objective }}</div>
+                  <input type="hidden" name="objective" value="{{ form.initial.objective }}">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <div class="form-label">Área:</div>
+                  <div class="form-value">{{ form.initial.department }}</div>
+                  <input type="hidden" name="department" value="{{ form.initial.department }}">
+                </div>
+              </div>
             </div>
-          {% endif %}
-          {% if error_message %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-              {{ error_message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <div class="form-label">Moderador:</div>
+                  <div class="form-value">{{ form.initial.moderator }}</div>
+                  <input type="hidden" name="moderator" value="{{ form.initial.moderator }}">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <div class="form-label">Fecha:</div>
+                  <div class="form-value">{{ form.initial.date }}</div>
+                  <input type="hidden" name="date" value="{{ form.initial.date }}">
+                </div>
+              </div>
             </div>
-          {% endif %}
-
-          <!-- Contenedor para mensajes de error -->
-          <div id="error-message" class="mt-5"></div>
-
-          <form id="registrationForm" class="mt-4" method="post" onsubmit="event.preventDefault(); getLocationAndSend();">
-            {% csrf_token %}
-
-            <div class="mb-3">
-              <input type="hidden" name="topic" value="{{ form.initial.topic }}">
+            
+            <div class="row g-3">
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <div class="form-label">Hora Inicial:</div>
+                  <div class="form-value">{{ form.initial.start_time|time:"h:i A" }}</div>
+                  <input type="hidden" name="start_time" value="{{ form.initial.start_time|time:"H:i" }}">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <div class="form-label">Hora Final:</div>
+                  <div class="form-value">{{ form.initial.end_time|time:"h:i A" }}</div>
+                  <input type="hidden" name="end_time" value="{{ form.initial.end_time|time:"H:i" }}">
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <div class="form-label">Modalidad:</div>
+                  <div class="form-value">{{ form.initial.mode }}</div>
+                </div>
+              </div>
             </div>
-
-            <div class="mb-3">
-              <label><strong>Objetivo:</strong> {{ form.initial.objective }}</label>
-              <input type="hidden" name="objective" value="{{ form.initial.objective }}">
-            </div>
-
-            <div class="mb-3">
-              <label><strong>Área:</strong> {{ form.initial.department }}</label>
-              <input type="hidden" name="department" value="{{ form.initial.department }}">
-            </div>
-
-            <div class="mb-3">
-              <label><strong>Moderador:</strong> {{ form.initial.moderator }}</label>
-              <input type="hidden" name="moderator" value="{{ form.initial.moderator }}">
-            </div>
-
-            <div class="mb-3">
-              <label><strong>Fecha:</strong> {{ form.initial.date }}</label>
-              <input type="hidden" name="date" value="{{ form.initial.date }}">
-            </div>
-
-            <div class="mb-3">
-              <label><strong>Hora Inicial:</strong> {{ form.initial.start_time|time:"h:i A" }}</label>
-              <input type="hidden" name="start_time" value="{{ form.initial.start_time|time:"H:i" }}">
+          </div>
+          
+          <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="bi bi-geo-alt-fill me-2"></i>
+            Luego de ingresar tu documento de identidad, debes <strong>permitir</strong> el acceso a tu <strong>ubicación</strong> para completar el registro.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
 
+          <div class="id-capture mt-4">
             <div class="mb-3">
-              <label><strong>Hora Final:</strong> {{ form.initial.end_time|time:"h:i A" }}</label>
-              <input type="hidden" name="end_time" value="{{ form.initial.end_time|time:"H:i" }}">
+              <label for="document_id" class="form-label">Documento de Identidad del Asistente:</label>
+              {{ form.document_id }}
             </div>
-
-            <div class="mb-3">
-              <label><strong>Modalidad: </strong> {{ form.initial.mode}}</label>
-              <div class="alert alert-info alert-dismissible fade show" role="alert">
-                Luego de ingresar tu documento de identidad, debes <strong>permitir</strong> el acceso a tu  <strong>ubicación</strong> para completar el registro.
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-              <input type="hidden" name="mode" value="{{ form.initial.mode }}">
-              <input type="hidden" name="privacidad" value="{{ form.initial.privacidad }}">
-              <input type="hidden" name="tipo" value="{{ form.initial.tipo }}">
-              <input type="hidden" name="location" value="{{ form.initial.location }}">
-              <input type="hidden" name="url_reunion"  {% if form.initial.url_reunion %} value="{{ form.initial.url_reunion }}" {% else %} value="without-url" {% endif %}>
-              <input type="hidden" name="in_charge" value="{{ form.initial.in_charge }}">
-            </div>
-
-            <!-- LOCATION DATA -->
-            <input type="hidden" id="latitude" name="latitude" value="">
-            <input type="hidden" id="longitude" name="longitude" value="">
-
-            <div class="id-capture">
-              <div class="mb-3">
-                <label for="document_id" class="mt-3"><strong>Documento de Identidad del Asistente:</strong></label>
-                {{ form.document_id }}
-              </div>
+            <div class="text-center">
               <button type="submit" class="btn btn-funda" {% if not is_active %} disabled {% endif %}>
-                Registrar
+                <i class="bi bi-check-circle me-2"></i>Registrar Asistencia
               </button>
             </div>
+          </div>
         </form>
-         <!-- Spinner de carga -->
-        <div id="loading-spinner" class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
       </div>
     </div>
   </div>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
-      crossorigin="anonymous"
-    ></script>
-  </body>
+  <!-- Spinner de carga con hámster -->
+  <div id="loading-spinner" style="display: none;">
+    <div class="spinner-container">
+      <div aria-label="Hámster corriendo en una rueda" role="img" class="wheel-and-hamster"> 
+        <div class="wheel"></div> 
+        <div class="hamster"> 
+          <div class="hamster__body"> 
+            <div class="hamster__head"> 
+              <div class="hamster__ear"></div> 
+              <div class="hamster__eye"></div> 
+              <div class="hamster__nose"></div> 
+            </div> 
+            <div class="hamster__limb hamster__limb--fr"></div> 
+            <div class="hamster__limb hamster__limb--fl"></div> 
+            <div class="hamster__limb hamster__limb--br"></div> 
+            <div class="hamster__limb hamster__limb--bl"></div> 
+            <div class="hamster__tail"></div> 
+          </div> 
+        </div> 
+        <div class="spoke"></div> 
+      </div>
+      <p class="spinner-text">Procesando, por favor espere...</p>
+    </div>
+  </div>
+
+  <script>
+    // Aplicar clases de animación a elementos al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+      // Animar elementos con retraso secuencial
+      const formSections = document.querySelectorAll('.form-section');
+      formSections.forEach((section, index) => {
+        setTimeout(() => {
+          section.classList.add('animate__animated', 'animate__fadeIn');
+        }, 200 * index);
+      });
+      
+      // Verificar que el spinner funcione correctamente
+      console.log("DOM cargado, spinner disponible:", document.getElementById('loading-spinner'));
+    });
+    
+    function getLocationAndSend() {
+      if (navigator.geolocation) {
+        // Mostrar el spinner antes de solicitar la ubicación
+        showSpinner();
+        
+        navigator.geolocation.getCurrentPosition(function(position) {
+          document.getElementById('latitude').value = position.coords.latitude;
+          document.getElementById('longitude').value = position.coords.longitude;
+          document.getElementById('error-message').innerHTML = ''; // Limpiar mensajes de error previos
+          // El spinner ya está visible, no es necesario llamar a showSpinner() de nuevo
+          document.getElementById('registrationForm').submit(); // Enviar el formulario
+        }, function(error) {
+          // Ocultar el spinner en caso de error
+          hideSpinner();
+          
+          console.log("Error obteniendo la ubicación: ", error);
+          if (error.code === error.PERMISSION_DENIED) {
+            document.getElementById('error-message').innerHTML = '<div class="alert alert-danger animate__animated animate__shakeX" role="alert"><i class="bi bi-exclamation-triangle-fill me-2"></i> Para continuar con el registro, es necesario permitir el acceso a su ubicación. </div>';
+          } else {
+            document.getElementById('error-message').innerHTML = '<div class="alert alert-warning animate__animated animate__fadeIn" role="alert"><i class="bi bi-info-circle-fill me-2"></i> Hubo un problema al obtener su ubicación. Por favor, intente nuevamente. </div>';
+          }
+        });
+      } else {
+        console.log("Geolocalización no es soportada por este navegador.");
+        document.getElementById('error-message').innerHTML = '<div class="alert alert-warning animate__animated animate__fadeIn" role="alert"><i class="bi bi-info-circle-fill me-2"></i> Su navegador no soporta geolocalización. </div>';
+      }
+    }
+
+    function showSpinner() {
+      // Mostrar el spinner al usuario
+      const spinner = document.getElementById('loading-spinner');
+      console.log("Mostrando spinner:", spinner);
+      spinner.style.display = 'flex';
+    }
+    
+    function hideSpinner() {
+      // Ocultar el spinner
+      const spinner = document.getElementById('loading-spinner');
+      spinner.style.display = 'none';
+    }
+
+    // Restaurar el spinner a none si el usuario regresa usando el botón 'atrás' del navegador
+    window.addEventListener('pageshow', function(event) {
+      if (event.persisted) {  // Detecta si la página se carga desde la caché
+        hideSpinner();
+      }
+    });
+    
+    // Asegurarse de que el formulario no se envíe dos veces
+    document.getElementById('registrationForm').addEventListener('submit', function() {
+      // Deshabilitar el botón de envío para evitar múltiples envíos
+      const submitButton = this.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+      }
+      
+      // Mostrar el spinner
+      showSpinner();
+    });
+  </script>
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+    crossorigin="anonymous"
+  ></script>
+</body>
 </html>
