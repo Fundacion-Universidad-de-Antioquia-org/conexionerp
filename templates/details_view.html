@@ -53,6 +53,250 @@
   </div>
 </section>
 
+<!-- estilos específicos para details_view */ -->
+<style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+@keyframes underlineIn {
+  from { width: 0;}
+  to { width: 100%;}
+}
+
+.details {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(92,156,49,0.07);
+  padding: 2rem 2.5rem;
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
+}
+
+.header-section {
+  border-bottom: 2px solid #5c9c31;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.8rem;
+}
+
+.principal-title {
+  color: #5c9c31;
+  font-weight: 700;
+  font-size: 2rem;
+  margin-left: 1rem;
+  letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+}
+.principal-title::after {
+  content: "";
+  display: block;
+  height: 3px;
+  background: #5c9c31;
+  width: 0;
+  transition: width 0.4s;
+}
+.principal-title:hover::after {
+  width: 60%;
+  animation: underlineIn 0.4s forwards;
+}
+
+.grid-container {
+  display: grid;
+  gap: 1rem;
+  max-width: 980px;
+  margin: 0 auto;
+  width: 100%;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.header-resume, .detail-info, .url-container, .qr-container {
+  border-radius: 10px;
+  background: #f8f9fa;
+  box-shadow: 0 2px 8px rgba(92,156,49,0.04);
+  animation: fadeInUp 0.8s cubic-bezier(.39,.575,.565,1) both;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.header-resume:hover, .detail-info:hover, .url-container:hover, .qr-container:hover {
+  box-shadow: 0 8px 24px rgba(92,156,49,0.13);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.header-resume {
+  border-left: 4px solid #5c9c31;
+  padding: 1.2rem 1.5rem;
+}
+
+.header-resume p strong {
+  color: #5c9c31;
+}
+
+.header-resume pre {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 0.8rem;
+  font-size: 1rem;
+}
+
+.detail-info p {
+  background: #fff;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-left: 3px solid #e0e0e0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.detail-info p strong {
+  color: #5c9c31;
+}
+.detail-info p:hover {
+  border-left: 3px solid #5c9c31;
+  box-shadow: 0 2px 8px rgba(92,156,49,0.10);
+}
+
+.url-container {
+  border-left: 4px solid #5c9c31;
+  padding: 1.2rem 1.5rem;
+}
+.url-container a {
+  color: #5c9c31;
+  font-weight: 500;
+  text-decoration: underline;
+  transition: color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.url-container a::after {
+  content: "";
+  display: block;
+  height: 2px;
+  background: #5c9c31;
+  width: 0;
+  transition: width 0.3s;
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+}
+.url-container a:hover {
+  color: #3e6523;
+}
+.url-container a:hover::after {
+  width: 100%;
+  animation: underlineIn 0.3s forwards;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.2rem 0.5rem;
+}
+
+#qr-image {
+  max-width: 350px;
+  width: 90%;
+  border: 6px solid #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(92,156,49,0.10);
+  margin-top: 0.5rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+#qr-image:hover {
+  box-shadow: 0 6px 18px rgba(92,156,49,0.18);
+  transform: scale(1.05) rotate(-2deg);
+}
+
+.separator-sm {
+  height: 1.6px;
+  background: linear-gradient(90deg, transparent, #5c9c31, transparent);
+  margin: 1rem 0;
+  border: none;
+}
+
+/* Media queries para diseño responsive */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "info"
+      "url"
+      "qr";
+  }
+  
+  .header-resume {
+    grid-area: header;
+  }
+  
+  .detail-info {
+    grid-area: info;
+  }
+  
+  .url-container {
+    grid-area: url;
+  }
+  
+  .qr-container {
+    grid-area: qr;
+    align-self: center;
+    margin: 0 auto;
+  }
+  
+  #qr-image {
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 767px) {
+  .details {
+    padding: 1.5rem 1rem;
+  }
+  
+  .grid-container {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "info"
+      "url"
+      "qr";
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    width: 100%;
+  }
+  
+  .principal-title {
+    font-size: 1.5rem;
+  }
+  
+  .header-resume {
+    grid-area: header;
+  }
+  
+  .detail-info {
+    grid-area: info;
+  }
+  
+  .url-container {
+    grid-area: url;
+  }
+  
+  .qr-container {
+    grid-area: qr;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 1.5rem 0.5rem;
+  }
+  
+  #qr-image {
+    max-width: 380px;
+    width: 100%;
+    height: auto;
+  }
+}
+</style>
+
 <script>
   const qrBase64 = "{{ qr_base64|safe }}".replace(/(\r\n|\n|\r)/gm, ""); // Elimina cualquier salto de línea
   const image = document.getElementById("qr-image");

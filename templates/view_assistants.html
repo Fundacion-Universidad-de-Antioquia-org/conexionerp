@@ -3,270 +3,916 @@
 {% block title %}Asistentes{% endblock %}
 
 {% block content %}
-    <div class="header-section">
-        <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
-        <h3>Asistentes {{ capacitacion.tipo }} : {{ capacitacion.tema }}</h3>
+    <!-- Spinner de carga global -->
+    <div id="loadingSpinner" class="loading-overlay d-none">
+        <div class="spinner-container">
+            <div aria-label="Hámster corriendo en una rueda" role="img" class="wheel-and-hamster"> 
+                <div class="wheel"></div> 
+                <div class="hamster"> 
+                    <div class="hamster__body"> 
+                        <div class="hamster__head"> 
+                            <div class="hamster__ear"></div> 
+                            <div class="hamster__eye"></div> 
+                            <div class="hamster__nose"></div> 
+                        </div> 
+                        <div class="hamster__limb hamster__limb--fr"></div> 
+                        <div class="hamster__limb hamster__limb--fl"></div> 
+                        <div class="hamster__limb hamster__limb--br"></div> 
+                        <div class="hamster__limb hamster__limb--bl"></div> 
+                        <div class="hamster__tail"></div> 
+                    </div> 
+                </div> 
+                <div class="spoke"></div> 
+            </div>
+            <p class="mt-3 text-white">Procesando, por favor espere...</p>
+        </div>
     </div>
 
-    <section class="resume-section">
+    <div class="header-section p-3 mb-4 bg-light rounded shadow-sm">
+        <a href="{% url 'home' %}" class="btn btn-success-f rounded-circle me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h3 class="mb-0" style="color: #35bd00;">Asistentes {{ capacitacion.tipo }}: <span class="text-dark">{{ capacitacion.tema }}</span></h3>
+    </div>
+
+    <section class="resume-section p-3 mb-4 bg-white rounded shadow-sm">
         <!-- Tabla de datos y botón de descarga -->
         <section class="attendants-data">
-            <h5>Resumen:</h5>
-            <div class="total-attendants">
-                <div class="item-attendants">
-                    <i class="bi bi-envelope-check-fill"></i>
-                    <p>Total Invitados: <strong>{{ total_invitados }}</strong></p>
+            <h5 class="border-bottom pb-2 mb-3">Resumen:</h5>
+            <div class="total-attendants row g-3">
+                <div class="col-md item-attendants d-flex align-items-center">
+                    <div class="icon-container bg-primary text-white rounded-circle p-2 me-2">
+                        <i class="bi bi-envelope-check-fill"></i>
+                    </div>
+                    <p class="mb-0">Total Invitados: <strong>{{ total_invitados }}</strong></p>
                 </div>
-                <div class="item-attendants">
-                    <div class="desktop separator-sm"></div>
-                    <i class="bi bi-person-check-fill"></i>
-                    <p>Asistentes: <strong>{{ assistants_yes|length }}</strong></p>
+                <div class="col-md item-attendants d-flex align-items-center">
+                    <div class="icon-container bg-success text-white rounded-circle p-2 me-2">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                    <p class="mb-0">Asistentes: <strong>{{ assistants_yes|length }}</strong></p>
                 </div>
-                <div class="item-attendants">
-                    <div class="desktop separator-sm"></div>
-                    <i class="bi bi-person-dash-fill"></i>
-                    <p>Ausentes Citados: <strong>{{ assistants_no|length }}</strong></p>
+                <div class="col-md item-attendants d-flex align-items-center">
+                    <div class="icon-container bg-danger text-white rounded-circle p-2 me-2">
+                        <i class="bi bi-person-dash-fill"></i>
+                    </div>
+                    <p class="mb-0">Ausentes Citados: <strong>{{ assistants_no|length }}</strong></p>
                 </div>
-                <div class="item-attendants">
-                    <div class="desktop separator-sm"></div>
-                    <i class="bi bi-people-fill"></i>
-                    <p>Cupos Disponibles: <strong>{{ total_ausentes }}</strong></p>
+                <div class="col-md item-attendants d-flex align-items-center">
+                    <div class="icon-container bg-info text-white rounded-circle p-2 me-2">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <p class="mb-0">Cupos Disponibles: <strong>{{ total_ausentes }}</strong></p>
                 </div>
-                <div class="item-attendants">
-                    <div class="desktop separator-sm"></div>
-                    <i class="bi bi-reception-3"></i>
-                    <p>Tasa de éxito: <strong>{{ tasa_exito }} %</strong></p>
+                <div class="col-md item-attendants d-flex align-items-center">
+                    <div class="icon-container text-dark rounded-circle p-2 me-2" style="background-color:coral;">
+                        <i class="bi bi-reception-3"></i>
+                    </div>
+                    <p class="mb-0">Tasa de éxito: <strong>{{ tasa_exito }} %</strong></p>
                 </div>
             </div>
         </section>
     </section>
-    <!-- Conf Evidencia -->
-    <section class="download-section">
-        <div class="download-zone">
-            
-            <a href="?download=excel" class="btn btn-success-f">
-                <i class="bi bi-cloud-download"></i>
+    
+    <!-- Sección de Descargas -->
+    <section class="download-section p-3 mb-4 bg-white rounded shadow-sm">
+        <h5 class="border-bottom pb-2 mb-3">Descargas disponibles:</h5>
+        <div class="download-zone d-flex flex-wrap gap-2">
+            <a href="?download=excel" class="btn btn-success-f d-flex align-items-center">
+                <i class="bi bi-file-excel me-2"></i>
                 Descargar Asistencia
             </a>      
 
-            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f">
-                <i class="bi bi-cloud-download"></i>
+            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f d-flex align-items-center">
+                <i class="bi bi-file-pdf me-2"></i>
                 Descargar Resumen
             </a>    
     
             {% if capacitacion.archivo_presentacion %}
-                <a href="{{ capacitacion.archivo_presentacion }}"  class="btn btn-success-f" target="_blank">
-                    <i class="bi bi-cloud-download"></i>
+                <a href="{{ capacitacion.archivo_presentacion }}" class="btn btn-success-f d-flex align-items-center" target="_blank">
+                    <i class="bi bi-file-ppt me-2"></i>
                     Descargar Presentación
                 </a>
             {% endif %}
         </div>
-
-        
     </section>
 
-    <div class="accordion" id="accordionExample">
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                Confirmados
-            </button>
-            </h2>
-            <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-            <div class="accordion-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Cédula</th>
-                                <th>Nombre</th>
-                                <th>Cargo</th>
-                                <th>Área</th>
-                                <th>Correo Personal</th>
-                                <th>Correo Corporativo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for assistant in assistants_yes %}
-                            <tr>
-                                <td>{{ forloop.counter }}</td>
-                                <td>{{ assistant.userId|upper }}</td>          
-                                <td>{{ assistant.username|upper }}</td>
-                                <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}{% endif %}</td>
-                                <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}{% endif %}</td>
-                                <td>{% if assistant.personalEmail %}{{ assistant.personalEmail }}{% else %}{% endif %}</td>
-                                <td>{% if assistant.corporateEmail %}{{ assistant.corporateEmail }}{% else %}{% endif %}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <!-- Acordeón de Asistentes -->
+        <div class="accordion mb-4 shadow-sm" id="accordionExample">
+            <!-- Sección de Confirmados -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i> Confirmados ({{ assistants_yes|length }})
+                    </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center">#</th>
+                                        <th>Cédula</th>
+                                        <th>Nombre</th>
+                                        <th>Cargo</th>
+                                        <th>Área</th>
+                                        <th>Correo Personal</th>
+                                        <th>Correo Corporativo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assistant in assistants_yes %}
+                                    <tr>
+                                        <td class="text-center">{{ forloop.counter }}</td>
+                                        <td>{{ assistant.userId|upper }}</td>          
+                                        <td>{{ assistant.username|upper }}</td>
+                                        <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}-{% endif %}</td>
+                                        <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}-{% endif %}</td>
+                                        <td>{% if assistant.personalEmail %}{{ assistant.personalEmail }}{% else %}-{% endif %}</td>
+                                        <td>{% if assistant.corporateEmail %}{{ assistant.corporateEmail }}{% else %}-{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Sección de Pendientes -->
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        <i class="bi bi-hourglass-split text-warning me-2"></i> Pendientes ({{ assistants_no|length }})
+                    </button>
+                </h2>
+                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                    <div class="accordion-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-center">#</th>
+                                        <th>Cédula</th>
+                                        <th>Nombre</th>
+                                        <th>Cargo</th>
+                                        <th>Área</th>
+                                        <th>Correo Personal</th>
+                                        <th>Correo Corporativo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assistant in assistants_no %}
+                                    <tr>
+                                        <td class="text-center">{{ forloop.counter }}</td>
+                                        <td>{{ assistant.userId|upper }}</td>          
+                                        <td>{{ assistant.username|upper }}</td>
+                                        <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}-{% endif %}</td>
+                                        <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}-{% endif %}</td>
+                                        <td>{% if assistant.personalEmail %}{{ assistant.personalEmail }}{% else %}-{% endif %}</td>
+                                        <td>{% if assistant.corporateEmail %}{{ assistant.corporateEmail }}{% else %}-{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>                
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                    Pendientes
-                </button>
-            </h2>
-            <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                <div class="accordion-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Cédula</th>
-                                    <th>Nombre</th>
-                                    <th>Cargo</th>
-                                    <th>Área</th>
-                                    <th>Correo Personal</th>
-                                    <th>Correo Corporativo</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for assistant in assistants_no %}
-                                <tr>
-                                    <td>{{ forloop.counter }}</td>
-                                    <td>{{ assistant.userId|upper }}</td>          
-                                    <td>{{ assistant.username|upper }}</td>
-                                    <td>{% if assistant.jobTitle %}{{ assistant.jobTitle|upper }}{% else %}{% endif %}</td>
-                                    <td>{% if assistant.employeeDepartment %}{{ assistant.employeeDepartment|upper }}{% else %}{% endif %}</td>
-                                    <td>{% if assistant.personalEmail %}{{ assistant.personalEmail }}{% else %}{% endif %}</td>
-                                    <td>{% if assistant.corporateEmail %}{{ assistant.corporateEmail }}{% else %}{% endif %}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>                
-                </div>
+
+    <!-- Sección de Carga de Evidencias -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Cargar Evidencia</h5>
+        </div>
+        <div class="card-body">
+            <div class="evidence-zone row g-3">
+                {% if capacitacion.estado == 'ACTIVA' %}
+                    <!-- Formulario para la imagen -->
+                    <div class="col-md-6">
+                        <div class="card h-100" style="border-color: #ABD904;">
+                            <div class="card-header text-black" style="background-color: #ABD904;">
+                                <i class="bi bi-images me-2"></i> Imágenes
+                            </div>
+                            <div class="card-body">
+                                <form class="load-image-form" method="POST" enctype="multipart/form-data" onsubmit="return validateImageForm()">
+                                    <div class="load-image-settings">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="form_type" value="image_upload">
+                                        <div class="load-image-tool mb-3">	
+                                            <label for="images" class="form-label">Elige máximo 5 imágenes (Máximo 3MB):</label>
+                                            <input type="file" name="images" id="images" class="form-control" accept="image/*" multiple required>
+                                        </div>
+                                        <div class="load-image-button">
+                                            <button type="submit" id="uploadImagesBtn" class="btn w-100" style="background-color: #ABD904;">
+                                                <i class="bi bi-upload me-2"></i> Cargar Imágenes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Formulario para subir presentación -->
+                    <div class="col-md-6">
+                        <div class="card h-100" style="border-color: #F26B1D;">
+                            <div class="card-header text-black" style="background-color: #F26B1D;">
+                                <i class="bi bi-file-earmark-slides me-2"></i> Presentación
+                            </div>
+                            <div class="card-body">
+                                <form class="load-file-form" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
+                                    {% csrf_token %}
+                                    <div class="form-group mb-3">
+                                        <label for="archivo_presentacion" class="form-label">Subir Presentación (PDF o PPTX):</label>
+                                        <input type="file" name="archivo_presentacion" id="archivo_presentacion" class="form-control" accept=".pdf, .pptx" required>
+                                    </div>
+                                    <button type="submit" class="btn w-100" style="background-color: #F26B1D;">
+                                        <i class="bi bi-upload me-2"></i> Cargar Presentación
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center py-3">
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i> La capacitación no está activa. No se pueden cargar evidencias.
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <br />
-    <h5>Cargar Evidencia: </h5>
-    <div class="evidence-zone">
-        {% if capacitacion.estado == 'ACTIVA' %}
-            <!-- Formulario para la imagen -->
-            <form class="load-image-form" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
-                <div class="load-image-settings">
-                    {% csrf_token %}
-                    <div class="load-image-tool">	
-                        <label for="images">Elige máximo 5 imágenes (Máximo 3MB): </label>
-                        <input type="file" name="images" class="form-control" accept="image/*" multiple required>
-                    </div>
-                    <div class="load-image-button">
-                        <button type="submit" class="btn btn-success-f"> Cargar Imágenes</button>
-                    </div>
-                </div>
-            </form>
-        
-            <!-- Formulario para subir presentación -->
-            <form class="load-file-form" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="archivo_presentacion">Subir Presentación (PDF o PPTX):</label>
-                    <input type="file" name="archivo_presentacion" id="archivo_presentacion" class="form-control" accept=".pdf, .pptx" required>
-                </div>
-                <button type="submit" class="btn btn-success-f mt-2">Cargar Presentación</button>
-            </form>
-        {% endif %}
-    </div>
-
+    <!-- Mensajes del sistema -->
     {% if messages %}
         {% for message in messages %}
-            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags %} alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags %} alert-{{ message.tags }}{% else %}alert-info{% endif %} shadow-sm">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle{% elif message.tags == 'success' %}bi-check-circle{% else %}bi-info-circle{% endif %} me-2"></i>
                 {{ message }}
             </div>
         {% endfor %}
     {% endif %}
 
-    <section class="evidences">
-        {% if capacitacion.images.all %}
-        <h4>Evidencias:</h4>
-        <div class="carousel-container">
-            <div id="carouselExampleIndicators" class="carousel slide">
-                <div class="carousel-indicators">
-                    {% for image in capacitacion.images.all %}
-                        <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active"{% endif %} aria-label="Slide {{ forloop.counter }}"></button>
-                    {% endfor %}
-                </div>
-                <div class="carousel-inner">
-                    {% for image in capacitacion.images.all %}
-                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <!-- Botón para eliminar la imagen -->
-                            {% if capacitacion.estado == 'ACTIVA' %}
-                            <form class="delete-image-form" method="POST" action="{% url 'delete_image' image.id %}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta imagen?');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-dark"><i class="bi bi-trash3"></i></button>
-                            </form>
-                            {% endif %}
-                            <img src="{{ image.image_url }}" class="d-block" alt="Imagen de capacitación">
-                        </div>
-                    {% endfor %}
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Anterior</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Siguiente</span>
-                </button>
+    <!-- Sección de Evidencias - GALERÍA -->
+    {% if capacitacion.images.all %}
+    <section class="evidences mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header text-white d-flex align-items-center" style="background: linear-gradient(135deg, #36b902, #0c6600) !important;">
+                <i class="bi bi-images me-2 fs-4"></i>
+                <h5 class="mb-0">Galería de Evidencias</h5>
             </div>
-            {% else %}
-                <p>No hay imágenes para mostrar.</p>
-        {% endif %}
+            <div class="card-body p-4 bg-light">
+                <!-- Galería de imágenes -->
+                <div class="row g-4 image-gallery">
+                    {% for image in capacitacion.images.all %}
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card h-100 image-card border-0 shadow-hover">
+                            <div class="position-relative overflow-hidden rounded">
+                                <div class="image-container">
+                                    <img src="{{ image.image_url }}" class="card-img-top img-fluid" alt="Evidencia {{ forloop.counter }}" loading="lazy">
+                                </div>
+                                <div class="image-overlay d-flex align-items-center justify-content-center">
+                                    <button type="button" class="btn btn-light btn-sm rounded-circle me-2 btn-icon" data-bs-toggle="modal" data-bs-target="#imageModal{{ image.id }}" title="Ver imagen completa">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+                                    {% if capacitacion.estado == 'ACTIVA' %}
+                                    <form method="POST" action="{% url 'delete_image' image.id %}" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar esta imagen?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm rounded-circle btn-icon" title="Eliminar imagen">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-body text-center bg-white rounded-bottom">
+                                <h6 class="card-title mb-0 text-primary">Evidencia {{ forloop.counter }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Modal para cada imagen -->
+                    <div class="modal fade" id="imageModal{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel{{ image.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-xl modal-dialog-centered">
+                            <div class="modal-content border-0">
+                                <div class="modal-header bg-gradient-primary text-white">
+                                    <h5 class="modal-title" id="imageModalLabel{{ image.id }}">
+                                        <i class="bi bi-image me-2"></i> Evidencia {{ forloop.counter }} - {{ capacitacion.tema }}
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body text-center p-0 bg-dark">
+                                    <div class="image-viewer">
+                                        <img src="{{ image.image_url }}" class="img-fluid" alt="Evidencia {{ forloop.counter }}">
+                                    </div>
+                                </div>
+                                <div class="modal-footer d-flex justify-content-between">
+                                    <div class="image-info text-muted">
+                                        <small><i class="bi bi-info-circle me-1"></i> Imagen {{ forloop.counter }} de {{ capacitacion.images.all|length }}</small>
+                                    </div>
+                                    <div class="d-flex">
+                                        {% if capacitacion.estado == 'ACTIVA' %}
+                                        <form method="POST" action="{% url 'delete_image' image.id %}" class="me-2">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de eliminar esta imagen?');">
+                                                <i class="bi bi-trash me-2"></i> Eliminar
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            <i class="bi bi-x-circle me-2"></i> Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </section>
-    <!-- Spinner de carga -->
-<div id="background-spinner" class="background-spinner" style="display: none;">
-    <h5>Cargando archivo &#8987;</h5>
-</div>
-<div id="loading-spinner" class="spinner-border text-light" role="status" style="display: none;">
-    <span class="visually-hidden">Loading...</span>
-</div>
+    {% else %}
+        <div class="alert alert-info shadow-sm border-left-info">
+            <i class="bi bi-info-circle-fill me-2"></i> No hay imágenes para mostrar.
+        </div>
+    {% endif %}
 
-<script>
-    function showSpinner() {
-        document.getElementById('background-spinner').style.display = 'block';
-        document.getElementById('loading-spinner').style.display = 'block';
+    <!-- Estilos adicionales para la galería -->
+    <style>
+        /* Estilos para la galería de imágenes */
+        .image-gallery .image-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: white;
+        }
+        
+        .shadow-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .image-container {
+            height: 220px;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .image-card:hover .image-container img {
+            transform: scale(1.05);
+        }
+        
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-card:hover .image-overlay {
+            opacity: 1;
+        }
+        
+        .btn-icon {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-icon:hover {
+            transform: scale(1.1);
+        }
+        
+        .border-left-info {
+            border-left: 4px solid #0dcaf0;
+        }
 
-        // Deshabilitar todos los botones de envío para evitar múltiples envíos
-        let buttons = document.querySelectorAll("form button[type='submit']");
-        buttons.forEach(button => button.disabled = true);
-    }
+        
+        /* Estilos para el modal */
+        .modal-content {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .modal-header.bg-gradient-primary {
+            border-bottom: none;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid rgba(0,0,0,0.05);
+            background-color: #f8f9fa;
+        }
+        
+        .image-viewer {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            max-height: 80vh;
+        }
+        
+        .image-viewer img {
+            max-height: 70vh;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        
+        /* Mejoras para dispositivos móviles */
+        @media (max-width: 768px) {
+            .image-container {
+                height: 180px;
+            }
+            
+            .image-viewer {
+                padding: 10px;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .modal-footer .d-flex {
+                margin-top: 10px;
+            }
+        }
 
-    function hideSpinner() {
-        document.getElementById('background-spinner').style.display = 'none';
-        document.getElementById('loading-spinner').style.display = 'none';
+        
+        
+        /* Estilos para el spinner de carga */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .spinner-container {
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            border-radius: 10px;
+        }
+        
+        .wheel-and-hamster { 
+            --dur: 1s; 
+            position: relative; 
+            width: 12em; 
+            height: 12em; 
+            font-size: 14px; 
+            margin: 0 auto;
+        } 
+        
+        .wheel, 
+        .hamster, 
+        .hamster div, 
+        .spoke { 
+            position: absolute; 
+        } 
+        
+        .wheel, 
+        .spoke { 
+            border-radius: 50%; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+        } 
+        
+        .wheel { 
+            background: radial-gradient(100% 100% at center,hsla(0,0%,60%,0) 47.8%,hsl(0,0%,60%) 48%); 
+            z-index: 2; 
+        } 
+        
+        .hamster { 
+            animation: hamster var(--dur) ease-in-out infinite; 
+            top: 50%; 
+            left: calc(50% - 3.5em); 
+            width: 7em; 
+            height: 3.75em; 
+            transform: rotate(4deg) translate(-0.8em,1.85em); 
+            transform-origin: 50% 0; 
+            z-index: 1; 
+        } 
+        
+        .hamster__head { 
+            animation: hamsterHead var(--dur) ease-in-out infinite; 
+            background: hsl(30,90%,55%); 
+            border-radius: 70% 30% 0 100% / 40% 25% 25% 60%; 
+            box-shadow: 0 -0.25em 0 hsl(30,90%,80%) inset, 
+                    0.75em -1.55em 0 hsl(30,90%,90%) inset; 
+            top: 0; 
+            left: -2em; 
+            width: 2.75em; 
+            height: 2.5em; 
+            transform-origin: 100% 50%; 
+        } 
+        
+        .hamster__ear { 
+            animation: hamsterEar var(--dur) ease-in-out infinite; 
+            background: hsl(0,90%,85%); 
+            border-radius: 50%; 
+            box-shadow: -0.25em 0 hsl(30,90%,55%) inset; 
+            top: -0.25em; 
+            right: -0.25em; 
+            width: 0.75em; 
+            height: 0.75em; 
+            transform-origin: 50% 75%; 
+        } 
+        
+        .hamster__eye { 
+            animation: hamsterEye var(--dur) linear infinite; 
+            background-color: hsl(0,0%,0%); 
+            border-radius: 50%; 
+            top: 0.375em; 
+            left: 1.25em; 
+            width: 0.5em; 
+            height: 0.5em; 
+        } 
+        
+        .hamster__nose { 
+            background: hsl(0,90%,75%); 
+            border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%; 
+            top: 0.75em; 
+            left: 0; 
+            width: 0.2em; 
+            height: 0.25em; 
+        } 
+        
+        .hamster__body { 
+            animation: hamsterBody var(--dur) ease-in-out infinite; 
+            background: hsl(30,90%,90%); 
+            border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%; 
+            box-shadow: 0.1em 0.75em 0 hsl(30,90%,55%) inset, 
+                    0.15em -0.5em 0 hsl(30,90%,80%) inset; 
+            top: 0.25em; 
+            left: 2em; 
+            width: 4.5em; 
+            height: 3em; 
+            transform-origin: 17% 50%; 
+            transform-style: preserve-3d; 
+        } 
+        
+        .hamster__limb--fr, 
+        .hamster__limb--fl { 
+            clip-path: polygon(0 0,100% 0,70% 80%,60% 100%,0% 100%,40% 80%); 
+            top: 2em; 
+            left: 0.5em; 
+            width: 1em; 
+            height: 1.5em; 
+            transform-origin: 50% 0; 
+        } 
+        
+        .hamster__limb--fr { 
+            animation: hamsterFRLimb var(--dur) linear infinite; 
+            background: linear-gradient(hsl(30,90%,80%) 80%,hsl(0,90%,75%) 80%); 
+            transform: rotate(15deg) translateZ(-1px); 
+        } 
+        
+        .hamster__limb--fl { 
+            animation: hamsterFLLimb var(--dur) linear infinite; 
+            background: linear-gradient(hsl(30,90%,90%) 80%,hsl(0,90%,85%) 80%); 
+            transform: rotate(15deg); 
+        } 
+        
+        .hamster__limb--br, 
+        .hamster__limb--bl { 
+            border-radius: 0.75em 0.75em 0 0; 
+            clip-path: polygon(0 0,100% 0,100% 30%,70% 90%,70% 100%,30% 100%,40% 90%,0% 30%); 
+            top: 1em; 
+            left: 2.8em; 
+            width: 1.5em; 
+            height: 2.5em; 
+            transform-origin: 50% 30%; 
+        } 
+        
+        .hamster__limb--br { 
+            animation: hamsterBRLimb var(--dur) linear infinite; 
+            background: linear-gradient(hsl(30,90%,80%) 90%,hsl(0,90%,75%) 90%); 
+            transform: rotate(-25deg) translateZ(-1px); 
+        } 
+        
+        .hamster__limb--bl { 
+            animation: hamsterBLLimb var(--dur) linear infinite; 
+            background: linear-gradient(hsl(30,90%,90%) 90%,hsl(0,90%,85%) 90%); 
+            transform: rotate(-25deg); 
+        } 
+        
+        .hamster__tail { 
+            animation: hamsterTail var(--dur) linear infinite; 
+            background: hsl(0,90%,85%); 
+            border-radius: 0.25em 50% 50% 0.25em; 
+            box-shadow: 0 -0.2em 0 hsl(0,90%,75%) inset; 
+            top: 1.5em; 
+            right: -0.5em; 
+            width: 1em; 
+            height: 0.5em; 
+            transform: rotate(30deg) translateZ(-1px); 
+            transform-origin: 0.25em 0.25em; 
+        } 
+        
+        .spoke { 
+            animation: spoke var(--dur) linear infinite; 
+            background: radial-gradient(100% 100% at center,hsl(0,0%,60%) 4.8%,hsla(0,0%,60%,0) 5%), 
+                    linear-gradient(hsla(0,0%,55%,0) 46.9%,hsl(0,0%,65%) 47% 52.9%,hsla(0,0%,65%,0) 53%) 50% 50% / 99% 99% no-repeat; 
+        } 
+        
+        /* Animations */ 
+        @keyframes hamster { 
+            from, to { 
+                transform: rotate(4deg) translate(-0.8em,1.85em); 
+            } 
+        
+            50% { 
+                transform: rotate(0) translate(-0.8em,1.85em); 
+            } 
+        } 
+        
+        @keyframes hamsterHead { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(0); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(8deg); 
+            } 
+        } 
+        
+        @keyframes hamsterEye { 
+            from, 90%, to { 
+                transform: scaleY(1); 
+            } 
+        
+            95% { 
+                transform: scaleY(0); 
+            } 
+        } 
+        
+        @keyframes hamsterEar { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(0); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(12deg); 
+            } 
+        } 
+        
+        @keyframes hamsterBody { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(0); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(-2deg); 
+            } 
+        } 
+        
+        @keyframes hamsterFRLimb { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(50deg) translateZ(-1px); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(-30deg) translateZ(-1px); 
+            } 
+        } 
+        
+        @keyframes hamsterFLLimb { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(-30deg); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(50deg); 
+            } 
+        } 
+        
+        @keyframes hamsterBRLimb { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(-60deg) translateZ(-1px); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(20deg) translateZ(-1px); 
+            } 
+        } 
+        
+        @keyframes hamsterBLLimb { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(20deg); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(-60deg); 
+            } 
+        } 
+        
+        @keyframes hamsterTail { 
+            from, 25%, 50%, 75%, to { 
+                transform: rotate(30deg) translateZ(-1px); 
+            } 
+        
+            12.5%, 37.5%, 62.5%, 87.5% { 
+                transform: rotate(10deg) translateZ(-1px); 
+            } 
+        } 
+        
+        @keyframes spoke { 
+            from { 
+                transform: rotate(0); 
+            } 
+        
+            to { 
+                transform: rotate(-1turn); 
+            } 
+        }
+    </style>
 
-        // Habilitar botones nuevamente
-        let buttons = document.querySelectorAll("form button[type='submit']");
-        buttons.forEach(button => button.disabled = false);
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        let forms = document.querySelectorAll("form.load-image-form, form.load-file-form");
-
-        forms.forEach(form => {
-            form.addEventListener("submit", function() {
-                showSpinner();
+    <!-- Script para prevenir duplicación de imágenes y mostrar spinner -->
+    <script>
+        // Variable para controlar si el formulario ya se envió
+        let imageFormSubmitted = false;
+        
+        // Función para mostrar el spinner de carga
+        function showGlobalSpinner() {
+            document.getElementById('loadingSpinner').classList.remove('d-none');
+        }
+        
+        // Función para ocultar el spinner de carga
+        function hideGlobalSpinner() {
+            document.getElementById('loadingSpinner').classList.add('d-none');
+        }
+        
+        // Función para validar el formulario de imágenes
+        function validateImageForm() {
+            const fileInput = document.getElementById('images');
+            const files = fileInput.files;
+            
+            // Validación básica de archivos
+            if (files.length === 0) {
+                alert('Por favor, seleccione al menos una imagen.');
+                return false;
+            }
+            
+            if (files.length > 5) {
+                alert('No puede seleccionar más de 5 imágenes a la vez.');
+                return false;
+            }
+            
+            // Verificar si el formulario ya se envió
+            if (imageFormSubmitted) {
+                console.log('Formulario ya enviado, evitando duplicación');
+                return false;
+            }
+            
+            // Verificar tamaño y tipo de archivos
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // Verificar tamaño (máximo 3MB)
+                if (file.size > 3 * 1024 * 1024) {
+                    alert(`La imagen "${file.name}" excede el tamaño máximo de 3MB.`);
+                    return false;
+                }
+                
+                // Verificar tipo de archivo
+                if (!file.type.startsWith('image/')) {
+                    alert(`El archivo "${file.name}" no es una imagen válida.`);
+                    return false;
+                }
+            }
+            
+            // Deshabilitar el botón para evitar múltiples clics
+            document.getElementById('uploadImagesBtn').disabled = true;
+            
+            // Mostrar indicador de carga en el botón
+            document.getElementById('uploadImagesBtn').innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando...';
+            
+            // Mostrar spinner global
+            showGlobalSpinner();
+            
+            // Marcar el formulario como enviado
+            imageFormSubmitted = true;
+            
+            // Agregar un parámetro único para evitar caché
+            const form = document.querySelector('.load-image-form');
+            const uniqueField = document.createElement('input');
+            uniqueField.type = 'hidden';
+            uniqueField.name = 'unique_id';
+            uniqueField.value = Date.now().toString();
+            form.appendChild(uniqueField);
+            
+            return true;
+        }
+        
+        // Función para mostrar spinner al cargar presentación
+        function showSpinner() {
+            const submitBtn = document.querySelector('.load-file-form button[type="submit"]');
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Cargando...';
+            submitBtn.disabled = true;
+            
+            // Mostrar spinner global
+            showGlobalSpinner();
+            
+            return true;
+        }
+        
+        // Mostrar el spinner inmediatamente al cargar la página
+        document.getElementById('loadingSpinner').classList.remove('d-none');
+        
+        // Reiniciar el estado cuando la página se carga completamente
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reiniciar el estado del formulario
+            imageFormSubmitted = false;
+            
+            // Ocultar el spinner global después de un breve retraso
+            setTimeout(function() {
+                hideGlobalSpinner();
+            }, 800);
+            
+            // Reiniciar el estado si hay errores en el formulario
+            const errorMessages = document.querySelectorAll('.alert-danger');
+            if (errorMessages.length > 0) {
+                const uploadBtn = document.getElementById('uploadImagesBtn');
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.innerHTML = '<i class="bi bi-upload me-2"></i> Cargar Imágenes';
+                }
+            }
+            
+            // Prevenir reenvío de formulario al recargar la página
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+            
+            // Agregar manejadores para los formularios de eliminación
+            document.querySelectorAll('form[action*="delete_image"]').forEach(form => {
+                form.addEventListener('submit', function() {
+                    if (confirm('¿Está seguro de eliminar esta imagen?')) {
+                        showGlobalSpinner();
+                        return true;
+                    }
+                    return false;
+                });
+            });
+            
+            // Agregar manejadores para los enlaces de descarga
+            document.querySelectorAll('.download-zone a').forEach(link => {
+                link.addEventListener('click', function() {
+                    showGlobalSpinner();
+                    setTimeout(function() {
+                        hideGlobalSpinner();
+                    }, 3000); // Ocultar después de 3 segundos para descargas
+                });
             });
         });
-
-        // Asegurar que se oculte si el usuario regresa atrás en la navegación
+        
+        // Mostrar el spinner cuando la página se está recargando
+        window.addEventListener('beforeunload', function() {
+            showGlobalSpinner();
+        });
+        
+        // Restaurar el spinner si el usuario regresa usando el botón 'atrás' del navegador
         window.addEventListener('pageshow', function(event) {
-            if (event.persisted) { 
-                hideSpinner();
+            if (event.persisted) {  // Detecta si la página se carga desde la caché
+                setTimeout(function() {
+                    hideGlobalSpinner();
+                }, 500);
             }
         });
-    });
-</script>
-
+    </script>
 {% endblock %}
-
-

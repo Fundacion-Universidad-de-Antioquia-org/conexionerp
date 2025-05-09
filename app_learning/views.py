@@ -33,7 +33,6 @@ from reportlab.lib import colors
 from PyPDF2 import PdfReader
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
- 
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +82,19 @@ def upload_to_azure_blob(file, filename):
             print("Error: La cadena de conexión o el nombre del contenedor no están configurados.")
             return None
 
+        # Sanitizar el nombre del archivo para evitar problemas con caracteres especiales
+        filename = ''.join(c for c in filename if c.isalnum() or c in '._- ')
+        
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=filename)
 
         # Subir el archivo
-        blob_client.upload_blob(file, overwrite=True)
+        content_settings = None
+        if hasattr(file, 'content_type') and file.content_type:
+            from azure.storage.blob import ContentSettings
+            content_settings = ContentSettings(content_type=file.content_type)
+            
+        blob_client.upload_blob(file, overwrite=True, content_settings=content_settings)
         print(f"Archivo subido a: {blob_client.url}")
 
         return blob_client.url
@@ -101,19 +108,51 @@ def delete_blob_from_azure(blob_url):
     try:
         # Obtener la cadena de conexión desde las variables de entorno
         connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if not connection_string:
+            print("Error: No se encontró la cadena de conexión de Azure")
+            return False
+            
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         
-        # Extraer el nombre del contenedor y del blob desde la URL
+        # Extraer el nombre del contenedor y del blob desde la URL de manera más robusta
         parsed_url = urlparse(blob_url)
-        path_parts = parsed_url.path.lstrip('/').split('/', 1)
+        
+        # Manejar diferentes formatos de URL de Azure
+        if 'blob.core.windows.net' in parsed_url.netloc:
+            # Formato estándar: https://account.blob.core.windows.net/container/blob
+            path_parts = parsed_url.path.lstrip('/').split('/', 1)
+        else:
+            # Podría ser una URL personalizada o CDN
+            print(f"Formato de URL no reconocido: {blob_url}")
+            return False
+        
+        if len(path_parts) < 2:
+            print(f"Error: URL mal formateada: {blob_url}")
+            return False
+            
         container_name = path_parts[0]
         blob_name = unquote(path_parts[1])
 
         print('Nombre del contenedor:', container_name)
         print('Nombre del blob:', blob_name)
         
+        # Verificar si el contenedor existe
+        try:
+            container_client = blob_service_client.get_container_client(container_name)
+            container_client.get_container_properties()
+        except Exception as e:
+            print(f"Error: El contenedor {container_name} no existe: {e}")
+            return False
+        
         # Obtener el cliente del blob
         blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        
+        # Verificar si el blob existe antes de intentar eliminarlo
+        try:
+            blob_client.get_blob_properties()
+        except Exception as e:
+            print(f"Error: El blob {blob_name} no existe: {e}")
+            return False
         
         # Eliminar el blob
         blob_client.delete_blob()
@@ -124,25 +163,48 @@ def delete_blob_from_azure(blob_url):
         print(f"Error eliminando el blob de Azure Blob Storage: {e}")
         traceback.print_exc()
         return False
+        
 
 # Vista para eliminar imagenes
 def delete_image(request, image_id):
-    image = get_object_or_404(EventImage, id=image_id)
-    capacitacion_id = image.capacitacion.id
+    try:
+        image = get_object_or_404(EventImage, id=image_id)
+        capacitacion_id = image.capacitacion.id
 
-    if request.method == 'POST':
-        # Eliminar el blob de Azure Blob Storage
-        success = delete_blob_from_azure(image.image_url)
-        if success:
-            # Eliminar la instancia de la imagen
+        if request.method == 'POST':
+            # Guardar la URL antes de eliminar la imagen
+            image_url = image.image_url
+            
+            # Primero eliminar la instancia de la imagen de la base de datos
             image.delete()
-            messages.success(request, "La imagen ha sido eliminada exitosamente.")
+            
+            # Luego intentar eliminar el blob de Azure
+            success = delete_blob_from_azure(image_url)
+            if success:
+                messages.success(request, "La imagen ha sido eliminada exitosamente.")
+            else:
+                # Aún si falla la eliminación del blob, la imagen ya se eliminó de la base de datos
+                messages.warning(request, "La imagen se eliminó de la base de datos, pero hubo un problema al eliminar el archivo de Azure.")
         else:
-            messages.error(request, "Hubo un error al eliminar la imagen.")
-    else:
-        messages.error(request, "Solicitud inválida.")
+            messages.error(request, "Solicitud inválida.")
+    except Exception as e:
+        messages.error(request, f"Hubo un error al eliminar la imagen: {str(e)}")
+        print(f"Error en delete_image: {e}")
+        traceback.print_exc()
 
     return redirect('view_assistants', id=capacitacion_id)
+
+# Nueva vista para mostrar una imagen específica en tamaño completo
+def view_image(request, image_id):
+    image = get_object_or_404(EventImage, id=image_id)
+    capacitacion = image.capacitacion
+    
+    context = {
+        'image': image,
+        'capacitacion': capacitacion
+    }
+    
+    return render(request, 'view_image.html', context)
 
 
 # Conversión a UTC asegurando que el objeto sea datetime
@@ -176,7 +238,7 @@ def get_department_id(department_name):
         logger.error('Failed to fetch department ID from Odoo', exc_info=True)
         return None
 
-# Función para obtener el ID del empleado por Nombre
+# Función para obtener el ID del empleado por # de documento
 def get_employee_id_by_name(name):
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
@@ -1269,25 +1331,33 @@ def generar_pdf(request, id):
 
 def search_employees(request):
     query = request.GET.get('q', '')
-    results = []
+    search_type = request.GET.get('search_type', 'id') #Por defecto busca por ID
     
-    if query:
-        try:
-            common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
-            uid = common.authenticate(database, user, password, {})
-            models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+    if not query:
+        return JsonResponse({'results': []})
+    
+    common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+    uid = common.authenticate(database, user, password, {})
+    models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
 
-            employees = models.execute_kw(database, uid, password,
-                                          'hr.employee', 'search_read',
-                                          [[['name', 'ilike', query]]],  # Filtrar por número de identificación
-                                          {'fields': ['id', 'name', 'identification_id'], 'limit': 10})
+    # Construir el dominio de busqueda segun el tipo de busqueda
+    if search_type == 'id':
+        # Buscar solo por numero de identificacion 
+        domain = [('identification_id', 'ilike', query)]
+    elif search_type == 'name':
+        # buscar solo por nombre
+        domain = [('name', 'ilike', query)]
+    else: # 'both'
+        # Buscar por nommbre como por identificacion
+        domain =['|', ('identification_id', 'ilike', query), ('name', 'ilike', query)]
+    # Esto ejecuta la busqueda en Odoo y obtiene los resultados en forma de diccionarios
+    employee_ids = models.execute_kw(database, uid, password,
+        'hr.employee', 'search_read',
+        [domain],
+        {'fields': ['name', 'identification_id'], 'limit': 10})
 
-            results = [{'name': emp['name'], 'identification_id': emp['identification_id']} for emp in employees]
+    return JsonResponse({'results': employee_ids})
 
-        except Exception as e:
-            logger.error('Failed to fetch employees from Odoo', exc_info=True)
-
-    return JsonResponse({'results': results})
 
 #Enviar Asistentes Obligatorios a Odoo
 def send_assistants_to_odoo(capacitacion_id, employee_ids):

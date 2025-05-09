@@ -3,6 +3,148 @@
 {% block title %}{% if form.instance.pk %}Editar Evento{% else %}Crear Evento{% endif %}{% endblock %}
 
 {% block content %}
+
+<!-- estilos para mejorar la apariencia -->
+<style>
+  .create-capacitation {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #e0e0e0;
+  }
+
+  .header-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #36b902;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .subtitle {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .form-create-cap {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .form-create-cap label {
+    font-weight: 500;
+    color: #4a5568;
+    margin-bottom: 0.5rem;
+    display: block;
+    font-size: 0.95rem;
+  }
+
+  .form-create-cap input,
+  .form-create-cap select,
+  .form-create-cap textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: #f8fafc;
+    transition: all 0.2s;
+  }
+
+  .form-create-cap input:focus,
+  .form-create-cap select:focus,
+  .form-create-cap textarea:focus {
+    border-color: #36b902;
+    box-shadow: 0 0 0 3px rgba(54, 185, 2, 0.15);
+    outline: none;
+    background-color: #ffffff;
+  }
+
+  .btn-success-f {
+    background-color: #36b902;
+    border-color: #36b902;
+    color: white;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .btn-success-f:hover {
+    background-color: #2e8b57;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .btn-danger {
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .fua-btn-outline-1 {
+    color:rgb(56, 224, 13);
+    background-color: transparent;
+    border: 1px solid rgb(44, 207, 12);
+    border-radius: 6px 12px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.4s;
+    display: inline-block;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .fua-btn-outline-1:hover {
+    background-color:rgb(15, 190, 9);
+    color: white;
+  }
+
+  /* Estilos para el modal */
+  .modal-header {
+    background-color: #36b902;
+    color: white;
+    padding: 1.25rem;
+    border-bottom: none;
+  }
+
+  .modal-title {
+    font-weight: 500;
+    font-size: 1.25rem;
+  }
+
+  .suggestion {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .suggestion:hover {
+    background-color: #f8fafc;
+  }
+
+  .selected-employee {
+    background-color: #f8fafc;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+</style>
+
+
 <section class="create-capacitation">
 
   <div class="header-section d-flex align-items-center">
@@ -56,7 +198,7 @@
     <button type="submit" class="btn btn-success-f">
       <i class="bi bi-upload"></i>{% if form.instance.pk %} Guardar{% else %} Crear{% endif %}
     </button>
-    <a href="{% url 'home' %}"><button type="button" class="btn btn-delete-f"><i class="bi bi-x-circle-fill"></i> Cancelar</button></a>
+    <a href="{% url 'home' %}"><button type="button" class="btn btn-danger" ><i class="bi bi-x-circle"></i> Cancelar</button></a>
   </form>
 </section>
 
@@ -70,8 +212,10 @@
       </div>
       <div class="modal-body">
         <div class="mb-3">
-          <label for="numero_identificacion" class="form-label">Número de Identificación</label>
-          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese número de cédula" autocomplete="off">
+          <label for="numero_identificacion" class="form-label">Búsqueda de Empleado</label>
+          <!-- se modifico el placeholder para indicar que se pueda buscar por nombre o ID -->
+          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese Nombre o Número de cédula" autocomplete="off">
+          <small class="form-text text-muted"> Buscar por nombre o número de identificación</small>
           <div id="sugerencias" class="mt-2"></div> <!-- Donde se mostrarán las sugerencias -->
         </div>
         <div id="selected-employees-list"></div>
@@ -133,7 +277,7 @@
     const query = this.value;
 
     if (query.length >= 2) {  // Buscar después de 2 caracteres
-      fetch(`/learn/search_employees/?q=${query}`)
+      fetch(`/learn/search_employees/?q=${query}&search_type=both`)
         .then(response => response.json())
         .then(data => {
           const sugerencias = document.getElementById('sugerencias');
@@ -161,7 +305,8 @@
     setTimeout(() => {  // Asegurar que se ejecute después de que el valor se haya pegado
       const query = this.value.trim();
       if (query.length >= 2) {
-        fetch(`/learn/search_employees/?q=${query}`)
+        // modificado para buscar por nombre como por ID
+        fetch(`/learn/search_employees/?q=${query}&search_type=both`)
           .then(response => response.json())
           .then(data => {
             const sugerencias = document.getElementById('sugerencias');

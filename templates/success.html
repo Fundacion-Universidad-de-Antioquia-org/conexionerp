@@ -1,10 +1,9 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <link rel="stylesheet" href="{% static 'style.css' %}" /> -->
     <link rel="stylesheet" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/style.css" />
     <!-- Bootstrap -->
     <link
@@ -24,35 +23,418 @@
       href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
       rel="stylesheet"
     />
+    <!-- Animate.css para animaciones -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
     <!-- FAVICON -->
     <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png" />
-    <title>Registro Asistencia</title>
+    <title>Registro Exitoso | Fundación</title>
+
+    <style>
+      :root {
+        --primary-color: #5c9c31;
+        --secondary-color: #f8f9fa;
+        --accent-color: #f2cb05;
+        --text-color: #f3f3f3;
+        --light-text: #e0e0e0;
+        --border-radius: 10px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --transition-speed: 0.3s;
+      }
+
+      body {
+        font-family: 'Open Sans', sans-serif;
+        background-color: #1a1a1a;
+        color: var(--text-color);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background: linear-gradient(135deg, #222222 0%, #333333 100%);
+      }
+
+      .success {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+      }
+
+      .central-div {
+        background-color: #2a2a2a;
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 1s ease-out;
+      }
+
+      .central-div::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        background: linear-gradient(90deg, var(--primary-color), #8bc34a);
+      }
+
+      .logo-end {
+        max-width: 200px;
+        margin-bottom: 2rem;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+        animation: float 6s ease-in-out infinite; 
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .separator {
+        width: 100px;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+        margin: 1rem 0 2rem;
+      }
+
+      .text-central-div {
+        width: 100%;
+        animation: fadeIn 1.2s ease-in-out;
+      }
+
+      .text-central-div h2 {
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+      }
+
+      .text-central-div h2:first-child {
+        animation: slideInRight 0.8s ease-out;
+      }
+
+      .text-central-div h2:nth-child(2) {
+        color: var(--text-color);
+        font-weight: 600;
+        margin-bottom: 2rem;
+        animation: slideInLeft 0.8s ease-out;
+      }
+
+      .text-central-div h5 {
+        color: var(--light-text);
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+        animation: fadeIn 1.5s ease-out;
+      }
+
+      .btn-funda {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(92, 156, 49, 0.3);
+        position: relative;
+        overflow: hidden;
+        animation: pulse 2s infinite;
+      }
+
+      .btn-funda::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: all 0.6s;
+      }
+
+      .btn-funda:hover {
+        background-color: #4a8026;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(92, 156, 49, 0.4);
+      }
+
+      .btn-funda:hover::before {
+        left: 100%;
+      }
+
+      /* Confeti animado - Corregido */
+      .confetti-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1;
+        overflow: hidden;
+        border-radius: var(--border-radius);
+      }
+
+      .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #f0f;
+        opacity: 0.7;
+        animation: confetti-fall 6s ease-in-out forwards;
+        transform-origin: center;
+      }
+
+      @keyframes confetti-fall {
+        0% {
+          transform: translateY(-50px) rotate(0deg) translateX(0);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.9;
+        }
+        100% {
+          transform: translateY(800px) rotate(360deg) translateX(-20px);
+          opacity: 0;
+        }
+      }
+
+      /* Checkmark Animado - Corregido */
+      .checkmark-circle {
+        width: 80px;
+        height: 80px;
+        position: relative;
+        display: inline-block;
+        vertical-align: top;
+        margin-bottom: 1.5rem;
+      }
+
+      .checkmark-circle .background {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        position: absolute;
+        box-shadow: 0 0 20px rgba(92, 156, 49, 0.5);
+      }
+
+      .checkmark-circle .checkmark {
+        border-radius: 5px;
+      }
+
+      .checkmark-circle .checkmark.draw:after {
+        animation-delay: 0.3s;
+        animation-duration: 0.8s;
+        animation-timing-function: ease;
+        animation-name: checkmark;
+        transform: scaleX(-1) rotate(135deg);
+        animation-fill-mode: forwards;
+      }
+
+      .checkmark-circle .checkmark:after {
+        opacity: 0;
+        height: 40px;
+        width: 20px;
+        transform-origin: left top;
+        border-right: 7px solid white;
+        border-top: 7px solid white;
+        content: '';
+        left: 21px;
+        top: 45px;
+        position: absolute;
+      }
+
+      @keyframes checkmark {
+        0% {
+          height: 0;
+          width: 0;
+          opacity: 1;
+        }
+        20% {
+          height: 0;
+          width: 20px;
+          opacity: 1;
+        }
+        40% {
+          height: 40px;
+          width: 20px;
+          opacity: 1;
+        }
+        100% {
+          height: 40px;
+          width: 20px;
+          opacity: 1;
+        }
+      }
+
+      /* Animación slideInRight faltante */
+      @keyframes slideInRight {
+        from {
+          transform: translateX(50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      /* Responsive */
+      @media (max-width: 768px) {
+        .central-div {
+          padding: 2rem 1rem;
+        }
+
+        .logo-end {
+          max-width: 150px;
+        }
+
+        .text-central-div h2 {
+          font-size: 1.5rem;
+        }
+      }
+    
+    </style>
+    
   </head>
   <body>
-    <section class="succes">
+    <section class="success">
       <div class="central-div">
+        <!-- Confeti animado -->
+        <div class="confetti-container" id="confetti-container"></div>
+        
         <img
-        src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
-        class="logo-end"
-        alt="Logo Fundacion"
+          src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
+          class="logo-end"
+          alt="Logo Fundacion"
         />
-        <div class="separator desktop"></div>
+        
+        <!-- Checkmark animado - Asegurando que tenga la clase draw -->
+        <div class="checkmark-circle">
+          <div class="background"></div>
+          <div class="checkmark draw"></div>
+        </div>
+        
+        <div class="separator"></div>
+        
         <div class="text-central-div">
           <h2>{{ employee_name }}:</h2>
           <h2>Has registrado exitosamente tu asistencia</h2>
           {% if url_reunion %}
           <!-- Si hay una URL válida, muestra el botón de unirse -->
           <h5>Ingresa a la Reunión:</h5>
-          <a href="{{ url_reunion }}" target="_blank" class="btn btn-funda"
-            >Unirse</a
-          >
+          <a href="{{ url_reunion }}" target="_blank" class="btn btn-funda">
+            <i class="bi bi-camera-video-fill me-2"></i>Unirse ahora
+          </a>
           {% else %}
           <!-- Si no hay URL, muestra un mensaje de agradecimiento -->
-          <h5>Gracias por Participar</h5>
+          <h5 class="animate__animated animate__fadeIn animate__delay-1s">¡Gracias por Participar!</h5>
           {% endif %}
         </div>
       </div>
     </section>
+    
+    <script>
+      // Crear confeti - Script corregido
+      document.addEventListener('DOMContentLoaded', function() {
+        const confettiContainer = document.getElementById('confetti-container');
+        const colors = [
+          '#5c9c31', // Verde principal
+          '#8bc34a', // Verde claro
+          '#cddc39', // Lima
+          '#ffeb3b', // Amarillo
+          '#ffc107', // Ámbar
+          '#ff9800'  // Naranja
+        ];
+        
+        // Limpiar el contenedor primero
+        confettiContainer.innerHTML = '';
+        
+        // Crear confeti solo una vez al cargar
+        function createConfetti() {
+          // Crear 30 piezas de confeti
+          for (let i = 0; i < 30; i++) {
+            setTimeout(() => {
+              const confetti = document.createElement('div');
+              confetti.className = 'confetti';
+              
+              // Posición aleatoria horizontal
+              const left = Math.random() * 100;
+              confetti.style.left = left + '%';
+              
+              // Duración aleatoria
+              const duration = 3 + Math.random() * 3;
+              confetti.style.animationDuration = duration + 's';
+              
+              // Color aleatorio
+              const colorIndex = Math.floor(Math.random() * colors.length);
+              confetti.style.backgroundColor = colors[colorIndex];
+              
+              // Tamaño aleatorio
+              const size = 5 + Math.random() * 8;
+              confetti.style.width = size + 'px';
+              confetti.style.height = size + 'px';
+              
+              // Forma aleatoria
+              const shapes = ['circle', 'square', 'triangle'];
+              const shapeIndex = Math.floor(Math.random() * shapes.length);
+              if (shapes[shapeIndex] === 'circle') {
+                confetti.style.borderRadius = '50%';
+              } else if (shapes[shapeIndex] === 'triangle') {
+                confetti.style.width = '0';
+                confetti.style.height = '0';
+                confetti.style.borderLeft = size/2 + 'px solid transparent';
+                confetti.style.borderRight = size/2 + 'px solid transparent';
+                confetti.style.borderBottom = size + 'px solid ' + colors[colorIndex];
+                confetti.style.backgroundColor = 'transparent';
+              }
+              
+              // Añadir al contenedor
+              confettiContainer.appendChild(confetti);
+              
+              // Eliminar el confeti después de que termine la animación
+              setTimeout(() => {
+                confetti.remove();
+              }, duration * 1000 + 500);
+              
+            }, i * 150); // Crear confeti con un pequeño retraso entre cada uno
+          }
+        }
+        
+        // Crear confeti inicial
+        createConfetti();
+        
+        // Verificar que el checkmark tenga la clase draw
+        const checkmark = document.querySelector('.checkmark');
+        if (checkmark && !checkmark.classList.contains('draw')) {
+          checkmark.classList.add('draw');
+        }
+      });
+    </script>
+    
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
