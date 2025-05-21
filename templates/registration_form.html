@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,699 +25,7 @@
   <!-- FAVICON -->
   <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png"/>
   <title>Registro Asistencia</title>
-  <style>
-    :root {
-      --primary-color: #5c9c31;
-      --secondary-color: #f8f9fa;
-      --accent-color: #e67e22;
-      --text-color: #333;
-      --light-text: #6c757d;
-      --border-radius: 10px;
-      --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      --transition-speed: 0.3s;
-    }
-    
-    body {
-      font-family: 'Open Sans', sans-serif;
-      background-color: #f5f5f5;
-      color: var(--text-color);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    
-    .registrer {
-      display: flex;
-      min-height: 100vh;
-      background-color: #fff;
-      box-shadow: var(--box-shadow);
-      animation: fadeIn 1s ease-in-out;
-    }
-    
-    .left-side {
-      flex: 1;
-      background: linear-gradient(135deg, #68a339 0%, #5c9c31 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .left-side::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/pattern.png');
-      background-size: cover;
-      opacity: 0.1;
-      animation: pulse 15s infinite alternate;
-    }
-
-    @keyframes pulse {
-      0% {
-        opacity: 0.05;
-        transform: scale(1);
-      }
-      50% {
-        opacity: 0.1;
-        transform: scale(1.05);
-      }
-      100% {
-        opacity: 0.15;
-        transform: scale(1);
-      }
-    }
-    
-    .logo {
-      max-width: 80%;
-      position: relative;
-      z-index: 2;
-      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-      animation: float 6s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0% {
-        transform: translateY(0px);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-      100% {
-        transform: translateY(0px);
-      }
-    }
-    
-    .right-side {
-      flex: 1.5;
-      padding: 3rem;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-    }
-    
-    .topic-tittle {
-      color: var(--primary-color);
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-      border-bottom: 2px solid var(--primary-color);
-      padding-bottom: 0.5rem;
-      animation: slideInRight 0.8s ease-in-out;
-    }
-
-    @keyframes slideInRight {
-      from {
-        transform: translateX(50px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-    
-    .form-card {
-      background-color: var(--secondary-color);
-      border-radius: var(--border-radius);
-      padding: 2rem;
-      box-shadow: var(--box-shadow);
-      margin-bottom: 2rem;
-      animation: fadeInUp 1s ease-out;
-      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-    }
-
-    .form-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    @keyframes fadeInUp {
-      from {
-        transform: translateY(20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1,
-      }
-    }
-    
-    .form-section {
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 1rem;
-      animation-duration: 0.8;
-      animation-fill-mode: both;
-      animation-name: fadeIn;
-      animation-delay: calc(var(--animation-order) * 00.1s);
-    }
-    
-    .form-section:last-child {
-      border-bottom: none;
-    }
-    
-    .form-section-title {
-      font-weight: 600;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
-      position:relative;
-      display: inline-block;
-    }
-
-    .form-section-title::after {
-      content: '';
-      position: absolute;
-      width: 0;
-      height: 2px;
-      bottom: -5px;
-      left: 0;
-      background-color: var(--primary-color);
-      transition: width 0.3s ease;
-    }
-
-    .form-section:hover .form-section-title::after {
-      width: 100%;
-    }
-    
-    .form-label {
-      font-weight: 600;
-      color: var(--light-text);
-      margin-bottom: 0.5rem;
-      transition: color var(--transition-speed);
-    }
-    
-    .form-value {
-      font-weight: 400;
-      color: var(--text-color);
-      transition: transform var(--transition-speed);
-    }
-
-    .form-section:hover .form-value {
-      transform: translateY(5px);
-    }
-    
-    .btn-funda {
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 0.75rem 2rem;
-      border-radius: 50px;
-      font-weight: 600;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 5px rgba(92, 156, 49, 0.3);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn-funda:hover {
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: all 0.6s;
-    }
-    
-    .btn-funda:hover {
-      background-color: #4a8026;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(92, 156, 49, 0.4);
-    }
-
-    .btn-funda:hover::before {
-      left: 100%;
-    }
-    
-    .btn-funda:disabled {
-      background-color: #a5c791;
-      cursor: not-allowed;
-    }
-    
-    .id-capture {
-      background-color: white;
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      box-shadow: var(--box-shadow);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      animation: fadeInUp 1.2s ease-out;
-      transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-    }
-
-    .id-capture:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
-    }
-
-    /* Animacion para los inputs */
-    input.form-control {
-      transition: all 0.3s ease;
-      border: 1px solid #ced4da;
-    }
-
-    input.form-control:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.25rem rgba(92, 156, 50, 0.25);
-      transform: translateY(-2px);
-    }
-
-    /* Animacion para las alertas */
-    .alert {
-      border-radius: var(--border-radius);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-      animation: slideInDown 0.5s ease-out;
-    }
-
-    @keyframes slideInDown {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
-    }
-
-    .alert:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    
-    /* Spinner de carga con hámster */
-    #loading-spinner {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      z-index: 1000;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      animation: fadeIn 0.3s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-      to {
-        opacity: 1;
-      }
-    }
-    
-    .spinner-container {
-      text-align: center;
-    }
-    
-    /* Estilos del hámster */
-    .wheel-and-hamster {
-      --dur: 1s;
-      position: relative;
-      width: 12em;
-      height: 12em;
-      font-size: 14px;
-      margin: 0 auto;
-    }
-    
-    .wheel,
-    .hamster,
-    .hamster div,
-    .spoke {
-      position: absolute;
-    }
-    
-    .wheel,
-    .spoke {
-      border-radius: 50%;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-    }
-    
-    .wheel {
-      background: radial-gradient(100% 100% at center,hsla(0,0%,60%,0) 47.8%,hsl(0,0%,60%) 48%);
-      z-index: 2;
-    }
-    
-    .hamster {
-      animation: hamster var(--dur) ease-in-out infinite;
-      top: 50%;
-      left: calc(50% - 3.5em);
-      width: 7em;
-      height: 3.75em;
-      transform: rotate(4deg) translate(-0.8em,1.85em);
-      transform-origin: 50% 0;
-      z-index: 1;
-    }
-    
-    .hamster__head {
-      animation: hamsterHead var(--dur) ease-in-out infinite;
-      background: hsl(30,90%,55%);
-      border-radius: 70% 30% 0 100% / 40% 25% 25% 60%;
-      box-shadow: 0 -0.25em 0 hsl(30,90%,80%) inset,
-              0.75em -1.55em 0 hsl(30,90%,90%) inset;
-      top: 0;
-      left: -2em;
-      width: 2.75em;
-      height: 2.5em;
-      transform-origin: 100% 50%;
-    }
-    
-    .hamster__ear {
-      animation: hamsterEar var(--dur) ease-in-out infinite;
-      background: hsl(0,90%,85%);
-      border-radius: 50%;
-      box-shadow: -0.25em 0 hsl(30,90%,55%) inset;
-      top: -0.25em;
-      right: -0.25em;
-      width: 0.75em;
-      height: 0.75em;
-      transform-origin: 50% 75%;
-    }
-    
-    .hamster__eye {
-      animation: hamsterEye var(--dur) linear infinite;
-      background-color: hsl(0,0%,0%);
-      border-radius: 50%;
-      top: 0.375em;
-      left: 1.25em;
-      width: 0.5em;
-      height: 0.5em;
-    }
-    
-    .hamster__nose {
-      background: hsl(0,90%,75%);
-      border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%;
-      top: 0.75em;
-      left: 0;
-      width: 0.2em;
-      height: 0.25em;
-    }
-    
-    .hamster__body {
-      animation: hamsterBody var(--dur) ease-in-out infinite;
-      background: hsl(30,90%,90%);
-      border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%;
-      box-shadow: 0.1em 0.75em 0 hsl(30,90%,55%) inset,
-              0.15em -0.5em 0 hsl(30,90%,80%) inset;
-      top: 0.25em;
-      left: 2em;
-      width: 4.5em;
-      height: 3em;
-      transform-origin: 17% 50%;
-      transform-style: preserve-3d;
-    }
-    
-    .hamster__limb--fr,
-    .hamster__limb--fl {
-      clip-path: polygon(0 0,100% 0,70% 80%,60% 100%,0% 100%,40% 80%);
-      top: 2em;
-      left: 0.5em;
-      width: 1em;
-      height: 1.5em;
-      transform-origin: 50% 0;
-    }
-    
-    .hamster__limb--fr {
-      animation: hamsterFRLimb var(--dur) linear infinite;
-      background: linear-gradient(hsl(30,90%,80%) 80%,hsl(0,90%,75%) 80%);
-      transform: rotate(15deg) translateZ(-1px);
-    }
-    
-    .hamster__limb--fl {
-      animation: hamsterFLLimb var(--dur) linear infinite;
-      background: linear-gradient(hsl(30,90%,90%) 80%,hsl(0,90%,85%) 80%);
-      transform: rotate(15deg);
-    }
-    
-    .hamster__limb--br,
-    .hamster__limb--bl {
-      border-radius: 0.75em 0.75em 0 0;
-      clip-path: polygon(0 0,100% 0,100% 30%,70% 90%,70% 100%,30% 100%,40% 90%,0% 30%);
-      top: 1em;
-      left: 2.8em;
-      width: 1.5em;
-      height: 2.5em;
-      transform-origin: 50% 30%;
-    }
-    
-    .hamster__limb--br {
-      animation: hamsterBRLimb var(--dur) linear infinite;
-      background: linear-gradient(hsl(30,90%,80%) 90%,hsl(0,90%,75%) 90%);
-      transform: rotate(-25deg) translateZ(-1px);
-    }
-    
-    .hamster__limb--bl {
-      animation: hamsterBLLimb var(--dur) linear infinite;
-      background: linear-gradient(hsl(30,90%,90%) 90%,hsl(0,90%,85%) 90%);
-      transform: rotate(-25deg);
-    }
-    
-    .hamster__tail {
-      animation: hamsterTail var(--dur) linear infinite;
-      background: hsl(0,90%,85%);
-      border-radius: 0.25em 50% 50% 0.25em;
-      box-shadow: 0 -0.2em 0 hsl(0,90%,75%) inset;
-      top: 1.5em;
-      right: -0.5em;
-      width: 1em;
-      height: 0.5em;
-      transform: rotate(30deg) translateZ(-1px);
-      transform-origin: 0.25em 0.25em;
-    }
-    
-    .spoke {
-      animation: spoke var(--dur) linear infinite;
-      background: radial-gradient(100% 100% at center,hsl(0,0%,60%) 4.8%,hsla(0,0%,60%,0) 5%),
-              linear-gradient(hsla(0,0%,55%,0) 46.9%,hsl(0,0%,65%) 47% 52.9%,hsla(0,0%,65%,0) 53%) 50% 50% / 99% 99% no-repeat;
-    }
-    
-    /* Animaciones del hámster */
-    @keyframes hamster {
-      from, to {
-        transform: rotate(4deg) translate(-0.8em,1.85em);
-      }
-    
-      50% {
-        transform: rotate(0) translate(-0.8em,1.85em);
-      }
-    }
-    
-    @keyframes hamsterHead {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(0);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(8deg);
-      }
-    }
-    
-    @keyframes hamsterEye {
-      from, 90%, to {
-        transform: scaleY(1);
-      }
-    
-      95% {
-        transform: scaleY(0);
-      }
-    }
-    
-    @keyframes hamsterEar {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(0);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(12deg);
-      }
-    }
-    
-    @keyframes hamsterBody {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(0);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(-2deg);
-      }
-    }
-    
-    @keyframes hamsterFRLimb {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(50deg) translateZ(-1px);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(-30deg) translateZ(-1px);
-      }
-    }
-    
-    @keyframes hamsterFLLimb {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(-30deg);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(50deg);
-      }
-    }
-    
-    @keyframes hamsterBRLimb {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(-60deg) translateZ(-1px);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(-30deg) translateZ(-1px);
-      }
-    }
-    
-    @keyframes hamsterBLLimb {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(-30deg);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(-60deg);
-      }
-    }
-    
-    @keyframes hamsterTail {
-      from, 25%, 50%, 75%, to {
-        transform: rotate(30deg) translateZ(-1px);
-      }
-    
-      12.5%, 37.5%, 62.5%, 87.5% {
-        transform: rotate(10deg) translateZ(-1px);
-      }
-    }
-    
-    @keyframes spoke {
-      from {
-        transform: rotate(0);
-      }
-    
-      to {
-        transform: rotate(-1turn);
-      }
-    }
-    
-    .spinner-text {
-      margin-top: 1rem;
-      color: white;
-      font-weight: 600;
-      animation: pulse 1.5s infinite;
-    }
-    
-    @keyframes pulse {
-      0% {
-        opacity: 0.6;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0.6;
-      }
-    }
-    
-    /* Efecto de revelacion para las filas */ 
-    .row {
-      opacity: 0;
-      animation: fadeInRow 0.8s forwards;
-    }
-    
-    .row:nth-child(1) {
-      animation-delay: 0.2s;
-    }
-
-    .row:nth-child(2) {
-      animation-delay: 0.4s;
-    }
-
-    .row:nth-child(3) {
-      animation-delay: 0.6s;
-    }
-
-    @keyframes fadeInRow {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      from {
-        opacity: 0;
-        transform: translateY(20px)
-      }
-    }
-
-
-    /* Estilos para alertas */
-    .alert {
-      border-radius: var(--border-radius);
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-    
-    .alert-info {
-      background-color: #e8f4fd;
-      border-color: #bee5eb;
-      color: #0c5460;
-    }
-    
-    .alert-danger {
-      background-color: #f8d7da;
-      border-color: #f5c6cb;
-      color: #721c24;
-    }
-    
-    .alert-warning {
-      background-color: #fff3cd;
-      border-color: #ffeeba;
-      color: #856404;
-    }
-    
-    /* Responsive */
-    @media (max-width: 992px) {
-      .registrer {
-        flex-direction: column;
-      }
-      
-      .left-side {
-        min-height: 200px;
-      }
-      
-      .right-side {
-        padding: 2rem 1.5rem;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      .right-side {
-        padding: 1.5rem 1rem;
-      }
-      
-      .form-card {
-        padding: 1.5rem;
-      }
-      
-      .topic-tittle {
-        font-size: 1.5rem;
-      }
-      
-      .spinner-container {
-        width: 80%;
-        padding: 1.5rem;
-      }
-    }
-  </style>
+  
 </head>
 <body>
   <div class="registrer">
@@ -743,8 +50,8 @@
       {% endif %}
       
       {% if error_message %}
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-          <i class="bi bi-info-circle-fill me-2"></i>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <i class="bi bi-exclamation-circle-fill me-2"></i>
           {{ error_message }}
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -836,10 +143,18 @@
           </div>
 
           <div class="id-capture mt-4">
+            <!-- Campo de documento de identidad -->
             <div class="mb-3">
               <label for="document_id" class="form-label">Documento de Identidad del Asistente:</label>
               {{ form.document_id }}
             </div>
+            
+            <!-- Campo de contraseña -->
+            <div class="mb-3" id="password-field"> <!-- Con ese ID podemos mostrar u ocultar segun sea necesario -->
+              <label for="password_id" class="form-label">Contraseña de la intranet:</label>
+              {{ form.password_id }}
+            </div>
+
             <div class="text-center">
               <button type="submit" class="btn btn-funda" {% if not is_active %} disabled {% endif %}>
                 <i class="bi bi-check-circle me-2"></i>Registrar Asistencia
@@ -876,7 +191,38 @@
     </div>
   </div>
 
+  <style>
+
+  </style>
+
   <script>
+    // Función para verificar si se debe mostrar el campo de contraseña
+    document.addEventListener('DOMContentLoaded', function() {
+      // Obtener el valor de verificación de identidad desde la capacitación
+      const verificacionIdentidad = "{{ capacitacion.verificacion_identidad }}";
+      console.log("Verificación de identidad:", verificacionIdentidad);
+      
+      // Si la verificación de identidad es "NO", ocultar el campo de contraseña
+      if (verificacionIdentidad === "NO") {
+        const passwordField = document.getElementById('password-field');
+        if (passwordField) {
+          passwordField.style.display = 'none';
+          // También hacer que el campo no sea requerido
+          const passwordInput = document.querySelector('input[name="password_id"]');
+          if (passwordInput) {
+            passwordInput.required = false;
+          }
+        }
+      } else {
+        // Si está configurada como "SI", mostrar el campo de contraseña
+        document.getElementById('password-field').style.display = 'block';
+        const passwordInput = document.querySelector('input[name="password_id"]');
+        if (passwordInput) {
+          passwordInput.required = true;
+        }
+      }
+    });
+
     // Aplicar clases de animación a elementos al cargar la página
     document.addEventListener('DOMContentLoaded', function() {
       // Animar elementos con retraso secuencial
@@ -951,6 +297,769 @@
       showSpinner();
     });
   </script>
+
+<style>
+  :root {
+    --primary-color: #5c9c31;
+    --secondary-color: #f8f9fa;
+    --accent-color: #e67e22;
+    --text-color: #333;
+    --light-text: #6c757d;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
+  }
+  
+  body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: #f5f5f5;
+    color: var(--text-color);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  
+  .registrer {
+    display: flex;
+    min-height: 100vh;
+    background-color: #fff;
+    box-shadow: var(--box-shadow);
+    animation: fadeIn 1s ease-in-out;
+  }
+  
+  .left-side {
+    flex: 1;
+    background: linear-gradient(135deg, #68a339 0%, #5c9c31 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .left-side::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/pattern.png');
+    background-size: cover;
+    opacity: 0.1;
+    animation: pulse 15s infinite alternate;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.05;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.1;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 0.15;
+      transform: scale(1);
+    }
+  }
+  
+  .logo {
+    max-width: 80%;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+  
+  .right-side {
+    flex: 1.5;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .topic-tittle {
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+    animation: slideInRight 0.8s ease-in-out;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .form-card {
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 2rem;
+    animation: fadeInUp 1s ease-out;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  }
+
+  .form-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  @keyframes fadeInUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1,
+    }
+  }
+  
+  .form-section {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    animation-duration: 0.8;
+    animation-fill-mode: both;
+    animation-name: fadeIn;
+    animation-delay: calc(var(--animation-order) * 00.1s);
+  }
+  
+  .form-section:last-child {
+    border-bottom: none;
+  }
+  
+  .form-section-title {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    position:relative;
+    display: inline-block;
+  }
+
+  .form-section-title::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease;
+  }
+
+  .form-section:hover .form-section-title::after {
+    width: 100%;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    color: var(--light-text);
+    margin-bottom: 0.5rem;
+    transition: color var(--transition-speed);
+  }
+  
+  .form-value {
+    font-weight: 400;
+    color: var(--text-color);
+    transition: transform var(--transition-speed);
+  }
+
+  .form-section:hover .form-value {
+    transform: translateY(5px);
+  }
+  
+  /* Estilos para btn-funda */
+  .btn-funda {
+    background-color: #5c9c31 !important;
+    border-color: #5c9c31 !important;
+    color: #fff !important;
+    min-width: 160px;
+    min-height: 45px;
+    font-size: 1.15rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    box-shadow: 0 2px 5px rgba(92, 156, 49, 0.2);
+  }
+
+  /* Efecto de brillo deslizante */
+  .btn-funda::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transform: skewX(-25deg);
+    transition: left 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: -1;
+  }
+
+  /* Efecto de borde brillante */
+    .btn-funda::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background: linear-gradient(45deg, #84c754, #5c9c31, #3c6922) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    -webkit-mask-composite: xor; /* Alternativa más compatible */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-funda:hover::before {
+    left: 150%;
+  }
+
+  .btn-funda:hover::after {
+    opacity: 0.7;
+  }
+
+  .btn-funda:active {
+    background-color: #3c6922 !important;
+    border-color: #3c6922 !important;
+    transform: scale(0.97);
+    box-shadow: 0 1px 3px rgba(92, 156, 49, 0.3);
+  }
+
+  .btn-funda:hover {
+    background-color: #4c8927 !important;
+    border-color: #4c8927 !important;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 5px 15px rgba(92, 156, 49, 0.4);
+  }
+
+  .btn-funda:disabled {
+    background-color: #727272 !important;
+    border-color: #727272 !important;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .btn-funda:disabled::before,
+  .btn-funda:disabled::after {
+    display: none;
+  }
+
+  .id-capture {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    animation: fadeInUp 1.2s ease-out;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+  }
+
+  .id-capture:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+  }
+
+  /* Animacion para los inputs */
+  input.form-control {
+    transition: all 0.3s ease;
+    border: 1px solid #ced4da;
+  }
+
+  input.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(92, 156, 50, 0.25);
+    transform: translateY(-2px);
+  }
+
+  /* Animacion para las alertas */
+  .alert {
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    animation: slideInDown 0.5s ease-out;
+  }
+
+  @keyframes slideInDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .alert:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  
+  /* Spinner de carga con hámster */
+  #loading-spinner {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .spinner-container {
+    text-align: center;
+  }
+  
+  /* Estilos del hámster */
+  .wheel-and-hamster {
+    --dur: 1s;
+    position: relative;
+    width: 12em;
+    height: 12em;
+    font-size: 14px;
+    margin: 0 auto;
+  }
+  
+  .wheel,
+  .hamster,
+  .hamster div,
+  .spoke {
+    position: absolute;
+  }
+  
+  .wheel,
+  .spoke {
+    border-radius: 50%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .wheel {
+    background: radial-gradient(100% 100% at center,hsla(0,0%,60%,0) 47.8%,hsl(0,0%,60%) 48%);
+    z-index: 2;
+  }
+  
+  .hamster {
+    animation: hamster var(--dur) ease-in-out infinite;
+    top: 50%;
+    left: calc(50% - 3.5em);
+    width: 7em;
+    height: 3.75em;
+    transform: rotate(4deg) translate(-0.8em,1.85em);
+    transform-origin: 50% 0;
+    z-index: 1;
+  }
+  
+  .hamster__head {
+    animation: hamsterHead var(--dur) ease-in-out infinite;
+    background: hsl(30,90%,55%);
+    border-radius: 70% 30% 0 100% / 40% 25% 25% 60%;
+    box-shadow: 0 -0.25em 0 hsl(30,90%,80%) inset,
+            0.75em -1.55em 0 hsl(30,90%,90%) inset;
+    top: 0;
+    left: -2em;
+    width: 2.75em;
+    height: 2.5em;
+    transform-origin: 100% 50%;
+  }
+  
+  .hamster__ear {
+    animation: hamsterEar var(--dur) ease-in-out infinite;
+    background: hsl(0,90%,85%);
+    border-radius: 50%;
+    box-shadow: -0.25em 0 hsl(30,90%,55%) inset;
+    top: -0.25em;
+    right: -0.25em;
+    width: 0.75em;
+    height: 0.75em;
+    transform-origin: 50% 75%;
+  }
+  
+  .hamster__eye {
+    animation: hamsterEye var(--dur) linear infinite;
+    background-color: hsl(0,0%,0%);
+    border-radius: 50%;
+    top: 0.375em;
+    left: 1.25em;
+    width: 0.5em;
+    height: 0.5em;
+  }
+  
+  .hamster__nose {
+    background: hsl(0,90%,75%);
+    border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%;
+    top: 0.75em;
+    left: 0;
+    width: 0.2em;
+    height: 0.25em;
+  }
+  
+  .hamster__body {
+    animation: hamsterBody var(--dur) ease-in-out infinite;
+    background: hsl(30,90%,90%);
+    border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%;
+    box-shadow: 0.1em 0.75em 0 hsl(30,90%,55%) inset,
+            0.15em -0.5em 0 hsl(30,90%,80%) inset;
+    top: 0.25em;
+    left: 2em;
+    width: 4.5em;
+    height: 3em;
+    transform-origin: 17% 50%;
+    transform-style: preserve-3d;
+  }
+  
+  .hamster__limb--fr,
+  .hamster__limb--fl {
+    clip-path: polygon(0 0,100% 0,70% 80%,60% 100%,0% 100%,40% 80%);
+    top: 2em;
+    left: 0.5em;
+    width: 1em;
+    height: 1.5em;
+    transform-origin: 50% 0;
+  }
+  
+  .hamster__limb--fr {
+    animation: hamsterFRLimb var(--dur) linear infinite;
+    background: linear-gradient(hsl(30,90%,80%) 80%,hsl(0,90%,75%) 80%);
+    transform: rotate(15deg) translateZ(-1px);
+  }
+  
+  .hamster__limb--fl {
+    animation: hamsterFLLimb var(--dur) linear infinite;
+    background: linear-gradient(hsl(30,90%,90%) 80%,hsl(0,90%,85%) 80%);
+    transform: rotate(15deg);
+  }
+  
+  .hamster__limb--br,
+  .hamster__limb--bl {
+    border-radius: 0.75em 0.75em 0 0;
+    clip-path: polygon(0 0,100% 0,100% 30%,70% 90%,70% 100%,30% 100%,40% 90%,0% 30%);
+    top: 1em;
+    left: 2.8em;
+    width: 1.5em;
+    height: 2.5em;
+    transform-origin: 50% 30%;
+  }
+  
+  .hamster__limb--br {
+    animation: hamsterBRLimb var(--dur) linear infinite;
+    background: linear-gradient(hsl(30,90%,80%) 90%,hsl(0,90%,75%) 90%);
+    transform: rotate(-25deg) translateZ(-1px);
+  }
+  
+  .hamster__limb--bl {
+    animation: hamsterBLLimb var(--dur) linear infinite;
+    background: linear-gradient(hsl(30,90%,90%) 90%,hsl(0,90%,85%) 90%);
+    transform: rotate(-25deg);
+  }
+  
+  .hamster__tail {
+    animation: hamsterTail var(--dur) linear infinite;
+    background: hsl(0,90%,85%);
+    border-radius: 0.25em 50% 50% 0.25em;
+    box-shadow: 0 -0.2em 0 hsl(0,90%,75%) inset;
+    top: 1.5em;
+    right: -0.5em;
+    width: 1em;
+    height: 0.5em;
+    transform: rotate(30deg) translateZ(-1px);
+    transform-origin: 0.25em 0.25em;
+  }
+  
+  .spoke {
+    animation: spoke var(--dur) linear infinite;
+    background: radial-gradient(100% 100% at center,hsl(0,0%,60%) 4.8%,hsla(0,0%,60%,0) 5%),
+            linear-gradient(hsla(0,0%,55%,0) 46.9%,hsl(0,0%,65%) 47% 52.9%,hsla(0,0%,65%,0) 53%) 50% 50% / 99% 99% no-repeat;
+  }
+  
+  /* Animaciones del hámster */
+  @keyframes hamster {
+    from, to {
+      transform: rotate(4deg) translate(-0.8em,1.85em);
+    }
+  
+    50% {
+      transform: rotate(0) translate(-0.8em,1.85em);
+    }
+  }
+  
+  @keyframes hamsterHead {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(0);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(8deg);
+    }
+  }
+  
+  @keyframes hamsterEye {
+    from, 90%, to {
+      transform: scaleY(1);
+    }
+  
+    95% {
+      transform: scaleY(0);
+    }
+  }
+  
+  @keyframes hamsterEar {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(0);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(12deg);
+    }
+  }
+  
+  @keyframes hamsterBody {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(0);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(-2deg);
+    }
+  }
+  
+  @keyframes hamsterFRLimb {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(50deg) translateZ(-1px);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(-30deg) translateZ(-1px);
+    }
+  }
+  
+  @keyframes hamsterFLLimb {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(-30deg);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(50deg);
+    }
+  }
+  
+  @keyframes hamsterBRLimb {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(-60deg) translateZ(-1px);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(-30deg) translateZ(-1px);
+    }
+  }
+  
+  @keyframes hamsterBLLimb {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(-30deg);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(-60deg);
+    }
+  }
+  
+  @keyframes hamsterTail {
+    from, 25%, 50%, 75%, to {
+      transform: rotate(30deg) translateZ(-1px);
+    }
+  
+    12.5%, 37.5%, 62.5%, 87.5% {
+      transform: rotate(10deg) translateZ(-1px);
+    }
+  }
+  
+  @keyframes spoke {
+    from {
+      transform: rotate(0);
+    }
+  
+    to {
+      transform: rotate(-1turn);
+    }
+  }
+  
+  .spinner-text {
+    margin-top: 1rem;
+    color: white;
+    font-weight: 600;
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.6;
+    }
+  }
+  
+  /* Efecto de revelacion para las filas */ 
+  .row {
+    opacity: 0;
+    animation: fadeInRow 0.8s forwards;
+  }
+  
+  .row:nth-child(1) {
+    animation-delay: 0.2s;
+  }
+
+  .row:nth-child(2) {
+    animation-delay: 0.4s;
+  }
+
+  .row:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+
+  @keyframes fadeInRow {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    from {
+      opacity: 0;
+      transform: translateY(20px)
+    }
+  }
+
+
+  /* Estilos para alertas */
+  .alert {
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+  
+  .alert-info {
+    background-color: #e8f4fd;
+    border-color: #bee5eb;
+    color: #0c5460;
+  }
+  
+  .alert-danger {
+    background-image: linear-gradient(to right, #FEE2E2 0%, #fab2b2 100%);
+    border: 1px solid #fca5a5;
+    border-left-width: 6px;
+    border-left-color: #dc2626;
+    color: #991b1b;
+    font-weight: 500;
+    box-shadow: 0 4px 8px rgba(220, 38, 38, 0.15);
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  
+  .alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+  }
+  
+  /* Responsive */
+  @media (max-width: 992px) {
+    .registrer {
+      flex-direction: column;
+    }
+    
+    .left-side {
+      min-height: 200px;
+    }
+    
+    .right-side {
+      padding: 2rem 1.5rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .right-side {
+      padding: 1.5rem 1rem;
+    }
+    
+    .form-card {
+      padding: 1.5rem;
+    }
+    
+    .topic-tittle {
+      font-size: 1.5rem;
+    }
+    
+    .spinner-container {
+      width: 80%;
+      padding: 1.5rem;
+    }
+  }
+</style>
 
   <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"

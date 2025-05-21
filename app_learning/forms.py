@@ -1,4 +1,7 @@
+from cProfile import label
+from tkinter import Widget
 from django import forms
+import hashlib # para el hash de la contraseña
 from .models import CtrlCapacitaciones
 from app_learning.services.odoo_conection import fetch_departametos_from_odoo
 
@@ -20,6 +23,12 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         choices=[('', 'Nivel de privacidad')] + CtrlCapacitaciones.PRIVACIDAD,
         required=True,
         label= 'Privacidad'
+    )
+
+    verificacion_identidad = forms.ChoiceField(
+        choices=CtrlCapacitaciones.VERIFICACION_IDENTIDAD,
+        label='Verificacion de identidad (se pedira la contraseña de la intranet a todos los asistentes)',
+        required = True,
     )
     
 
@@ -105,6 +114,15 @@ class RegistrationForm(forms.Form):
   location = forms.CharField(max_length=255, label='Ubicación', required=False)  # Solo requerido para ciertas modalidades
   url_reunion = forms.CharField(max_length=255, label='URL del evento', required=False)  # Solo requerido para ciertas modalidades
   in_charge = forms.CharField(max_length=60, label='Responsable', widget=forms.TextInput(attrs={'readonly':'readonly'}))
+  
+  password_id = forms.CharField (
+  max_length = 50,
+  label="Contrase de Intranet",
+  required=False, # Cambiamos a false para manejar el requerimiento con JavaScript
+  widget=forms.PasswordInput(attrs={
+            'placeholder': 'Ingrese su contraseña de intranet'
+        }))
+
   document_id = forms.CharField(
     max_length=20,
     label='Documento de Identidad', 
@@ -118,4 +136,13 @@ class RegistrationForm(forms.Form):
     for field in cleaned_data:
       if isinstance(cleaned_data[field], str):
         cleaned_data[field] = cleaned_data[field]
+
+    # cifrar la contraseña a MD5
+    if 'password_id' in cleaned_data:
+        password_original = cleaned_data['password_id']
+        # Guardamos la contraseña cifrada en un nuevo campo
+        cleaned_data['hashed_password'] = hashlib.md5(password_original.encode('utf-8')).hexdigest()
     return cleaned_data
+
+""" lo que hace este fragmento de codigo es verificar si existe el campo password_id, si existe,
+obtiene el valor del campo, lo cifra en MD5 y lo guarda en un nuevo campo llamado hashed_password"""
