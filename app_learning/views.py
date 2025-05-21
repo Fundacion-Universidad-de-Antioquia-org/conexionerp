@@ -259,7 +259,6 @@ def get_employee_id_by_name(name):
         logger.error('Failed to fetch employee ID from Odoo', exc_info=True)
         return None
 
-
 # Función para enviar datos a Odoo
 def send_to_odoo(data):
     logger.debug(f"Intentando enviar datos a Odoo: {data}")
