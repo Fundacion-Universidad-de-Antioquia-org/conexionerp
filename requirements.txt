@@ -26,9 +26,7 @@ openpyxl==3.1.5
 pillow==10.4.0
 platformdirs==4.2.0
 portalocker==2.10.1
-psycopg2-binary==2.9.9
 psycopg2-binary==2.9.10
-psycopg2==2.9.9
 psycopg2==2.9.10
 pycparser==2.22
 pyenchant==3.2.2
