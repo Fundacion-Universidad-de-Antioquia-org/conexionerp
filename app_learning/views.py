@@ -504,7 +504,8 @@ def registration_view(request, id=None):
                 #llamar la función para verificar la contraseña
                 # Llamar a la función password_validation
                 #password_validation(document_id, hashed_password)
-                if (password_validation(document_id, form.cleaned_data['hashed_password'])):
+                                # Verificar si se requiere contraseña o no
+                if capacitacion.verificacion_identidad == "NO" or (capacitacion.verificacion_identidad == "SI" and password_validation(document_id, form.cleaned_data['hashed_password'])):
                     
                     print('Contraseña correcta')
                     try:
@@ -1316,6 +1317,8 @@ def generar_pdf(request, id):
     # 1️⃣ Lista de asistentes (solo si hay datos)
     if asistentes_data:
         elements.append(Paragraph("Lista de Asistentes:", bold_style))
+        if capacitacion.verificacion_identidad == "SI":
+            elements.append(Paragraph("**Este listado de asistentes tiene validacion de identidad con el usuario y contraseña de la intranet**", styles['Italic']))
         elements.append(Spacer(1, 4))
 
         asistentes_table_data = [
