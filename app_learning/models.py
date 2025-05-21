@@ -1,3 +1,4 @@
+from contextlib import nullcontext
 from django.db import models
 from django.utils import timezone
 
@@ -20,7 +21,7 @@ class CtrlCapacitaciones(models.Model):
     responsable = models.CharField(max_length=60, default='', verbose_name='Responsable')
     area_encargada = models.CharField(max_length=100, verbose_name='Área encargada')
     
-    # Opciones para campos de selección
+    # Opciones para campos de selección (Crear campo de verificacion de identidad)
     ESTADO = [
         ('ACTIVA', 'ACTIVA'),
         ('CERRADA', 'CERRADA'),
@@ -32,6 +33,11 @@ class CtrlCapacitaciones(models.Model):
         ('PRESENCIAL', 'PRESENCIAL'),
         ('VIRTUAL', 'VIRTUAL'),
         ('MIXTA', 'MIXTA'),
+    ]
+
+    VERIFICACION_IDENTIDAD = [
+        ('SI', 'SI'),
+        ('NO', 'NO'),
     ]
     
     TIPO = [
@@ -74,6 +80,14 @@ class CtrlCapacitaciones(models.Model):
         choices=ESTADO, 
         default='ACTIVA',
         verbose_name='Estado'
+    )
+    verificacion_identidad = models.CharField(
+        max_length=2,
+        choices=VERIFICACION_IDENTIDAD,
+        default='NO',
+        null=True,
+        blank=True,
+        verbose_name='verificacion de identidad'
     )
     
     # Campos específicos según modalidad

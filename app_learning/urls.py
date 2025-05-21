@@ -18,4 +18,5 @@ urlpatterns = [
     path('capacitacion/imagen/ver/<int:image_id>/', views.view_image, name='view_image'),
     path('get_employee_names/', views.get_employee_names, name='get_employee_names'),
     path('capacitacion/<int:id>/generar_pdf/', views.generar_pdf, name='generar_pdf'),
+    path('verificacion-config/', views.verificacion_config, name='verificacion_config'),
 ]

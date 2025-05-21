@@ -135,8 +135,22 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': os.getenv('DB_HOST'),
         'PORT': '5432',
+    }, #ESPACIO PARA ENLAZAR LA INTRANET
+    'auth_db': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('AUTH_DB_NAME'),
+        'USER': os.getenv('AUTH_DB_USER'),
+        'PASSWORD': os.getenv('AUTH_DB_PASSWORD'),
+        'HOST': os.getenv('AUTH_DB_HOST'),
+        'PORT': os.getenv('AUTH_DB_PORT', '3306'),
     }
 }
+
+#CONFIGURACION DE AUTENTICACION
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend', #Backend predeterminado
+    'conexionerp.auth_backends.SecondaryDatabaseBackend', #Backend personalizado
+]
 
 
 # Password validation

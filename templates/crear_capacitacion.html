@@ -3,6 +3,355 @@
 {% block title %}{% if form.instance.pk %}Editar Evento{% else %}Crear Evento{% endif %}{% endblock %}
 
 {% block content %}
+<section class="create-capacitation">
+
+  <div class="header-section d-flex align-items-center">
+    <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
+    <h3 class="subtitle">{% if form.instance.pk %}Editar Evento{% else %}Crear Evento{% endif %}</h3>
+  </div>
+  
+
+  <form id="createCapForm" class="form-create-cap" method="post" enctype="multipart/form-data" onsubmit="showSpinner();">
+    {% csrf_token %}
+    {{ form.fecha.label_tag }} {{ form.fecha }}
+    {{ form.tipo.label_tag }} {{ form.tipo }}
+    {{ form.privacidad.label_tag }} {{ form.privacidad }}
+    {{ form.tema.label_tag }} {{ form.tema }}
+    {{ form.responsable.label_tag }} {{ form.responsable }}
+    {{ form.moderador.label_tag }} {{ form.moderador }}
+    {{ form.hora_inicial.label_tag }} {{ form.hora_inicial }}
+    {{ form.hora_final.label_tag }} {{ form.hora_final }}
+    {{ form.total_invitados.label_tag }} {{ form.total_invitados }}
+    <p></p>
+    <!-- Botón para abrir el modal de añadir asistentes -->
+    <button type="button" class="fua-btn-outline-1" data-bs-toggle="modal" data-bs-target="#asistentesModal" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
+      <i class="bi bi-person-plus-fill"></i>
+      Añadir Asistentes
+    </button>
+    {{ form.area_encargada.label_tag }} {{ form.area_encargada }}
+    {{ form.modalidad.label_tag }} {{ form.modalidad }}
+
+    <!-- Los campos se agregarán dinámicamente según la selección de modalidad -->
+    <div id="virtual-fields" class="virtual-f" style="display: none;">
+      {{ form.url_reunion.label_tag }} {{ form.url_reunion }}
+    </div>
+    <div id="presencial-fields" class="presencial-f" style="display: none;">
+      {{ form.ubicacion.label_tag }} {{ form.ubicacion }}
+    </div>
+
+    {{ form.objetivo.label_tag }} {{ form.objetivo }}
+    {{ form.estado.label_tag }} {{ form.estado }}
+    {{ form.verificacion_identidad.label_tag }} {{ form.verificacion_identidad }}
+
+    <div id="temas-fields" class="presencial-f" style="display: none;">
+      {{ form.temas.label_tag }}
+      <div>
+        {{ form.temas }}
+      </div>
+    </div>
+
+    <!-- Campo oculto para almacenar los IDs de los asistentes seleccionados -->
+    <input type="hidden" name="employee_names" id="selectedEmployeeIds">
+    <!-- Campo oculto para almacenar las credenciales de verficacion -->
+    <input type="hidden" name="credenciales_verificacion" id="credencialesVerificacion">
+    <!-- <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}> -->
+    <button type="submit" class="btn btn-success-f">
+      <i class="bi bi-upload"></i>{% if form.instance.pk %} Guardar{% else %} Crear{% endif %}
+    </button>
+    <a href="{% url 'home' %}"><button type="button" class="btn btn-danger" ><i class="bi bi-x-circle"></i> Cancelar</button></a>
+  </form>
+</section>
+
+<!-- Modal para añadir asistentes -->
+<div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="asistentesModalLabel">Añadir Asistentes</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="numero_identificacion" class="form-label">Búsqueda de Empleado</label>
+          <!-- se modifico el placeholder para indicar que se pueda buscar por nombre o ID -->
+          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese Nombre o Número de cédula" autocomplete="off">
+          <small class="form-text text-muted"> Buscar por nombre o número de identificación</small>
+          <div id="sugerencias" class="mt-2"></div> <!-- Donde se mostrarán las sugerencias -->
+        </div>
+        <div id="selected-employees-list"></div>
+      </div>
+      <div class="modal-footer">
+        <input type="file" id="asistentes-file" class="form-control" accept=".xlsx, .xls">
+        <button type="button" class="btn btn-success-f" id="btn-upload-file">Cargar Archivo</button>
+        <button type="button" class="btn btn-success-f" id="btn-completar">Completar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="background-spinner-2" class="background-spinner">
+  <h5>Guardando Datos</h5>
+</div>
+<!-- Spinner de Carga -->
+<div id="loading-spinner-2" class="spinner-border text-light" role="status">
+  <span class="visually-hidden">Loading...</span>
+</div>
+
+<script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+      crossorigin="anonymous"
+></script>
+<script>
+  // Campo oculto para almacenar los IDs de los asistentes seleccionados
+  let selectedEmployeeIds = [];
+
+
+  function updateSelectedEmployeesDisplay() {
+    const selectedEmployeesList = document.getElementById('selected-employees-list');
+    selectedEmployeesList.innerHTML = ''; // Limpiar lista previa
+
+    selectedEmployeeIds.forEach(function(id, index) {
+      const employeeDiv = document.createElement('div');
+      employeeDiv.classList.add('selected-employee');
+      employeeDiv.textContent = id;
+
+      // Botón para eliminar cada empleado
+      const removeButton = document.createElement('button');
+      removeButton.textContent = 'Eliminar';
+      removeButton.classList.add('btn', 'btn-danger', 'btn-sm', 'ms-2');
+      removeButton.addEventListener('click', function() {
+        // Eliminar el empleado del array
+        selectedEmployeeIds.splice(index, 1);
+        // Actualizar la visualización
+        updateSelectedEmployeesDisplay();
+      });
+      employeeDiv.appendChild(removeButton);
+      selectedEmployeesList.appendChild(employeeDiv);
+    });
+  }
+
+
+  // Función para buscar asistentes y sugerir resultados desde Odoo
+  document.getElementById('numero_identificacion').addEventListener('input', function() {
+    const query = this.value;
+
+    if (query.length >= 2) {  // Buscar después de 2 caracteres
+      fetch(`/learn/search_employees/?q=${query}&search_type=both`)
+        .then(response => response.json())
+        .then(data => {
+          const sugerencias = document.getElementById('sugerencias');
+          sugerencias.innerHTML = ''; // Limpiar resultados previos
+          
+          data.results.forEach(function(employee) {
+            const suggestion = document.createElement('div');
+            suggestion.classList.add('suggestion');
+            suggestion.textContent = `${employee.name} - ${employee.identification_id}`; // Mostrar nombre y identificación
+            suggestion.addEventListener('click', function() {
+              selectedEmployeeIds.push(employee.name);  // Añadir el ID único
+              updateSelectedEmployeesDisplay();
+              sugerencias.innerHTML = ''; // Limpiar sugerencias después de la selección
+              document.getElementById('numero_identificacion').value = ''; // Limpiar input
+            });
+            sugerencias.appendChild(suggestion);
+          });
+        });
+    }
+  });
+
+
+// Función para mostrar/ocultar campos según la selección de verificación de identidad
+document.getElementById('id_verificacion_identidad').addEventListener('change', function() {
+    const verificacionValue = this.value;
+    console.log("Verificación de identidad cambiada a:", verificacionValue);
+    
+    // Aquí puedes agregar lógica adicional si necesitas mostrar/ocultar campos
+    handleVerificacionIdentidad();
+});
+  
+// Inicializar el estado de los campos al cargar la página
+window.onload = function() {
+    toggleFields();  // Para inicializar el estado de los campos de modalidad
+    
+    // También verificar el estado inicial de verificación de identidad
+    const verificacionValue = document.getElementById('id_verificacion_identidad').value;
+    console.log("Estado inicial de verificación:", verificacionValue);
+    
+    // Inicializar el manejo de verificación de identidad
+    handleVerificacionIdentidad();
+};
+
+
+
+
+
+  // Manejar evento de pegar (Ctrl + V)
+  document.getElementById('numero_identificacion').addEventListener('paste', function() {
+    setTimeout(() => {  // Asegurar que se ejecute después de que el valor se haya pegado
+      const query = this.value.trim();
+      if (query.length >= 2) {
+        // modificado para buscar por nombre como por ID
+        fetch(`/learn/search_employees/?q=${query}&search_type=both`)
+          .then(response => response.json())
+          .then(data => {
+            const sugerencias = document.getElementById('sugerencias');
+            sugerencias.innerHTML = ''; // Limpiar resultados previos
+
+            data.results.forEach(function(employee) {
+              const suggestion = document.createElement('div');
+              suggestion.classList.add('suggestion');
+              suggestion.textContent = `${employee.name} - ${employee.identification_id}`;
+              suggestion.addEventListener('click', function() {
+                selectedEmployeeIds.push(employee.name);  // Añadir la cédula (campo 'name')
+                sugerencias.innerHTML = ''; // Limpiar sugerencias después de la selección
+                document.getElementById('numero_identificacion').value = ''; // Limpiar input
+                alert(`Empleado ${employee.identification_id} añadido.`);
+              });
+              sugerencias.appendChild(suggestion);
+            });
+          });
+      }
+    }, 100);  // Esperar un poco para que el contenido se procese
+  });
+
+  // Completar el formulario al cerrar el modal
+  document.getElementById('btn-completar').addEventListener('click', function() {
+    document.getElementById('selectedEmployeeIds').value = selectedEmployeeIds.join(',');  // Añadir los IDs al campo oculto
+    console.log("Asistentes Seleccionados; ", selectedEmployeeIds);
+    document.querySelector('.btn-close').click();  // Cerrar el modal
+  });
+
+  // Funcion para manejar la verificacion de identidad
+  function handleVerificacionIdentidad() {
+    const verificacion = document.getElementById('id_verificacion_identidad').value;
+    const credencialesArray = [];
+
+    if (verificacion === 'SI') {
+      // Si se selecciona si, se necesita recopilar documento y contraseña para cada asistente
+      selectedEmployeeIds.forEach(function(id) {
+        // Aqui solo se guarda el ID, la contraseña se solitara al momento del registro
+        credencialesArray.push({
+          documento: id,
+          requiere_verificacion: true
+        });
+      });
+    }
+    // Guardar el array como JSON en el campo oculto
+    document.getElementById('credencialesVerificacion').value = JSON.stringify(credencialesArray);
+  }
+
+  // Agregar evento al cambio de verificacion de identidad
+  document.getElementById('id_verificacion_identidad').addEventListener('change', handleVerificacionIdentidad);
+
+  //Agregar verificacion de identidad al enviar el formulario
+  document.getElementById('createCapForm').addEventListener('submit', function() {
+    handleVerificacionIdentidad();
+  });
+
+
+  function showSpinner(){
+    document.getElementById('background-spinner-2').style.display = 'block';
+    document.getElementById('loading-spinner-2').style.display = 'block';
+  }
+
+  // Mostrar campos según modalidad
+  function toggleFields() {
+    var modalidad = document.getElementById('id_modalidad').value;
+    var tipoEvento = document.getElementById('id_tipo').value;
+    var virtualFields = document.getElementById('virtual-fields');
+    var presencialFields = document.getElementById('presencial-fields');
+    var temasFields = document.getElementById('temas-fields');
+   
+    // Ocultar todos los campos al inicio
+    virtualFields.style.display = 'none';
+    presencialFields.style.display = 'none';
+    temasFields.style.display = 'none';
+
+    // Mostrar los campos según la modalidad seleccionada
+    if (modalidad === 'VIRTUAL') {
+      virtualFields.style.display = 'inherit';
+    } else if (modalidad === 'PRESENCIAL') {
+      presencialFields.style.display = 'inherit';
+    } else if (modalidad === 'MIXTA') {
+      virtualFields.style.display = 'inherit';
+      presencialFields.style.display = 'inherit';
+    }
+
+    if(tipoEvento === 'Capacitación' || tipoEvento === 'Reunión') {
+      temasFields.style.display = 'inherit';
+    }
+  }
+
+
+  document.getElementById('id_tipo').addEventListener('change', toggleFields);
+  document.getElementById('id_modalidad').addEventListener('change', toggleFields);
+  window.onload = toggleFields;  // Para inicializar el estado de los campos al cargar la página
+
+  //Restaurar Spinner al none
+  window.addEventListener('pageshow', function(event){
+    if(event.persisted){
+      document.getElementById('loading-spinner-2').style.display = 'none';
+      document.getElementById('background-spinner-2').style.display = 'none';
+    }
+  })
+
+
+  //Manejar carga archivo de Excel:
+
+  document.getElementById('btn-upload-file').addEventListener('click', function () {
+    const fileInput = document.getElementById('asistentes-file');
+    const file = fileInput.files[0];
+
+    if(!file){
+      alert('Por favor, selecciona un archivo');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, {type: 'array'});
+
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+
+      // Obtener los datos del archivo Excel
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+      // Extraer IDs de la primera columna
+      const ids = [];
+      for(let i = 0; i < jsonData.length; i++) {
+        const row = jsonData[i];
+        const id = row[0]; // Primera columna
+        if(id) {
+          ids.push(id.toString());
+        }
+      }
+
+      if(ids.length > 0) {
+        // Agregar los IDs al selectedEmployeeIds
+        selectedEmployeeIds = selectedEmployeeIds.concat(ids);
+
+        // Eliminar duplicados
+        selectedEmployeeIds = [...new Set(selectedEmployeeIds)];
+
+        updateSelectedEmployeesDisplay();
+
+        alert('IDs agregados desde el archivo.');
+      } else {
+        alert('No se encontraron IDs en el archivo.');
+      }
+    };
+
+    reader.onerror = function(ex) {
+      console.error('Error leyendo el archivo:', ex);
+      alert('Error leyendo el archivo.');
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+</script>
 
 <!-- estilos para mejorar la apariencia -->
 <style>
@@ -143,300 +492,4 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
 </style>
-
-
-<section class="create-capacitation">
-
-  <div class="header-section d-flex align-items-center">
-    <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
-    <h3 class="subtitle">{% if form.instance.pk %}Editar Evento{% else %}Crear Evento{% endif %}</h3>
-  </div>
-  
-
-  <form id="createCapForm" class="form-create-cap" method="post" enctype="multipart/form-data" onsubmit="showSpinner();">
-    {% csrf_token %}
-    {{ form.fecha.label_tag }} {{ form.fecha }}
-    {{ form.tipo.label_tag }} {{ form.tipo }}
-    {{ form.privacidad.label_tag }} {{ form.privacidad }}
-    {{ form.tema.label_tag }} {{ form.tema }}
-    {{ form.responsable.label_tag }} {{ form.responsable }}
-    {{ form.moderador.label_tag }} {{ form.moderador }}
-    {{ form.hora_inicial.label_tag }} {{ form.hora_inicial }}
-    {{ form.hora_final.label_tag }} {{ form.hora_final }}
-    {{ form.total_invitados.label_tag }} {{ form.total_invitados }}
-    <p></p>
-    <!-- Botón para abrir el modal de añadir asistentes -->
-    <button type="button" class="fua-btn-outline-1" data-bs-toggle="modal" data-bs-target="#asistentesModal" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
-      <i class="bi bi-person-plus-fill"></i>
-      Añadir Asistentes
-    </button>
-    {{ form.area_encargada.label_tag }} {{ form.area_encargada }}
-    {{ form.modalidad.label_tag }} {{ form.modalidad }}
-
-    <!-- Los campos se agregarán dinámicamente según la selección de modalidad -->
-    <div id="virtual-fields" class="virtual-f" style="display: none;">
-      {{ form.url_reunion.label_tag }} {{ form.url_reunion }}
-    </div>
-    <div id="presencial-fields" class="presencial-f" style="display: none;">
-      {{ form.ubicacion.label_tag }} {{ form.ubicacion }}
-    </div>
-
-    {{ form.objetivo.label_tag }} {{ form.objetivo }}
-    {{ form.estado.label_tag }} {{ form.estado }}
-
-    <div id="temas-fields" class="presencial-f" style="display: none;">
-      {{ form.temas.label_tag }}
-      <div>
-        {{ form.temas }}
-      </div>
-    </div>
-
-    <!-- Campo oculto para almacenar los IDs de los asistentes seleccionados -->
-    <input type="hidden" name="employee_names" id="selectedEmployeeIds">
-
-    <!-- <button type="submit" class="btn btn-success-f" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}> -->
-    <button type="submit" class="btn btn-success-f">
-      <i class="bi bi-upload"></i>{% if form.instance.pk %} Guardar{% else %} Crear{% endif %}
-    </button>
-    <a href="{% url 'home' %}"><button type="button" class="btn btn-danger" ><i class="bi bi-x-circle"></i> Cancelar</button></a>
-  </form>
-</section>
-
-<!-- Modal para añadir asistentes -->
-<div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="asistentesModalLabel">Añadir Asistentes</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <label for="numero_identificacion" class="form-label">Búsqueda de Empleado</label>
-          <!-- se modifico el placeholder para indicar que se pueda buscar por nombre o ID -->
-          <input type="text" class="form-control" id="numero_identificacion" placeholder="Ingrese Nombre o Número de cédula" autocomplete="off">
-          <small class="form-text text-muted"> Buscar por nombre o número de identificación</small>
-          <div id="sugerencias" class="mt-2"></div> <!-- Donde se mostrarán las sugerencias -->
-        </div>
-        <div id="selected-employees-list"></div>
-      </div>
-      <div class="modal-footer">
-        <input type="file" id="asistentes-file" class="form-control" accept=".xlsx, .xls">
-        <button type="button" class="btn btn-success-f" id="btn-upload-file">Cargar Archivo</button>
-        <button type="button" class="btn btn-success-f" id="btn-completar">Completar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="background-spinner-2" class="background-spinner">
-  <h5>Guardando Datos</h5>
-</div>
-<!-- Spinner de Carga -->
-<div id="loading-spinner-2" class="spinner-border text-light" role="status">
-  <span class="visually-hidden">Loading...</span>
-</div>
-
-<script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
-      crossorigin="anonymous"
-></script>
-<script>
-  // Campo oculto para almacenar los IDs de los asistentes seleccionados
-  let selectedEmployeeIds = [];
-
-
-  function updateSelectedEmployeesDisplay() {
-    const selectedEmployeesList = document.getElementById('selected-employees-list');
-    selectedEmployeesList.innerHTML = ''; // Limpiar lista previa
-
-    selectedEmployeeIds.forEach(function(id, index) {
-      const employeeDiv = document.createElement('div');
-      employeeDiv.classList.add('selected-employee');
-      employeeDiv.textContent = id;
-
-      // Botón para eliminar cada empleado
-      const removeButton = document.createElement('button');
-      removeButton.textContent = 'Eliminar';
-      removeButton.classList.add('btn', 'btn-danger', 'btn-sm', 'ms-2');
-      removeButton.addEventListener('click', function() {
-        // Eliminar el empleado del array
-        selectedEmployeeIds.splice(index, 1);
-        // Actualizar la visualización
-        updateSelectedEmployeesDisplay();
-      });
-      employeeDiv.appendChild(removeButton);
-      selectedEmployeesList.appendChild(employeeDiv);
-    });
-  }
-
-
-  // Función para buscar asistentes y sugerir resultados desde Odoo
-  document.getElementById('numero_identificacion').addEventListener('input', function() {
-    const query = this.value;
-
-    if (query.length >= 2) {  // Buscar después de 2 caracteres
-      fetch(`/learn/search_employees/?q=${query}&search_type=both`)
-        .then(response => response.json())
-        .then(data => {
-          const sugerencias = document.getElementById('sugerencias');
-          sugerencias.innerHTML = ''; // Limpiar resultados previos
-          
-          data.results.forEach(function(employee) {
-            const suggestion = document.createElement('div');
-            suggestion.classList.add('suggestion');
-            suggestion.textContent = `${employee.name} - ${employee.identification_id}`; // Mostrar nombre y identificación
-            suggestion.addEventListener('click', function() {
-              selectedEmployeeIds.push(employee.name);  // Añadir el ID único
-              updateSelectedEmployeesDisplay();
-              sugerencias.innerHTML = ''; // Limpiar sugerencias después de la selección
-              document.getElementById('numero_identificacion').value = ''; // Limpiar input
-            });
-            sugerencias.appendChild(suggestion);
-          });
-        });
-    }
-  });
-
-
-  // Manejar evento de pegar (Ctrl + V)
-  document.getElementById('numero_identificacion').addEventListener('paste', function() {
-    setTimeout(() => {  // Asegurar que se ejecute después de que el valor se haya pegado
-      const query = this.value.trim();
-      if (query.length >= 2) {
-        // modificado para buscar por nombre como por ID
-        fetch(`/learn/search_employees/?q=${query}&search_type=both`)
-          .then(response => response.json())
-          .then(data => {
-            const sugerencias = document.getElementById('sugerencias');
-            sugerencias.innerHTML = ''; // Limpiar resultados previos
-
-            data.results.forEach(function(employee) {
-              const suggestion = document.createElement('div');
-              suggestion.classList.add('suggestion');
-              suggestion.textContent = `${employee.name} - ${employee.identification_id}`;
-              suggestion.addEventListener('click', function() {
-                selectedEmployeeIds.push(employee.name);  // Añadir la cédula (campo 'name')
-                sugerencias.innerHTML = ''; // Limpiar sugerencias después de la selección
-                document.getElementById('numero_identificacion').value = ''; // Limpiar input
-                alert(`Empleado ${employee.identification_id} añadido.`);
-              });
-              sugerencias.appendChild(suggestion);
-            });
-          });
-      }
-    }, 100);  // Esperar un poco para que el contenido se procese
-  });
-
-  // Completar el formulario al cerrar el modal
-  document.getElementById('btn-completar').addEventListener('click', function() {
-    document.getElementById('selectedEmployeeIds').value = selectedEmployeeIds.join(',');  // Añadir los IDs al campo oculto
-    console.log("Asistentes Seleccionados; ", selectedEmployeeIds);
-    document.querySelector('.btn-close').click();  // Cerrar el modal
-  });
-
-  function showSpinner(){
-    document.getElementById('background-spinner-2').style.display = 'block';
-    document.getElementById('loading-spinner-2').style.display = 'block';
-  }
-
-  // Mostrar campos según modalidad
-  function toggleFields() {
-    var modalidad = document.getElementById('id_modalidad').value;
-    var tipoEvento = document.getElementById('id_tipo').value;
-    var virtualFields = document.getElementById('virtual-fields');
-    var presencialFields = document.getElementById('presencial-fields');
-    var temasFields = document.getElementById('temas-fields');
-   
-    // Ocultar todos los campos al inicio
-    virtualFields.style.display = 'none';
-    presencialFields.style.display = 'none';
-    temasFields.style.display = 'none';
-
-    // Mostrar los campos según la modalidad seleccionada
-    if (modalidad === 'VIRTUAL') {
-      virtualFields.style.display = 'inherit';
-    } else if (modalidad === 'PRESENCIAL') {
-      presencialFields.style.display = 'inherit';
-    } else if (modalidad === 'MIXTA') {
-      virtualFields.style.display = 'inherit';
-      presencialFields.style.display = 'inherit';
-    }
-
-    if(tipoEvento === 'Capacitación' || tipoEvento === 'Reunión') {
-      temasFields.style.display = 'inherit';
-    }
-  }
-
-
-  document.getElementById('id_tipo').addEventListener('change', toggleFields);
-  document.getElementById('id_modalidad').addEventListener('change', toggleFields);
-  window.onload = toggleFields;  // Para inicializar el estado de los campos al cargar la página
-
-  //Restaurar Spinner al none
-  window.addEventListener('pageshow', function(event){
-    if(event.persisted){
-      document.getElementById('loading-spinner-2').style.display = 'none';
-      document.getElementById('background-spinner-2').style.display = 'none';
-    }
-  })
-
-
-  //Manejar carga archivo de Excel:
-
-  document.getElementById('btn-upload-file').addEventListener('click', function () {
-    const fileInput = document.getElementById('asistentes-file');
-    const file = fileInput.files[0];
-
-    if(!file){
-      alert('Por favor, selecciona un archivo');
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = function(e) {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, {type: 'array'});
-
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-
-      // Obtener los datos del archivo Excel
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-
-      // Extraer IDs de la primera columna
-      const ids = [];
-      for(let i = 0; i < jsonData.length; i++) {
-        const row = jsonData[i];
-        const id = row[0]; // Primera columna
-        if(id) {
-          ids.push(id.toString());
-        }
-      }
-
-      if(ids.length > 0) {
-        // Agregar los IDs al selectedEmployeeIds
-        selectedEmployeeIds = selectedEmployeeIds.concat(ids);
-
-        // Eliminar duplicados
-        selectedEmployeeIds = [...new Set(selectedEmployeeIds)];
-
-        updateSelectedEmployeesDisplay();
-
-        alert('IDs agregados desde el archivo.');
-      } else {
-        alert('No se encontraron IDs en el archivo.');
-      }
-    };
-
-    reader.onerror = function(ex) {
-      console.error('Error leyendo el archivo:', ex);
-      alert('Error leyendo el archivo.');
-    };
-    reader.readAsArrayBuffer(file);
-  });
-
-</script>
 {% endblock %}
