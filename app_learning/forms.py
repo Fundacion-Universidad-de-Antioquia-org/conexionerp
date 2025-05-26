@@ -1,5 +1,9 @@
 from cProfile import label
 from tkinter import Widget
+=======
+# from cProfile import label
+# from tkinter import Widget
+
 from django import forms
 import hashlib # para el hash de la contraseña
 from .models import CtrlCapacitaciones

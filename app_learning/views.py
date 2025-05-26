@@ -134,8 +134,7 @@ def delete_blob_from_azure(blob_url):
         container_name = path_parts[0]
         blob_name = unquote(path_parts[1])
 
-        print('Nombre del contenedor:', container_name)
-        print('Nombre del blob:', blob_name)
+
         
         # Verificar si el contenedor existe
         try:
@@ -259,7 +258,6 @@ def get_employee_id_by_name(name):
     except Exception as e:
         logger.error('Failed to fetch employee ID from Odoo', exc_info=True)
         return None
-
 
 # Función para enviar datos a Odoo
 def send_to_odoo(data):
@@ -500,7 +498,8 @@ def registration_view(request, id=None):
         if form.is_valid():
             document_id = form.cleaned_data['document_id']
             if 'hashed_password' in form.cleaned_data:
-                print('Contraseña en MD5: ', form.cleaned_data['hashed_password'])
+                
+
                 #llamar la función para verificar la contraseña
                 # Llamar a la función password_validation
                 #password_validation(document_id, hashed_password)
@@ -692,17 +691,6 @@ def verificacion_config(request):
     except CtrlCapacitaciones.DoesNotExist:
         return JsonResponse({'error': 'capacitacion no encontrada'},
         status=404)
-
-# Cifrado con MB5
-def register_attendance(request):
-    if request.method == 'POST': 
-        form = RegistrationForm(request.POST)
-        if form.is_valid():
-            #Obtener la contraseña cifrada
-            hashed_password = form.cleaned_data['hashed_password']
-            document_id = form.cleaned_data['document']
-    print('Contraseña cifrada:', hashed_password)
-
 # Vista de Éxito Al Enviar Datos
 def success_view(request, employee_name, url_reunion=None):
     decoded_url = unquote(url_reunion) if url_reunion and url_reunion != 'without-url' else None
@@ -798,7 +786,6 @@ def update_odoo_capacitacion (capacitacion):
 def edit_capacitacion(request, id, *, context):
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     userdata = context['user']
-    print('User Data: ', userdata)
     username = userdata.get('name')
     email = userdata.get('preferred_username')
     
