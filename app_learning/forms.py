@@ -29,6 +29,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         choices=CtrlCapacitaciones.VERIFICACION_IDENTIDAD,
         label='Verificacion de identidad (se pedira la contraseña de la intranet a todos los asistentes)',
         required = True,
+        initial='NO' # Valor por defecto
     )
     
 

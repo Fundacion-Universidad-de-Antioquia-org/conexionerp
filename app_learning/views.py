@@ -687,7 +687,7 @@ def verificacion_config(request):
         capacitacion = CtrlCapacitaciones.objects.get(id=capacitacion_id)
         return JsonResponse({
             'verificacion_identidad': capacitacion.verificacion_identidad if
-            hasattr(capacitacion, 'verificacion_identidad') else 'NO' #valor por defecto NO
+            hasattr(capacitacion, 'verificacion_identidad') else 'NO'
         })
     except CtrlCapacitaciones.DoesNotExist:
         return JsonResponse({'error': 'capacitacion no encontrada'},
