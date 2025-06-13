@@ -43,7 +43,8 @@ def empleados_list(request):
             'work_phone',
             'identification_id',
             'x_studio_estado_empleado'
-        ]
+        ],
+        limit=False  
     )
 
     logger.debug(f"[empleados_list] Odoo devolvió {len(empleados)} empleados")
@@ -82,54 +83,50 @@ def prestadores_list(request):
         fields=[
             'id', 'x_name', 'x_studio_nombre_contratista', 'x_studio_tipo_identificacin',
             'x_studio_cdigo_ciiu', 'x_studio_partner_email'
-        ]
+        ],
+        limit=False  
     )
     return JsonResponse({'prestadores': prestadores})
 @csrf_exempt
 def empleados_conduccion_list(request):
-    # 1) Sólo GET
     if request.method != 'GET':
         return JsonResponse({'error': 'Sólo GET permitido.'}, status=405)
 
-    # 2) Obtener filtro de la URL
-    codigo = request.GET.get('codigo')
-    logger.debug(f"[empleados_conduccion_list] Filtro recibido – codigo={codigo!r}")
+    # dominio fijo para la compañía
+    domain = [
+        ('company_id.name', '=', 'Programa de Conducción de Vehículos de Transporte Masivo')
+    ]
 
-    # 3) Construir domain
-    domain = []
-    if codigo is not None:
-        try:
-            domain.append(('x_studio_codigo', '=', int(codigo)))
-        except ValueError:
-            domain.append(('x_studio_codigo', '=', codigo))
-    logger.debug(f"[empleados_conduccion_list] Domain final: {domain!r}")
-
-    # 4) Llamada a Odoo: solicitamos 'job_title' en lugar de 'job_id'
+    # llamamos a Odoo sin límite de 100
     empleados = odoo_search_read(
         model='hr.employee',
-        domain=domain or None,
+        domain=domain,
         fields=[
-            'x_studio_codigo',             # opcional, solo para debug
             'name',                        # cédula
-            'identification_id',           # nombre empleado
+            'identification_id',           # nombre
+            'x_studio_codigo',             # código tripulante
             'x_studio_estado_empleado',    # estado
-            'job_title'                    # campo directo
-        ]
+            'job_title'                    # título del puesto
+        ],
+        # prueba primero con False; si falla, cámbialo a 0
+        limit=False  
+        # o bien limit=0
     )
-    logger.debug(f"[empleados_conduccion_list] Odoo devolvió {len(empleados)} registros")
+    # 4) Loguear la cantidad total que vino de Odoo
+    total = len(empleados)
+    logger.debug(f"[empleados_conduccion_list] Odoo devolvió {total} empleados")
 
-    # 5) Mapear a la forma que quieres en JSON, usando job_title tal cual
-    resultados = []
-    for emp in empleados:
-        resultados.append({
+    resultados = [
+        {
             'cedula':   emp.get('name'),
             'nombre':   emp.get('identification_id'),
+            'Codigo tripulante': emp.get('x_studio_codigo'),
             'estado':   emp.get('x_studio_estado_empleado'),
             'job_title': emp.get('job_title'),
-        })
-
-    # 6) Devolver JSON
-    return JsonResponse({'empleados': resultados}, safe=False)
+        }
+        for emp in empleados
+    ]
+    return JsonResponse({'empleados': resultados})
 
 """@csrf_exempt
 def contratos_list(request):
