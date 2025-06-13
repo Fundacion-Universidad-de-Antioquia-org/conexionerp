@@ -21,21 +21,23 @@ load-dotenv==0.1.0
 mccabe==0.7.0
 msal==1.31.1
 msal-extensions==1.2.0
+mysqlclient==2.2.7
 openpyxl==3.1.5
 pillow==10.4.0
 platformdirs==4.2.0
 portalocker==2.10.1
-psycopg2==2.9.9
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
+psycopg2==2.9.10
 pycparser==2.22
 pyenchant==3.2.2
 PyJWT==2.10.1
 pylint==3.1.0
+PyPDF2==3.0.1
 pypng==0.20220715.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 pytz==2024.1
-pywin32==308; sys_platform == 'win32'
+pywin32==308; sys_platform == "win32"
 qrcode==7.4.2
 reportlab==4.3.1
 requests==2.31.0
@@ -44,4 +46,4 @@ sqlparse==0.5.0
 tomlkit==0.12.4
 typing_extensions==4.12.2
 tzdata==2024.1
-urllib3==2.2.1	
+urllib3==2.2.1
