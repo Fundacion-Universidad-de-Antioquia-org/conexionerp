@@ -94,7 +94,7 @@ def empleados_conduccion_list(request):
 
     # dominio fijo para la compañía
     domain = [
-        ('company_id.name', '=', 'Programa de Conducción de Vehículos de Transporte Masivo')
+        ('company_id.name', '=', 'Programa de Conducción de Vehículos de Transporte Masivo'),  ('x_studio_estado_empleado', '=', 'Activo'),
     ]
 
     # llamamos a Odoo sin límite de 100
