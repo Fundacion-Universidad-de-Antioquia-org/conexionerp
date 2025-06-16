@@ -127,7 +127,59 @@ def empleados_conduccion_list(request):
         for emp in empleados
     ]
     return JsonResponse({'empleados': resultados})
+@csrf_exempt
+def empleado_conduccion_por_codigo(request):
+    # 1) Sólo GET
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Sólo GET permitido.'}, status=405)
 
+    # 2) Leer el código desde query string
+    codigo = request.GET.get('codigo')
+    if not codigo:
+        return JsonResponse({'error': 'Falta el parámetro "codigo".'}, status=400)
+    logger.debug(f"[empleado_conduccion_por_codigo] Filtro recibido – codigo={codigo!r}")
+
+    # 3) Construir dominio: compañía fija + filtro por código
+    domain = [
+        ('company_id.name', '=', 'Programa de Conducción de Vehículos de Transporte Masivo')
+    ]
+    # Intentamos convertir a entero, si falla lo usamos como string
+    try:
+        domain.append(('x_studio_codigo', '=', int(codigo)))
+    except ValueError:
+        domain.append(('x_studio_codigo', '=', codigo))
+    logger.debug(f"[empleado_conduccion_por_codigo] Domain final: {domain!r}")
+
+    # 4) Llamada a Odoo sin límite de 100
+    empleados = odoo_search_read(
+        model='hr.employee',
+        domain=domain,
+        fields=[
+            'name',                        # cédula
+            'identification_id',           # nombre
+            'x_studio_codigo',             # código tripulante
+            'x_studio_estado_empleado',    # estado
+            'job_title'                    # título del puesto
+        ],
+        limit=False  # o limit=0 si tu wrapper lo prefiere
+    )
+    total = len(empleados)
+    logger.debug(f"[empleado_conduccion_por_codigo] Odoo devolvió {total} registros")
+
+    # 5) Mapear al JSON de respuesta
+    resultados = [
+        {
+            'cedula':              emp.get('name'),
+            'nombre':              emp.get('identification_id'),
+            'Codigo tripulante':   emp.get('x_studio_codigo'),
+            'estado':              emp.get('x_studio_estado_empleado'),
+            'job_title':           emp.get('job_title'),
+        }
+        for emp in empleados
+    ]
+
+    # 6) Devolver JSON
+    return JsonResponse({'empleados': resultados})
 """@csrf_exempt
 def contratos_list(request):
     # 1) Sólo GET
