@@ -141,7 +141,7 @@ def empleado_conduccion_por_codigo(request):
 
     # 3) Construir dominio: compañía fija + filtro por código
     domain = [
-        ('company_id.name', '=', 'Programa de Conducción de Vehículos de Transporte Masivo')
+        ('company_id.name', '=', 'Programa de Conducción de Vehículos de Transporte Masivo'), ('x_studio_estado_empleado', '=', 'Activo'),
     ]
     # Intentamos convertir a entero, si falla lo usamos como string
     try:
