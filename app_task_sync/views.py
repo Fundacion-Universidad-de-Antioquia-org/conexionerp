@@ -3,6 +3,7 @@ from .utils import odoo_search_read, odoo_update
 from django.views.decorators.csrf import csrf_exempt
 import json
 import logging
+from collections import defaultdict
 
 # Vista para traer empleados y actualizar datos
 # 1) Obtenemos un logger para este módulo
@@ -351,6 +352,49 @@ def estados_basicos_list(request):
 
 # Vista para traer salarios
 
+@csrf_exempt
+def empleados_y_sus_hijos_activos(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Sólo GET permitido.'}, status=405)
+
+    # 1. Consultar hijos con empleados activos
+    hijos = odoo_search_read(
+        model='x_hijos',
+        domain=[('x_studio_estado_empleado', '=', 'Activo')],
+        fields=[
+            'x_studio_many2one_field_XctqN',        # Cédula (Many2One, se extrae el valor [1])
+            'x_studio_nombre_empleado_1',           # Nombre empleado
+            'x_name',                               # Identificación hijo
+            'x_studio_nombre',
+            'x_studio_fecha_de_nacimiento',
+            'x_studio_gnero',
+            'x_studio_edad'
+        ],
+        limit=False
+    )
+
+    from collections import defaultdict
+    agrupado = defaultdict(lambda: {'cedula': '', 'nombre': '', 'hijos': []})
+
+    for hijo in hijos:
+        cedula_field = hijo.get('x_studio_many2one_field_XctqN')  # [ID, valor]
+        cedula = cedula_field[1] if isinstance(cedula_field, list) and len(cedula_field) > 1 else ''
+
+        nombre = hijo.get('x_studio_nombre_empleado_1')
+        if not cedula:
+            continue
+
+        agrupado[cedula]['cedula'] = cedula
+        agrupado[cedula]['nombre'] = nombre
+        agrupado[cedula]['hijos'].append({
+            'x_name': hijo.get('x_name'),
+            'x_studio_nombre': hijo.get('x_studio_nombre'),
+            'x_studio_fecha_de_nacimiento': hijo.get('x_studio_fecha_de_nacimiento'),
+            'x_studio_gnero': hijo.get('x_studio_gnero'),
+            'x_studio_edad': hijo.get('x_studio_edad'),
+        })
+
+    return JsonResponse({'empleados': list(agrupado.values())}, safe=False)
 def salarios_list(request):
     salarios = odoo_search_read(
         model='hr.contract',
