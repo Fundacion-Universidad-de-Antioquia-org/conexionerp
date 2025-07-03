@@ -53,7 +53,7 @@ class CtrlCapacitaciones(models.Model):
     
     # Campos de información del evento
     tema = models.CharField(max_length=60, verbose_name='Tema')
-    objetivo = models.CharField(max_length=999, verbose_name='Objetivo')
+    objetivo = models.CharField(max_length=1200, verbose_name='Objetivo')
     temas = models.TextField(null=True, blank=True, verbose_name='Temas')
     
     # Campos de configuración
