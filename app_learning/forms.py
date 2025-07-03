@@ -1,6 +1,5 @@
 from cProfile import label
 from tkinter import Widget
-=======
 # from cProfile import label
 # from tkinter import Widget
 
