@@ -5,7 +5,13 @@ FROM python:3.11.9-alpine3.19
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=conexionerp.settings
 
-
+# 1) Instalar dependencias de compilación y mysqlclient-dev
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential \
+      default-libmysqlclient-dev \
+      pkg-config \
+ && rm -rf /var/lib/apt/lists/*
 
 # Configurar el directorio de trabajo
 WORKDIR /app
