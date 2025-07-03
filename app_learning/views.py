@@ -262,6 +262,7 @@ def get_employee_id_by_name(name):
 # Función para enviar datos a Odoo
 def send_to_odoo(data):
     logger.debug(f"Intentando enviar datos a Odoo: {data}")
+    print(f"Intentando enviar datos a Odoo: {data}")
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
@@ -497,6 +498,8 @@ def registration_view(request, id=None):
         if form.is_valid():
             document_id = form.cleaned_data['document_id']
             if 'hashed_password' in form.cleaned_data:
+                
+
                 #llamar la función para verificar la contraseña
                 # Llamar a la función password_validation
                 #password_validation(document_id, hashed_password)
@@ -683,12 +686,11 @@ def verificacion_config(request):
         capacitacion = CtrlCapacitaciones.objects.get(id=capacitacion_id)
         return JsonResponse({
             'verificacion_identidad': capacitacion.verificacion_identidad if
-            hasattr(capacitacion, 'verificacion_identidad') else 'NO' #valor por defecto NO
+            hasattr(capacitacion, 'verificacion_identidad') else 'NO'
         })
     except CtrlCapacitaciones.DoesNotExist:
         return JsonResponse({'error': 'capacitacion no encontrada'},
         status=404)
-
 # Vista de Éxito Al Enviar Datos
 def success_view(request, employee_name, url_reunion=None):
     decoded_url = unquote(url_reunion) if url_reunion and url_reunion != 'without-url' else None

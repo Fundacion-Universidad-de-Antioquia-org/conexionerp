@@ -1,5 +1,8 @@
+from cProfile import label
+from tkinter import Widget
 # from cProfile import label
 # from tkinter import Widget
+
 from django import forms
 import hashlib # para el hash de la contraseña
 from .models import CtrlCapacitaciones
@@ -29,6 +32,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         choices=CtrlCapacitaciones.VERIFICACION_IDENTIDAD,
         label='Verificacion de identidad (se pedira la contraseña de la intranet a todos los asistentes)',
         required = True,
+        initial='NO' # Valor por defecto
     )
     
 
