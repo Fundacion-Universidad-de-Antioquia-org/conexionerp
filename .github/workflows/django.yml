@@ -32,6 +32,10 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.11.9
+      - name: Install system deps for mysqlclient
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-libmysqlclient-dev build-essential pkg-config
       - name: Build the Docker container
         run:
           docker build . --file Dockerfile --tag conexionerp
