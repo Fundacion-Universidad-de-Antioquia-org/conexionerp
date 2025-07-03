@@ -6,12 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=conexionerp.settings
 
 # 1) Instalar dependencias de compilación y mysqlclient-dev
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      build-essential \
-      default-libmysqlclient-dev \
-      pkg-config \
- && rm -rf /var/lib/apt/lists/*
+
 
 # Configurar el directorio de trabajo
 WORKDIR /app
@@ -22,7 +17,7 @@ RUN pip install --upgrade pip
 
 # Copiar el archivo de requisitos y instalar dependencias de Python
 COPY ./requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Instalar Gunicorn
 RUN pip install gunicorn
