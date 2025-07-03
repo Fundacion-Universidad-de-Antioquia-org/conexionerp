@@ -65,7 +65,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                 'rows': 4,
                 'cols': 40,
                 'placeholder': 'Escriba un objetivo de máximo 255 caracteres',
-                'maxlength': 255
+                'maxlength': 1200
             }),
             'url_reunion': forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'}),
             'ubicacion': forms.TextInput(attrs={'placeholder': 'Ingrese la ubicación'}),
