@@ -22,7 +22,7 @@ RUN pip install --upgrade pip
 
 # Copiar el archivo de requisitos y instalar dependencias de Python
 COPY ./requirements.txt ./
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Instalar Gunicorn
 RUN pip install gunicorn

@@ -35,7 +35,7 @@ psycopg2==2.9.10
 psycopg2-binary==2.9.10
 pycparser==2.22
 pyenchant==3.2.2
-PyJWT==2.10.1
+PyJWT==2.9.0
 pylint==3.1.0
 PyPDF2==3.0.1
 pypng==0.20220715.0
