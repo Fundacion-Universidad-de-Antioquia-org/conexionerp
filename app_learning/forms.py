@@ -65,7 +65,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'objetivo': forms.Textarea(attrs={
                 'rows': 4,
                 'cols': 40,
-                'placeholder': 'Escriba un objetivo de máximo 255 caracteres',
+                'placeholder': 'Escribe tu objetivo',
                 'maxlength': 1200
             }),
             'url_reunion': forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'}),
@@ -73,7 +73,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'total_invitados': forms.NumberInput(attrs={'min':1, 'placeholder': 'Cantidad de invitados'}),
             'temas': forms.Textarea(attrs={
                 'rows': 4,
-                'placeholder': 'Escriba los temas de la capacitación',
+                'placeholder': 'Temas separados por comas',
             }),
         }
     
