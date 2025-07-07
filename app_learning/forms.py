@@ -52,6 +52,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                   'tipo',
                   'privacidad', 
                   'objetivo',
+                  'verificacion_identidad',
                   'temas', 
                   'estado']
         widgets = {
@@ -64,7 +65,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'objetivo': forms.Textarea(attrs={
                 'rows': 4,
                 'cols': 40,
-                'placeholder': 'Escriba un objetivo de máximo 255 caracteres',
+                'placeholder': 'Escribe tu objetivo',
                 'maxlength': 1200
             }),
             'url_reunion': forms.TextInput(attrs={'placeholder': 'Ingrese la URL de la reunión'}),
@@ -72,7 +73,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             'total_invitados': forms.NumberInput(attrs={'min':1, 'placeholder': 'Cantidad de invitados'}),
             'temas': forms.Textarea(attrs={
                 'rows': 4,
-                'placeholder': 'Escriba los temas de la capacitación',
+                'placeholder': 'Temas separados por comas',
             }),
         }
     
@@ -88,6 +89,10 @@ class CtrlCapacitacionesForm(forms.ModelForm):
             self.fields['estado'].widget.attrs['disabled'] = 'disabled'
         else: #si se está editando
             self.fields['estado'].widget.attrs.pop('disabled', None)
+            
+        if self.instance and self.instance.pk:
+            self.fields['verificacion_identidad'].initial = self.instance.verificacion_identidad
+            self.fields['verificacion_identidad'].disabled = True
 
         # Obtener modalidad actual desde datos del formulario o instancia existente
         modalidad = self.data.get('modalidad') or (self.instance.modalidad if self.instance else '')

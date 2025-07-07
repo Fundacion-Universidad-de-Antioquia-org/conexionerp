@@ -350,7 +350,9 @@ def create_capacitacion(request, *, context):
         if form.is_valid():
             capacitacion = form.save(commit=False)
             capacitacion.estado = 'ACTIVA'
-            capacitacion = form.save()
+            capacitacion.verificacion_identidad = form.cleaned_data['verificacion_identidad']
+            capacitacion.save()
+
             
             if capacitacion.tipo in ['Reunión', 'Capacitación']:
                 # Procesar archivo PDF si se envió
@@ -418,7 +420,9 @@ def create_capacitacion(request, *, context):
             #Create Log
             registrar_log_interno(username, observacion, tipo, id)
             
-
+            print('Verificación de Identidad:' + capacitacion.verificacion_identidad)
+            
+            print('Verificación de Identidad:' + capacitacion.verificacion_identidad)
             return HttpResponseRedirect(reverse('details_view', args=[capacitacion.id]))
         else:
             print("El formulario No es válido")
@@ -795,7 +799,7 @@ def edit_capacitacion(request, id, *, context):
             capacitacion = form.save(commit=False)
             capacitacion.user = username
             # Asegurarse de que el campo verificacion_identidad se guarde correctamente
-            capacitacion.verificacion_identidad = form.cleaned_data['verificacion_identidad']
+            # capacitacion.verificacion_identidad = form.cleaned_data['verificacion_identidad']
             form.save()
             # Obtener los empleados seleccionados del POST
             employee_names = request.POST.get('employee_names', '').split(',')

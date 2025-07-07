@@ -46,10 +46,8 @@
         <!-- Si es edición, mostrar el valor pero deshabilitar el campo -->
         <label for="id_verificacion_identidad">Verificación de identidad (se pedirá la contraseña de la intranet a todos los asistentes):</label>
         <select name="verificacion_identidad" id="id_verificacion_identidad" disabled>
-            <option value="{{ form.instance.verificacion_identidad }}" selected>{{ form.instance.verificacion_identidad }}</option>
+          <option value="{{ form.instance.verificacion_identidad }}" selected>{{ form.instance.verificacion_identidad }}</option>
         </select>
-        <!-- Campo oculto para mantener el valor original -->
-        <input type="hidden" name="verificacion_identidad" value="{{ form.instance.verificacion_identidad }}">
     {% else %}
         <!-- Si es creación, mostrar las opciones normalmente -->
         {{ form.verificacion_identidad.label_tag }} {{ form.verificacion_identidad }}
