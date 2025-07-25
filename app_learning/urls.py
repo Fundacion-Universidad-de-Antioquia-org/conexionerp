@@ -19,4 +19,5 @@ urlpatterns = [
     path('get_employee_names/', views.get_employee_names, name='get_employee_names'),
     path('capacitacion/<int:id>/generar_pdf/', views.generar_pdf, name='generar_pdf'),
     path('verificacion-config/', views.verificacion_config, name='verificacion_config'),
+    path('duplicate/<int:id>/', views.duplicate_event, name='duplicate_event'),
 ]

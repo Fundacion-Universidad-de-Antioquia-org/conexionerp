@@ -198,6 +198,13 @@
                 Detalles
               </button>
             </a>
+
+            <a href="{% url 'duplicate_event' capacitacion.id %}" title="Duplicar Evento">
+              <button type="button" class="btn btn-secondary">
+                <i class="bi bi-files"></i> Duplicar
+              </button>
+            </a>
+
           </td>
         </tr>
         {% empty %}

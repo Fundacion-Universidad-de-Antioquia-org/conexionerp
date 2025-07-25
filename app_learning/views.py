@@ -343,6 +343,8 @@ def send_to_odoo(data):
 @csrf_exempt
 @settings.AUTH.login_required()
 def create_capacitacion(request, *, context):
+
+
     if request.method == 'POST':
         request.POST = request.POST.copy()
         request.POST['estado'] = 'ACTIVA'
@@ -429,6 +431,35 @@ def create_capacitacion(request, *, context):
             print(form.errors)
     else:
         form = CtrlCapacitacionesForm()
+    return render(request, 'crear_capacitacion.html', {'form': form})
+
+#Duplicar una capacitación
+@settings.AUTH.login_required()
+def duplicate_event(request, id, *, context):
+    original = get_object_or_404(CtrlCapacitaciones, id=id)
+
+    initial_data = {
+        'fecha': original.fecha,
+        'tipo': original.tipo,
+        'privacidad': original.privacidad,
+        'tema': original.tema,
+        'responsable': original.responsable,
+        'moderador': original.moderador,
+        'hora_inicial': original.hora_inicial,
+        'hora_final': original.hora_final,
+        'total_invitados': original.total_invitados,
+        'area_encargada': original.area_encargada,
+        'modalidad': original.modalidad,
+        'objetivo': original.objetivo,
+        'estado': 'ACTIVA',  # Forzar como activa
+        'verificacion_identidad': original.verificacion_identidad,
+        'url_reunion': original.url_reunion,
+        'ubicacion': original.ubicacion,
+        'temas': original.temas,
+    }
+
+    form = CtrlCapacitacionesForm(initial=initial_data)
+
     return render(request, 'crear_capacitacion.html', {'form': form})
 
 # Función para mostrar lista de Capacitaciones
@@ -696,6 +727,7 @@ def verificacion_config(request):
         return JsonResponse({'error': 'capacitacion no encontrada'},
         status=404)
 # Vista de Éxito Al Enviar Datos
+
 def success_view(request, employee_name, url_reunion=None):
     decoded_url = unquote(url_reunion) if url_reunion and url_reunion != 'without-url' else None
     context = {
@@ -1390,7 +1422,7 @@ def generar_pdf(request, id):
     return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema or 'Reporte'}.pdf")# Buscar Empleados en Odoo
 
 
-
+#Buscar Empleados
 def search_employees(request):
     query = request.GET.get('q', '')
     search_type = request.GET.get('search_type', 'id') #Por defecto busca por ID
@@ -1477,7 +1509,8 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
         print(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}") 
     except Exception as e:
         logger.error('Failed to send assistants to Odoo', exc_info=True)
-        
+
+#Obtener Asistentes registrados a un evento en Odoo     
 def get_asistentes_odoo(capacitacion_id):
     try:
         # Conexión a Odoo
