@@ -167,10 +167,11 @@
           <td class="btn-actions">
             <a
               href="{% url 'details_view' capacitacion.id %}"
-              title="Ver Detalles"
+              title="URL del Evento"
             >
               <button type="button" class="btn btn-info-f">
-                <i class="bi bi-info-lg"></i>
+                <i class="bi bi-qr-code-scan"></i>
+                QR - Link
               </button>
             </a>
 
@@ -178,20 +179,23 @@
             <a href="{% url 'edit_capacitacion' capacitacion.id %}" title="Editar Capacitación">
               <button type="button" class="btn btn-warning-f">
                 <i class="bi bi-pencil-square"></i>
+                Editar
               </button>
             </a>
             {% else %}
             <button type="button" class="btn btn-warning-f" disabled title="No se puede editar un evento cerrado">
               <i class="bi bi-pencil-square"></i>
+              Editar
             </button>
             {% endif %}
 
             <a
               href="{% url 'view_assistants' capacitacion.id %}"
-              title="Ver Asistentes"
+              title="Detalles"
             >
               <button type="button" class="btn btn-success-f">
                 <i class="bi bi-person-check"></i>
+                Detalles
               </button>
             </a>
           </td>
