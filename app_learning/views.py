@@ -72,7 +72,6 @@ def get_employee_names(request):
     else:
         return JsonResponse({'results': []})
 
-
 def upload_to_azure_blob(file, filename):
     print('Intentando subir archivo a Azure Blob Storage...')
     try:
@@ -164,7 +163,6 @@ def delete_blob_from_azure(blob_url):
         traceback.print_exc()
         return False
         
-
 # Vista para eliminar imagenes
 def delete_image(request, image_id):
     try:
@@ -205,7 +203,6 @@ def view_image(request, image_id):
     }
     
     return render(request, 'view_image.html', context)
-
 
 # Conversión a UTC asegurando que el objeto sea datetime
 def convert_to_utc(dt, timezone_str):
@@ -336,8 +333,6 @@ def send_to_odoo(data):
     except Exception as e:
         logger.error('Failed to send data to Odoo', exc_info=True)
         return None, None, None
-
-
 
 # Función para crear QR de Capacitación
 @csrf_exempt
@@ -489,8 +484,6 @@ def password_validation(identificacion: str, password_md5: str) -> bool:
         result = cursor.fetchone()
 
     return result[0] > 0
-
-
 
 # Función para registrar asistencia y actualizar registro en Odoo
 def registration_view(request, id=None):
@@ -862,7 +855,6 @@ def edit_capacitacion(request, id, *, context):
     else:
         form = CtrlCapacitacionesForm(instance=capacitacion)
     return render(request, 'crear_capacitacion.html', {'form': form})
-
 
 # Vista para ver los usuarios que asistieron a una capacitación
 @settings.AUTH.login_required()
@@ -1421,7 +1413,6 @@ def generar_pdf(request, id):
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema or 'Reporte'}.pdf")# Buscar Empleados en Odoo
 
-
 #Buscar Empleados
 def search_employees(request):
     query = request.GET.get('q', '')
@@ -1451,7 +1442,6 @@ def search_employees(request):
         {'fields': ['name', 'identification_id'], 'limit': 10})
 
     return JsonResponse({'results': employee_ids})
-
 
 #Enviar Asistentes Obligatorios a Odoo
 def send_assistants_to_odoo(capacitacion_id, employee_ids):
