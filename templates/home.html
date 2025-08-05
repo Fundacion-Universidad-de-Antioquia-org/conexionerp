@@ -173,7 +173,7 @@
               <ul class="dropdown-menu" aria-labelledby="dropdownMenu{{ capacitacion.id }}">
                 <li>
                   <a class="dropdown-item" href="{% url 'details_view' capacitacion.id %}">
-                    <i class="bi bi-qr-code-scan me-2"></i>QR - Link
+                    <i class="bi bi-qr-code-scan me-2"></i>Resumen
                   </a>
                 </li>
                 {% if capacitacion.estado != 'CERRADA' %}
@@ -185,7 +185,7 @@
                 {% endif %}
                 <li>
                   <a class="dropdown-item" href="{% url 'view_assistants' capacitacion.id %}">
-                    <i class="bi bi-person-check me-2"></i>Detalles
+                    <i class="bi bi-person-check me-2"></i>Asistentes
                   </a>
                 </li>
                 <li>
