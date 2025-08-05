@@ -302,7 +302,6 @@
   const image = document.getElementById("qr-image");
   if (qrBase64) {
     image.src = `data:image/png;base64,${qrBase64}`;
-    console.log("QR Base64: ", qrBase64);
   } else {
     console.error("No QR Base64 data available.");
   }

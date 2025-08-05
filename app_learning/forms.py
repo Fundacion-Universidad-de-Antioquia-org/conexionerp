@@ -11,6 +11,12 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         label='Modalidad'
     )
     
+    agregar_fin = forms.BooleanField(
+        required=False,
+        label='Agregar fecha de finalización',
+        help_text='Marque si el evento es de varios días'
+    )
+    
     tipo = forms.ChoiceField(
         choices=[('', 'Elija el tipo de evento')] + CtrlCapacitaciones.TIPO,
         required= True,
@@ -33,7 +39,9 @@ class CtrlCapacitacionesForm(forms.ModelForm):
 
     class Meta:
         model = CtrlCapacitaciones
-        fields = ['fecha', 
+        fields = ['fecha',
+                  'agregar_fin',
+                  'fecha_fin',
                   'responsable', 
                   'hora_inicial', 
                   'hora_final', 
@@ -52,6 +60,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                   'estado']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_fin': forms.DateInput(attrs={'type': 'date'}),
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
             'hora_final': forms.TimeInput(attrs={'type': 'time'}),
             'tema': forms.TextInput(attrs={'placeholder': 'Nombre del evento'}),
@@ -71,6 +80,23 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                 'placeholder': 'Temas separados por comas',
             }),
         }
+    
+    def clean(self):
+        cd = super().clean()
+        agregar = cd.get('agregar_fin')
+        fecha = cd.get('fecha')
+        fecha_fin = cd.get('fecha_fin')
+
+        if agregar:
+            if not fecha_fin:
+                raise forms.ValidationError("Debe indicar fecha fin para el rango.")
+            if fecha_fin < fecha:
+                raise forms.ValidationError("La fecha fin no puede ser anterior a la inicial.")
+        else:
+            # No rango: forzamos fecha_fin = None para que save() la copie
+            cd['fecha_fin'] = None
+
+        return cd
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
