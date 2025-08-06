@@ -24,7 +24,6 @@ def registrar_log_interno(username, observacion, tipo, id_registro):
 
     headers = {
         "Content-Type": "application/json",
-        # "Authorization": f"Bearer {YOUR_TOKEN}",  # Si el endpoint exige autenticación
     }
 
     try:
