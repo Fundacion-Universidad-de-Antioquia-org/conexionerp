@@ -149,10 +149,10 @@
           <td>{{ capacitacion.tema|upper }}</td>
           <td>{{ capacitacion.area_encargada|upper }}</td>
           <td>{{ capacitacion.moderador|upper }}</td>
-          <td style="width: 110px">{{ capacitacion.fecha_formateada }}</td>
-          <td>{{ capacitacion.hora_inicial_formateada }}</td>
-          <td style="min-width: 60px">{{ capacitacion.hora_final_formateada }}</td>
-          <td>
+          <td class="text-center" style="width: 110px">{{ capacitacion.fecha_formateada }}</td>
+          <td class="text-center">{{ capacitacion.hora_inicial_formateada }}</td>
+          <td class="text-center" style="min-width: 60px">{{ capacitacion.hora_final_formateada }}</td>
+          <td class="text-center">
             {% if capacitacion.estado == 'ACTIVA' %}
             <span class="badge bg-success text-white">ACTIVA</span>
             {% elif capacitacion.estado == 'CERRADA' %}
@@ -164,37 +164,39 @@
             {% endif %}
           </td>
           <!-- <td style="min-width: 200px">{{ capacitacion.objetivo|upper }}</td> -->
-          <td class="btn-actions">
-            <a
-              href="{% url 'details_view' capacitacion.id %}"
-              title="Ver Detalles"
-            >
-              <button type="button" class="btn btn-info-f">
-                <i class="bi bi-info-lg"></i>
+          <td class="btn-actions text-center">
+            <div class="dropdown">
+              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu{{ capacitacion.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                <!-- <i class="bi bi-three-dots-horizontal"></i> -->
+                 Menú
               </button>
-            </a>
-
-            {% if capacitacion.estado != 'CERRADA' %}
-            <a href="{% url 'edit_capacitacion' capacitacion.id %}" title="Editar Capacitación">
-              <button type="button" class="btn btn-warning-f">
-                <i class="bi bi-pencil-square"></i>
-              </button>
-            </a>
-            {% else %}
-            <button type="button" class="btn btn-warning-f" disabled title="No se puede editar un evento cerrado">
-              <i class="bi bi-pencil-square"></i>
-            </button>
-            {% endif %}
-
-            <a
-              href="{% url 'view_assistants' capacitacion.id %}"
-              title="Ver Asistentes"
-            >
-              <button type="button" class="btn btn-success-f">
-                <i class="bi bi-person-check"></i>
-              </button>
-            </a>
+              <ul class="dropdown-menu" aria-labelledby="dropdownMenu{{ capacitacion.id }}">
+                <li>
+                  <a class="dropdown-item" href="{% url 'details_view' capacitacion.id %}">
+                    <i class="bi bi-qr-code-scan me-2"></i>Resumen
+                  </a>
+                </li>
+                {% if capacitacion.estado != 'CERRADA' %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'edit_capacitacion' capacitacion.id %}">
+                    <i class="bi bi-pencil-square me-2"></i>Editar
+                  </a>
+                </li>
+                {% endif %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'view_assistants' capacitacion.id %}">
+                    <i class="bi bi-person-check me-2"></i>Asistentes
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'duplicate_event' capacitacion.id %}">
+                    <i class="bi bi-files me-2"></i>Duplicar
+                  </a>
+                </li>
+              </ul>
+            </div>
           </td>
+
         </tr>
         {% empty %}
         <tr>

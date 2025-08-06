@@ -72,7 +72,6 @@ def get_employee_names(request):
     else:
         return JsonResponse({'results': []})
 
-
 def upload_to_azure_blob(file, filename):
     print('Intentando subir archivo a Azure Blob Storage...')
     try:
@@ -164,7 +163,6 @@ def delete_blob_from_azure(blob_url):
         traceback.print_exc()
         return False
         
-
 # Vista para eliminar imagenes
 def delete_image(request, image_id):
     try:
@@ -205,7 +203,6 @@ def view_image(request, image_id):
     }
     
     return render(request, 'view_image.html', context)
-
 
 # Conversión a UTC asegurando que el objeto sea datetime
 def convert_to_utc(dt, timezone_str):
@@ -337,12 +334,12 @@ def send_to_odoo(data):
         logger.error('Failed to send data to Odoo', exc_info=True)
         return None, None, None
 
-
-
 # Función para crear QR de Capacitación
 @csrf_exempt
 @settings.AUTH.login_required()
 def create_capacitacion(request, *, context):
+
+
     if request.method == 'POST':
         request.POST = request.POST.copy()
         request.POST['estado'] = 'ACTIVA'
@@ -431,6 +428,35 @@ def create_capacitacion(request, *, context):
         form = CtrlCapacitacionesForm()
     return render(request, 'crear_capacitacion.html', {'form': form})
 
+#Duplicar una capacitación
+@settings.AUTH.login_required()
+def duplicate_event(request, id, *, context):
+    original = get_object_or_404(CtrlCapacitaciones, id=id)
+
+    initial_data = {
+        'fecha': original.fecha,
+        'tipo': original.tipo,
+        'privacidad': original.privacidad,
+        'tema': original.tema,
+        'responsable': original.responsable,
+        'moderador': original.moderador,
+        'hora_inicial': original.hora_inicial,
+        'hora_final': original.hora_final,
+        'total_invitados': original.total_invitados,
+        'area_encargada': original.area_encargada,
+        'modalidad': original.modalidad,
+        'objetivo': original.objetivo,
+        'estado': 'ACTIVA',  # Forzar como activa
+        'verificacion_identidad': original.verificacion_identidad,
+        'url_reunion': original.url_reunion,
+        'ubicacion': original.ubicacion,
+        'temas': original.temas,
+    }
+
+    form = CtrlCapacitacionesForm(initial=initial_data)
+
+    return render(request, 'crear_capacitacion.html', {'form': form})
+
 # Función para mostrar lista de Capacitaciones
 def list_capacitaciones(request):
     capacitaciones = CtrlCapacitaciones.objects.all()
@@ -458,8 +484,6 @@ def password_validation(identificacion: str, password_md5: str) -> bool:
         result = cursor.fetchone()
 
     return result[0] > 0
-
-
 
 # Función para registrar asistencia y actualizar registro en Odoo
 def registration_view(request, id=None):
@@ -696,6 +720,7 @@ def verificacion_config(request):
         return JsonResponse({'error': 'capacitacion no encontrada'},
         status=404)
 # Vista de Éxito Al Enviar Datos
+
 def success_view(request, employee_name, url_reunion=None):
     decoded_url = unquote(url_reunion) if url_reunion and url_reunion != 'without-url' else None
     context = {
@@ -713,13 +738,21 @@ def details_view(request, id, *, context):
     show_url = capacitacion.modalidad == 'VIRTUAL' or capacitacion.modalidad == 'MIXTA'
     show_ubicacion = capacitacion.modalidad == 'PRESENCIAL' or capacitacion.modalidad == 'MIXTA'
     
+    fecha_str = capacitacion.fecha.strftime('%Y-%m-%d')
+    fecha_fin_str = capacitacion.fecha_fin.strftime('%Y-%m-%d') if capacitacion.fecha_fin else None
+    
+    if fecha_fin_str and fecha_str != fecha_fin_str:
+        date_display = f"{fecha_str} al {fecha_fin_str}"
+    else:
+        date_display = fecha_str
+    
     context = {
         'topic': capacitacion.tema,
         'department': capacitacion.area_encargada,
         'in_charge': capacitacion.responsable,
         'objective': capacitacion.objetivo,
         'moderator': capacitacion.moderador,
-        'date': capacitacion.fecha.strftime('%Y-%m-%d'),
+        'date': date_display,
         'start_time': capacitacion.hora_inicial.strftime('%H:%M'),
         'end_time': capacitacion.hora_final.strftime('%H:%M'),
         'modalidad': capacitacion.modalidad, 
@@ -830,7 +863,6 @@ def edit_capacitacion(request, id, *, context):
     else:
         form = CtrlCapacitacionesForm(instance=capacitacion)
     return render(request, 'crear_capacitacion.html', {'form': form})
-
 
 # Vista para ver los usuarios que asistieron a una capacitación
 @settings.AUTH.login_required()
@@ -1042,195 +1074,19 @@ def view_assistants(request, id, *, context):
         'success_message': success_message
     })
     
-# Vista para generar PDF de una capacitación
-"""def generar_pdf(request, id):
-    # 1. Obtener la capacitación y los asistentes
-    capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
-    asistentes_data = get_asistentes_odoo(capacitacion.id)  # Función que consulta Odoo
-
-    # 2. Crear buffer y documento base
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        leftMargin=40,
-        rightMargin=40,
-        topMargin=50,
-        bottomMargin=50
-    )
-
-    # 3. Definir estilos
-    styles = getSampleStyleSheet()
-
-    # Ajustar estilo Normal: fuente Helvetica, tamaño 12, interlineado 14
-    styles['Normal'].fontName = 'Helvetica'
-    styles['Normal'].fontSize = 12
-    styles['Normal'].leading = 14
-
-    # Estilo para texto en negrita
-    bold_style = ParagraphStyle(
-        'BoldStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold'
-    )
-
-    # Estilo para título centrado y negrita
-    title_style = ParagraphStyle(
-        'TitleStyle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        alignment=TA_CENTER,
-        fontSize=12,
-        leading=14
-    )
-
-    # Estilo para forzar el “wrapping” en las celdas
-    wrapped_style = ParagraphStyle(
-        'WrappedStyle',
-        parent=styles['Normal'],
-        wordWrap='CJK',  # Alternativas: 'RTL', 'LTR' o 'CJK'
-    )
-    
-    bullet_style = ParagraphStyle(
-        'BulletStyle',
-        parent=styles['Normal'],
-        leading=18,
-    )
-
-    # Helper para crear párrafos con word-wrap
-    def P(text, style=wrapped_style):
-        return Paragraph(text, style)
-
-    elements = []
-
-    # 4. Título principal (centrado y negrita)
-    title_paragraph = Paragraph(
-        f"FUNDACIÓN UNIVERSIDAD DE ANTIOQUIA<br/><br/>INFORME - {capacitacion.tema}",
-        title_style
-    )
-    elements.append(title_paragraph)
-    elements.append(Spacer(1, 12))
-
-    # 5. Objetivo
-    elements.append(Paragraph("Objetivo:", bold_style))
-    elements.append(Spacer(1, 4))
-    elements.append(P(capacitacion.objetivo))
-    elements.append(Spacer(1, 12))
-
-    # 6. Tabla con datos principales (Evento, Responsable, etc.)
-    info_data = [
-        [P("<b>Evento:</b>"), P(capacitacion.tema)],
-        [P("<b>Responsable:</b>"), P(capacitacion.responsable)],
-        [P("<b>Moderador:</b>"), P(capacitacion.moderador)],
-        [P("<b>Fecha:</b>"), P(capacitacion.fecha.strftime('%Y-%m-%d'))],
-        [
-            P("<b>Hora:</b>"),
-            P(f"{capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")
-        ],
-    ]
-    if capacitacion.modalidad in ["PRESENCIAL", "MIXTA"] and capacitacion.ubicacion:
-        info_data.append([P("<b>Lugar:</b>"), P(capacitacion.ubicacion)])
-    if capacitacion.modalidad in ["VIRTUAL", "MIXTA"] and capacitacion.url_reunion:
-        info_data.append([P("<b>URL Reunión:</b>"), P(capacitacion.url_reunion)])
-
-    info_table = Table(info_data, colWidths=[120, 420])
-    info_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 12),
-        # Alineación y rellenos
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        # Para asegurar el wrap
-        ('WORDWRAP', (0, 0), (-1, -1), True), #Forzar ajuste de línea si el txt es muy largo
-    ]))
-    elements.append(info_table)
-    elements.append(Spacer(1, 12))
-
-    # 7. Temas
-    if capacitacion.temas:
-        elements.append(Paragraph("Temas:", bold_style))
-        elements.append(Spacer(1, 4))
-        for tema_line in capacitacion.temas.splitlines():
-            elements.append(Paragraph(f"• {tema_line}", bullet_style))
-        elements.append(Spacer(1, 12))
-
-    # 8. Lista de asistentes
-    elements.append(Paragraph("Lista de Asistentes:", bold_style))
-    elements.append(Spacer(1, 4))
-
-    # Encabezado de la tabla
-    asistentes_table_data = [
-        [P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
-    ]
-    for assistant in asistentes_data:
-        asistentes_table_data.append([
-            P(assistant.get('username', '')),
-            P(assistant.get('jobTitle', '')),
-            P(assistant.get('employeeDepartment', ''))
-        ])
-
-    asistentes_table = Table(asistentes_table_data, colWidths=[150, 150, 180])
-    asistentes_table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 12),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        # Cuadros y fondo en la primera fila
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('GRID', (0, 0), (-1, -1), 0.25, colors.grey),
-        # Habilitar wrap en celdas
-        ('WORDWRAP', (0, 0), (-1, -1), True),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-    ]))
-    elements.append(asistentes_table)
-    elements.append(Spacer(1, 12))
-
-    # 9. Evidencias del Evento
-    elements.append(Paragraph("Evidencias del Evento:", bold_style))
-    elements.append(Spacer(1, 6))
-
-    # 9a. Presentación (mostrar “ver aquí”)
-    if capacitacion.archivo_presentacion:
-        presentacion_paragraph = Paragraph(
-        f'Presentación del evento: '
-        f'<font color="blue"><u><link href="{capacitacion.archivo_presentacion}">ver aquí</link></u></font>',
-        styles['Normal']  # O el estilo que uses por defecto
-    )
-
-    elements.append(presentacion_paragraph)
-    elements.append(Spacer(1, 12))  # Espacio debajo, opcional
-
-    # 9b. Imágenes
-    event_images = capacitacion.images.all()
-    if event_images.exists():
-        elements.append(Paragraph("Imágenes de evidencia:", bold_style))
-        elements.append(Spacer(1, 4))
-
-        for image in event_images:
-            try:
-                resp = requests.get(image.image_url)
-                if resp.status_code == 200:
-                    img_data = io.BytesIO(resp.content)
-                    img_obj = Image(img_data)
-                    # Ajusta tamaño máximo si es necesario
-                    img_obj._restrictSize(500, 300)
-                    elements.append(img_obj)
-                    elements.append(Spacer(1, 12))
-                else:
-                    elements.append(P(f"Error al cargar imagen: {image.image_url}"))
-            except Exception:
-                elements.append(P(f"Error al cargar imagen: {image.image_url}"))
-            elements.append(Spacer(1, 6))
-
-    # 10. Generar PDF y retornar
-    doc.build(elements)
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema}.pdf")
-    """
-
 def generar_pdf(request, id):
     # 1. Obtener la capacitación y los asistentes
     capacitacion = get_object_or_404(CtrlCapacitaciones, id=id)
     asistentes_data = get_asistentes_odoo(capacitacion.id) or []
+    
+    #Rango de fechas
+    
+    fecha_str = capacitacion.fecha.strftime('%Y-%m-%d') if capacitacion.fecha else "No disponible"
+    fecha_fin_str = capacitacion.fecha_fin.strftime('%Y-%m-%d') if capacitacion.fecha_fin else None
+    if capacitacion.fecha_fin and fecha_str != fecha_fin_str:
+        date_display = f"{fecha_str} al {fecha_fin_str}"
+    else:
+        date_display = fecha_str
 
     # 2. Obtener la ruta correcta del membrete
 
@@ -1277,7 +1133,7 @@ def generar_pdf(request, id):
         [P("<b>Evento:</b>"), P(capacitacion.tema)],
         [P("<b>Responsable:</b>"), P(capacitacion.responsable)],
         [P("<b>Moderador:</b>"), P(capacitacion.moderador)],
-        [P("<b>Fecha:</b>"), P(capacitacion.fecha.strftime('%Y-%m-%d') if capacitacion.fecha else "No disponible")],
+        [P("<b>Fecha:</b>"), P(date_display)],
         [P("<b>Hora:</b>"), P(f"{capacitacion.hora_inicial.strftime('%H:%M')} - {capacitacion.hora_final.strftime('%H:%M')}")]
     ]
 
@@ -1313,17 +1169,19 @@ def generar_pdf(request, id):
         elements.append(Spacer(1, 4))
 
         asistentes_table_data = [
-            [P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
+            [P("<b>#</b>"), P("<b>Identificación</b>"), P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
         ]
-        for assistant in asistentes_data:
+        for idx, assistant in enumerate(asistentes_data, start=1):
             asistentes_table_data.append([
+                P(str(idx)),
+                P(assistant.get('employeeId', 'No disponible')),
                 P(assistant.get('username', 'No disponible')),
                 P(assistant.get('jobTitle', 'No disponible')),
-                P(assistant.get('employeeDepartment', 'No disponible'))
+                P(assistant.get('employeeDepartment') or assistant.get('employeeCompany') or 'no hay')
             ])
         total_width = letter[0] - 80  
 
-        asistentes_table = Table(asistentes_table_data, colWidths=[total_width * 0.35, total_width * 0.35, total_width * 0.3])
+        asistentes_table = Table(asistentes_table_data, colWidths=[total_width * 0.10, total_width * 0.225, total_width * 0.225, total_width * 0.225, total_width * 0.225])
         asistentes_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 12),
@@ -1389,8 +1247,7 @@ def generar_pdf(request, id):
     buffer.seek(0)
     return FileResponse(buffer, as_attachment=True, filename=f"{capacitacion.tema or 'Reporte'}.pdf")# Buscar Empleados en Odoo
 
-
-
+#Buscar Empleados
 def search_employees(request):
     query = request.GET.get('q', '')
     search_type = request.GET.get('search_type', 'id') #Por defecto busca por ID
@@ -1419,7 +1276,6 @@ def search_employees(request):
         {'fields': ['name', 'identification_id'], 'limit': 10})
 
     return JsonResponse({'results': employee_ids})
-
 
 #Enviar Asistentes Obligatorios a Odoo
 def send_assistants_to_odoo(capacitacion_id, employee_ids):
@@ -1477,7 +1333,8 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
         print(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}") 
     except Exception as e:
         logger.error('Failed to send assistants to Odoo', exc_info=True)
-        
+
+#Obtener Asistentes registrados a un evento en Odoo     
 def get_asistentes_odoo(capacitacion_id):
     try:
         # Conexión a Odoo
@@ -1491,7 +1348,13 @@ def get_asistentes_odoo(capacitacion_id):
             'x_capacitacion_emplead', 'search_read',
             [[['x_studio_id_capacitacion', '=', capacitacion_id]]],
             {
-                'fields': ['x_studio_nombre_empleado', 'x_studio_cargo', 'x_studio_departamento_empleado'],
+                'fields': [
+                    'x_studio_nombre_empleado', 
+                    'x_studio_cargo', 
+                    'x_studio_departamento_empleado',
+                    'x_studio_capacitacion_compania_empleado',
+                    'x_studio_many2one_field_iphhw'
+                    ],
                 'limit': 999
             }
         )
@@ -1502,7 +1365,10 @@ def get_asistentes_odoo(capacitacion_id):
             asistentes_data.append({
                 'username': record.get('x_studio_nombre_empleado', ''),
                 'jobTitle': record.get('x_studio_cargo', ''),
-                'employeeDepartment': record.get('x_studio_departamento_empleado', '')
+                'employeeDepartment': record.get('x_studio_departamento_empleado'),
+                'employeeCompany': record.get('x_studio_capacitacion_compania_empleado'),
+                'employeeId': record.get('x_studio_many2one_field_iphhw', [])[1] if record.get('x_studio_many2one_field_iphhw') else '',
+                
             })
         return asistentes_data
 

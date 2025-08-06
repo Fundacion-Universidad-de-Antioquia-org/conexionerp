@@ -13,6 +13,13 @@ class CtrlCapacitaciones(models.Model):
         default=timezone.now, 
         verbose_name='Fecha de la sesión'
     )
+    
+    fecha_fin = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name='Fecha fin de la sesión',
+        help_text='Opcional: Fecha de finalización del evento si es de varios días'
+    )
     hora_inicial = models.TimeField(verbose_name='Hora de inicio')
     hora_final = models.TimeField(verbose_name='Hora de finalización')
     
@@ -133,6 +140,11 @@ class CtrlCapacitaciones(models.Model):
         default='user',
         verbose_name='Usuario creador'
     )
+    
+    def save(self, *args, **kwargs):
+        if not self.fecha_fin:
+            self.fecha_fin = self.fecha
+        super().save(*args, **kwargs)
     
     class Meta:
         verbose_name = 'Evento'

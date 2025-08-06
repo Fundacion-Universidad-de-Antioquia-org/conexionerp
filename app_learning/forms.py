@@ -1,8 +1,3 @@
-#from cProfile import label
-#from tkinter import Widget
-# from cProfile import label
-# from tkinter import Widget
-
 from django import forms
 import hashlib # para el hash de la contraseña
 from .models import CtrlCapacitaciones
@@ -14,6 +9,12 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         choices=[('', 'Elija una modalidad')] + CtrlCapacitaciones.MODALIDAD,
         required=True,
         label='Modalidad'
+    )
+    
+    agregar_fin = forms.BooleanField(
+        required=False,
+        label='Agregar fecha de finalización',
+        help_text='Marque si el evento es de varios días'
     )
     
     tipo = forms.ChoiceField(
@@ -38,7 +39,9 @@ class CtrlCapacitacionesForm(forms.ModelForm):
 
     class Meta:
         model = CtrlCapacitaciones
-        fields = ['fecha', 
+        fields = ['fecha',
+                  'agregar_fin',
+                  'fecha_fin',
                   'responsable', 
                   'hora_inicial', 
                   'hora_final', 
@@ -57,6 +60,7 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                   'estado']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_fin': forms.DateInput(attrs={'type': 'date'}),
             'hora_inicial': forms.TimeInput(attrs={'type': 'time'}),
             'hora_final': forms.TimeInput(attrs={'type': 'time'}),
             'tema': forms.TextInput(attrs={'placeholder': 'Nombre del evento'}),
@@ -76,6 +80,23 @@ class CtrlCapacitacionesForm(forms.ModelForm):
                 'placeholder': 'Temas separados por comas',
             }),
         }
+    
+    def clean(self):
+        cd = super().clean()
+        agregar = cd.get('agregar_fin')
+        fecha = cd.get('fecha')
+        fecha_fin = cd.get('fecha_fin')
+
+        if agregar:
+            if not fecha_fin:
+                raise forms.ValidationError("Debe indicar fecha fin para el rango.")
+            if fecha_fin < fecha:
+                raise forms.ValidationError("La fecha fin no puede ser anterior a la inicial.")
+        else:
+            # No rango: forzamos fecha_fin = None para que save() la copie
+            cd['fecha_fin'] = None
+
+        return cd
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,6 +136,7 @@ class RegistrationForm(forms.Form):
   department = forms.CharField(max_length=250, label= 'Departamento', widget= forms.TextInput(attrs={'readonly':'readonly'}))
   moderator = forms.CharField(max_length=100,label='Moderador(a)', widget = forms.TextInput(attrs={'readonly':'readonly'}))
   date = forms.DateField(widget=forms.DateInput(attrs={'type':'date', 'readonly': 'readonly'}), label='fecha', input_formats=['%Y-%m-%d'])
+  
   start_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora inicial')
   end_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time', 'readonly': 'readonly'}), label='Hora final')
   mode = forms.CharField(max_length=10, label='Modalidad', required=True)
