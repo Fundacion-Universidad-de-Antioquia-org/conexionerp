@@ -179,7 +179,7 @@
 // Función para mostrar/ocultar campos según la selección de verificación de identidad
 document.getElementById('id_verificacion_identidad').addEventListener('change', function() {
     const verificacionValue = this.value;
-    console.log("Verificación de identidad cambiada a:", verificacionValue);
+    // noop
     
     // Aquí puedes agregar lógica adicional si necesitas mostrar/ocultar campos
     handleVerificacionIdentidad();
@@ -191,7 +191,7 @@ window.onload = function() {
     
     // También verificar el estado inicial de verificación de identidad
     const verificacionValue = document.getElementById('id_verificacion_identidad').value;
-    console.log("Estado inicial de verificación:", verificacionValue);
+    // noop
     
     // Inicializar el manejo de verificación de identidad
     handleVerificacionIdentidad();
@@ -230,7 +230,7 @@ window.onload = function() {
   // Completar el formulario al cerrar el modal
   document.getElementById('btn-completar').addEventListener('click', function() {
     document.getElementById('selectedEmployeeIds').value = selectedEmployeeIds.join(',');  // Añadir los IDs al campo oculto
-    console.log("Asistentes Seleccionados; ", selectedEmployeeIds);
+    // noop
     document.querySelector('.btn-close').click();  // Cerrar el modal
   });
 

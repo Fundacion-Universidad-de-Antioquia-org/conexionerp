@@ -82,6 +82,19 @@
         <!-- Contenido de la página -->
         {% endblock %}
     </div>
+    {% if messages %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        {% for message in messages %}
+          Swal.fire({
+            icon: '{{ message.tags|default:"info" }}',
+            title: '{{ message|escapejs }}',
+            confirmButtonText: 'OK'
+          });
+        {% endfor %}
+      });
+    </script>
+    {% endif %}
     <div style="position: absolute; margin-bottom: 0; color: rgba(255, 255, 255, 0);">117</div>
     <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"

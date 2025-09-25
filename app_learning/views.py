@@ -73,13 +73,13 @@ def get_employee_names(request):
         return JsonResponse({'results': []})
 
 def upload_to_azure_blob(file, filename):
-    print('Intentando subir archivo a Azure Blob Storage...')
+    logger.info('Intentando subir archivo a Azure Blob Storage...')
     try:
         connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         container_name = os.getenv("AZURE_CONTAINER_NAME")
 
         if not connection_string or not container_name:
-            print("Error: La cadena de conexión o el nombre del contenedor no están configurados.")
+            logger.error("Azure Storage no configurado correctamente (connection_string/container)")
             return None
 
         # Sanitizar el nombre del archivo para evitar problemas con caracteres especiales
@@ -95,13 +95,11 @@ def upload_to_azure_blob(file, filename):
             content_settings = ContentSettings(content_type=file.content_type)
             
         blob_client.upload_blob(file, overwrite=True, content_settings=content_settings)
-        print(f"Archivo subido a: {blob_client.url}")
+        logger.info("Archivo subido a Azure Blob Storage")
 
         return blob_client.url
     except Exception as e:
-        print(f"Error subiendo el archivo a Azure Blob Storage: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Error subiendo archivo a Azure Blob Storage", exc_info=True)
         return None
 
 def delete_blob_from_azure(blob_url):
@@ -109,7 +107,7 @@ def delete_blob_from_azure(blob_url):
         # Obtener la cadena de conexión desde las variables de entorno
         connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         if not connection_string:
-            print("Error: No se encontró la cadena de conexión de Azure")
+            logger.error("Azure Storage connection string no encontrado")
             return False
             
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
@@ -123,11 +121,11 @@ def delete_blob_from_azure(blob_url):
             path_parts = parsed_url.path.lstrip('/').split('/', 1)
         else:
             # Podría ser una URL personalizada o CDN
-            print(f"Formato de URL no reconocido: {blob_url}")
+            logger.error("Formato de URL no reconocido para Azure Blob URL", extra={'blob_url': blob_url})
             return False
         
         if len(path_parts) < 2:
-            print(f"Error: URL mal formateada: {blob_url}")
+            logger.error("URL de blob malformada", extra={'blob_url': blob_url})
             return False
             
         container_name = path_parts[0]
@@ -140,7 +138,7 @@ def delete_blob_from_azure(blob_url):
             container_client = blob_service_client.get_container_client(container_name)
             container_client.get_container_properties()
         except Exception as e:
-            print(f"Error: El contenedor {container_name} no existe: {e}")
+            logger.error("Contenedor de Azure no existe", extra={'container_name': container_name})
             return False
         
         # Obtener el cliente del blob
@@ -150,17 +148,16 @@ def delete_blob_from_azure(blob_url):
         try:
             blob_client.get_blob_properties()
         except Exception as e:
-            print(f"Error: El blob {blob_name} no existe: {e}")
+            logger.error("Blob no existe en Azure", extra={'blob_name': blob_name})
             return False
         
         # Eliminar el blob
         blob_client.delete_blob()
         
-        print("Blob eliminado exitosamente.")
+        logger.info("Blob eliminado exitosamente")
         return True
     except Exception as e:
-        print(f"Error eliminando el blob de Azure Blob Storage: {e}")
-        traceback.print_exc()
+        logger.error("Error eliminando blob de Azure", exc_info=True)
         return False
         
 # Vista para eliminar imagenes
@@ -186,9 +183,8 @@ def delete_image(request, image_id):
         else:
             messages.error(request, "Solicitud inválida.")
     except Exception as e:
-        messages.error(request, f"Hubo un error al eliminar la imagen: {str(e)}")
-        print(f"Error en delete_image: {e}")
-        traceback.print_exc()
+        messages.error(request, f"Hubo un error al eliminar la imagen")
+        logger.error("Error en delete_image", exc_info=True)
 
     return redirect('view_assistants', id=capacitacion_id)
 
@@ -258,8 +254,7 @@ def get_employee_id_by_name(name):
 
 # Función para enviar datos a Odoo
 def send_to_odoo(data):
-    logger.debug(f"Intentando enviar datos a Odoo: {data}")
-    print(f"Intentando enviar datos a Odoo: {data}")
+    logger.debug("Intentando enviar datos a Odoo")
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
@@ -278,7 +273,7 @@ def send_to_odoo(data):
                                               'hr.employee', 'search_read',
                                               [[['name', '=', data['document_id']]]],
                                               {'fields': ['id', 'name'], 'limit': 1})
-            print('DATOS: ', employee_data)
+            logger.debug("Respuesta de busqueda de empleado recibida")
 
             if not employee_data:
                 raise ValueError(f"Empleado con documento '{data['document_id']}' no encontrado en Odoo")
@@ -354,34 +349,34 @@ def create_capacitacion(request, *, context):
             if capacitacion.tipo in ['Reunión', 'Capacitación']:
                 # Procesar archivo PDF si se envió
                 if 'archivo_pdf' in request.FILES:
-                    print("Se detectó un archivo PDF en request.FILES")  # Debugging
+                    logger.info("Archivo PDF detectado para carga en Azure")
                     pdf_file = request.FILES['archivo_pdf']
 
                     if pdf_file.content_type == 'application/pdf':
                         filename = f"pdf_evento_{capacitacion.id}_{pdf_file.name}"
-                        print(f"Subiendo archivo PDF: {filename}")  # Debugging
+                        logger.info("Subiendo archivo PDF a Azure", extra={'filename': filename})
 
                         pdf_url = upload_to_azure_blob(pdf_file, filename)
 
                         if pdf_url:
-                            print(f"PDF subido correctamente: {pdf_url}")  # Debugging
+                            logger.info("PDF subido correctamente a Azure")
                             capacitacion.pdf_url = pdf_url
                             capacitacion.save()
                         else:
-                            print("Error: pdf_url es None")  # Debugging
+                            logger.error("Fallo la carga de PDF a Azure: url vacia")
                             messages.error(request, "Error al subir el archivo PDF a Azure.")
                     else:
-                        print(f"Archivo inválido: {pdf_file.content_type}")  # Debugging
+                        logger.warning("Tipo de archivo inválido para PDF", extra={'content_type': pdf_file.content_type})
                         messages.error(request, "El archivo debe ser un PDF.")
                 else:
-                    print("No se detectó archivo PDF en request.FILES")  # Debugging
+                    logger.debug("No se adjunto archivo PDF en la solicitud")
 
             employee_ids = request.POST.get('employee_names', '').split(',')
-            print(f"Empleados seleccionados (POST): {employee_ids}") 
+            logger.debug("Ids de empleados seleccionados recibidos en POST") 
             
                         
             if employee_ids:
-                print("Llamando a send_assistants_to_odoo...")  # Confirmar si entra aquí
+                logger.info("Enviando asistentes preseleccionados a Odoo")
                 send_assistants_to_odoo(capacitacion.id, employee_ids)
                      
             qr_url = f"{apphost}/learn/register/?id={capacitacion.id}"
@@ -404,7 +399,6 @@ def create_capacitacion(request, *, context):
             capacitacion.save()
             
             userdata = context['user']
-            print('User Data: ', userdata)
             username = userdata.get('name')
             email = userdata.get('preferred_username')
             
@@ -417,13 +411,10 @@ def create_capacitacion(request, *, context):
             #Create Log
             registrar_log_interno(username, observacion, tipo, id)
             
-            print('Verificación de Identidad:' + capacitacion.verificacion_identidad)
-            
-            print('Verificación de Identidad:' + capacitacion.verificacion_identidad)
+            logger.info("Capacitacion creada", extra={'capacitacion_id': capacitacion.id, 'estado': capacitacion.estado})
             return HttpResponseRedirect(reverse('details_view', args=[capacitacion.id]))
         else:
-            print("El formulario No es válido")
-            print(form.errors)
+            logger.warning("Formulario de creacion de capacitacion invalido", extra={'errors': form.errors.as_json()})
     else:
         form = CtrlCapacitacionesForm()
     return render(request, 'crear_capacitacion.html', {'form': form})
@@ -432,28 +423,74 @@ def create_capacitacion(request, *, context):
 @settings.AUTH.login_required()
 def duplicate_event(request, id, *, context):
     original = get_object_or_404(CtrlCapacitaciones, id=id)
+    if request.method == 'POST':
+        logger.info("Solicitud POST para duplicar capacitacion", extra={'original_id': original.id})
+        # Forzar estado ACTIVA (el campo puede venir deshabilitado y no enviarse)
+        post_data = request.POST.copy()
+        post_data['estado'] = 'ACTIVA'
+        form = CtrlCapacitacionesForm(post_data, request.FILES)
+        if form.is_valid():
+            try:
+                nueva = form.save(commit=False)
+                # Forzar estado ACTIVA en duplicacion
+                nueva.estado = 'ACTIVA'
+                # Asegurar verificacion_identidad desde el form (evitar None)
+                nueva.verificacion_identidad = form.cleaned_data.get('verificacion_identidad', getattr(nueva, 'verificacion_identidad', 'NO'))
+                nueva.save()
 
-    initial_data = {
-        'fecha': original.fecha,
-        'tipo': original.tipo,
-        'privacidad': original.privacidad,
-        'tema': original.tema,
-        'responsable': original.responsable,
-        'moderador': original.moderador,
-        'hora_inicial': original.hora_inicial,
-        'hora_final': original.hora_final,
-        'total_invitados': original.total_invitados,
-        'area_encargada': original.area_encargada,
-        'modalidad': original.modalidad,
-        'objetivo': original.objetivo,
-        'estado': 'ACTIVA',  # Forzar como activa
-        'verificacion_identidad': original.verificacion_identidad,
-        'url_reunion': original.url_reunion,
-        'ubicacion': original.ubicacion,
-        'temas': original.temas,
-    }
+                # Generar QR para la nueva capacitacion
+                qr_url = f"{apphost}/learn/register/?id={nueva.id}"
+                qr = qrcode.QRCode(
+                    version=1,
+                    error_correction=qrcode.constants.ERROR_CORRECT_L,
+                    box_size=10,
+                    border=4,
+                )
+                qr.add_data(qr_url)
+                qr.make(fit=True)
+                img = qr.make_image(fill='black', back_color='white')
+                buffer = BytesIO()
+                img.save(buffer, format='PNG')
+                buffer.seek(0)
+                nueva.qr_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                nueva.save()
 
-    form = CtrlCapacitacionesForm(initial=initial_data)
+                # Log de auditoria interno
+                userdata = context['user']
+                email = userdata.get('preferred_username')
+                registrar_log_interno(email, f"Duplicacion de capacitacion: {original.id} -> {nueva.id}", "Creación", nueva.id)
+
+                messages.success(request, "La capacitación fue duplicada exitosamente.")
+                logger.info("Capacitacion duplicada exitosamente", extra={'original_id': original.id, 'nueva_id': nueva.id})
+                return HttpResponseRedirect(reverse('details_view', args=[nueva.id]))
+            except Exception:
+                logger.error("Error creando la capacitacion duplicada", exc_info=True, extra={'original_id': original.id})
+                messages.error(request, "No fue posible crear la copia de la capacitación.")
+        else:
+            logger.warning("Formulario invalido al duplicar capacitacion", extra={'original_id': original.id, 'errors': form.errors.as_json()})
+            messages.error(request, "Datos inválidos al duplicar la capacitación. Verifique los campos requeridos.")
+    else:
+        initial_data = {
+            'fecha': original.fecha,
+            'tipo': original.tipo,
+            'privacidad': original.privacidad,
+            'tema': original.tema,
+            'responsable': original.responsable,
+            'moderador': original.moderador,
+            'hora_inicial': original.hora_inicial,
+            'hora_final': original.hora_final,
+            'total_invitados': original.total_invitados,
+            'area_encargada': original.area_encargada,
+            'modalidad': original.modalidad,
+            'objetivo': original.objetivo,
+            'estado': 'ACTIVA',  # Forzar como activa
+            'verificacion_identidad': original.verificacion_identidad,
+            'url_reunion': original.url_reunion,
+            'ubicacion': original.ubicacion,
+            'temas': original.temas,
+        }
+
+        form = CtrlCapacitacionesForm(initial=initial_data)
 
     return render(request, 'crear_capacitacion.html', {'form': form})
 
@@ -534,7 +571,7 @@ def registration_view(request, id=None):
                                 # Verificar si se requiere contraseña o no
                 if capacitacion.verificacion_identidad == "NO" or (capacitacion.verificacion_identidad == "SI" and password_validation(document_id, form.cleaned_data['hashed_password'])):
                     
-                    print('Contraseña correcta')
+                    logger.info('Validacion de identidad correcta')
                     try:
                         # Verifica la privacidad del evento
                         if capacitacion.privacidad == "CERRADA": #priv
@@ -585,7 +622,7 @@ def registration_view(request, id=None):
                                         }
                                         
                                         models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'write', [[record_id], update_data])
-                                        print(f"Asistencia actualizada a 'Sí' para el empleado con documento {document_id}.")
+                                        logger.info("Asistencia actualizada a 'Si' para empleado")
                                         
                                         employee_name = models.execute_kw(database, uid, password,
                                             'hr.employee', 'search_read',
@@ -652,7 +689,7 @@ def registration_view(request, id=None):
                                         }
 
                                         models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'write', [[record_id], update_data])
-                                        print(f"Asistencia actualizada a 'Sí' para el empleado con documento {document_id}.")
+                                        logger.info("Asistencia actualizada a 'Si' para empleado")
 
                                         employee_name = models.execute_kw(database, uid, password,
                                             'hr.employee', 'search_read',
@@ -695,8 +732,7 @@ def registration_view(request, id=None):
 
 
         else:
-            print("El formulario no es válido")
-            print(form.errors)
+            logger.warning("Formulario de registro invalido", extra={'errors': form.errors.as_json()})
 
     context = {
         'form': form,
@@ -836,11 +872,11 @@ def edit_capacitacion(request, id, *, context):
             form.save()
             # Obtener los empleados seleccionados del POST
             employee_names = request.POST.get('employee_names', '').split(',')
-            print(f"Asistentes seleccionados en edición: {employee_names}")  # Verificar si los datos llegan aquí
+            logger.debug("Asistentes seleccionados en edicion recibidos")
 
             # Llamar a send_assistants_to_odoo después de guardar la capacitación
             if employee_names:
-                print("Enviando asistentes a Odoo desde la edición...")
+                logger.info("Enviando asistentes a Odoo desde edicion")
                 send_assistants_to_odoo(capacitacion.id, employee_names)
             
             #Log Data
@@ -982,7 +1018,7 @@ def view_assistants(request, id, *, context):
 
                     filename = f"capacitacion_{capacitacion.id}_{image_file.name}"
                     image_url = upload_to_azure_blob(image_file, filename)
-                    print('IMAGE-URL: ', image_url)
+                    logger.debug('Imagen cargada a Azure para capacitacion', extra={'capacitacion_id': capacitacion.id})
                     if image_url:
                         EventImage.objects.create(capacitacion=capacitacion, image_url=image_url)
                         messages.success(request, f"La imagen {image_file.name} ha sido cargada exitosamente.")
@@ -1239,7 +1275,7 @@ def generar_pdf(request, id):
 
             canvas.drawImage(membrete_img, 0, 0, width=612, height=792, preserveAspectRatio=True)
         except Exception as e:
-            print(f"Error cargando membrete: {e}")
+            logger.error("Error cargando membrete para PDF", exc_info=True)
 
     # 12. Generar PDF con membrete en todas las páginas
     doc.build(elements, onFirstPage=add_membrete, onLaterPages=add_membrete)
@@ -1300,7 +1336,7 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
         
         
        # Loop sobre cada empleado seleccionado
-        print('ENVIANDO ASISTENTES A ODOO')
+        logger.info('Enviando asistentes a Odoo')
         for name in employee_ids:
             employee_data = models.execute_kw(database, uid, password,
                                               'hr.employee', 'search_read',
@@ -1330,7 +1366,6 @@ def send_assistants_to_odoo(capacitacion_id, employee_ids):
                 models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'create', [odoo_data])
 
         logger.info(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}")
-        print(f"Asistentes enviados a Odoo para la capacitación {capacitacion_id}") 
     except Exception as e:
         logger.error('Failed to send assistants to Odoo', exc_info=True)
 
@@ -1373,5 +1408,5 @@ def get_asistentes_odoo(capacitacion_id):
         return asistentes_data
 
     except Exception as e:
-        print("Error obteniendo asistentes de Odoo:", e)
+        logger.error("Error obteniendo asistentes de Odoo", exc_info=True)
         return []
