@@ -423,6 +423,7 @@ def create_capacitacion(request, *, context):
 @settings.AUTH.login_required()
 def duplicate_event(request, id, *, context):
     original = get_object_or_404(CtrlCapacitaciones, id=id)
+    
     if request.method == 'POST':
         logger.info("Solicitud POST para duplicar capacitacion", extra={'original_id': original.id})
         # Forzar estado ACTIVA (el campo puede venir deshabilitado y no enviarse)
