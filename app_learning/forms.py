@@ -102,6 +102,10 @@ class CtrlCapacitacionesForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         areas = fetch_departametos_from_odoo()
         areas_choices = [(area_encargada, area_encargada) for area_encargada in areas]
+        # Asegurar que el valor actual (POST o initial) esté dentro de las opciones
+        current_area = self.data.get('area_encargada') or self.initial.get('area_encargada')
+        if current_area and (current_area, current_area) not in areas_choices:
+            areas_choices.append((current_area, current_area))
         self.fields['area_encargada'].choices = areas_choices
         
         #Estado 'ACTIVA' al crear capacitación:
