@@ -107,7 +107,9 @@ def empleados_conduccion_list(request):
             'identification_id',           # nombre
             'x_studio_codigo',             # código tripulante
             'x_studio_estado_empleado',    # estado
-            'job_title'                    # título del puesto
+            'job_title',
+            'x_studio_zona_proyecto_metro',# título del puesto
+            'x_studio_formacion_conduccion'
         ],
         # prueba primero con False; si falla, cámbialo a 0
         limit=False  
@@ -124,6 +126,8 @@ def empleados_conduccion_list(request):
             'Codigo tripulante': emp.get('x_studio_codigo'),
             'estado':   emp.get('x_studio_estado_empleado'),
             'job_title': emp.get('job_title'),
+            'zona': emp.get('x_studio_zona_proyecto_metro'),
+            'formacion_conduccion': emp.get('x_studio_formacion_conduccion'),
         }
         for emp in empleados
     ]
@@ -160,7 +164,9 @@ def empleado_conduccion_por_codigo(request):
             'identification_id',           # nombre
             'x_studio_codigo',             # código tripulante
             'x_studio_estado_empleado',    # estado
-            'job_title'                    # título del puesto
+            'job_title',
+            'x_studio_zona_proyecto_metro',# título del puesto
+            'x_studio_formacion_conduccion'# título del puesto
         ],
         limit=False  # o limit=0 si tu wrapper lo prefiere
     )
@@ -175,6 +181,9 @@ def empleado_conduccion_por_codigo(request):
             'Codigo tripulante':   emp.get('x_studio_codigo'),
             'estado':              emp.get('x_studio_estado_empleado'),
             'job_title':           emp.get('job_title'),
+            'zona': emp.get('x_studio_zona_proyecto_metro'),
+            'formacion_conduccion': emp.get('x_studio_formacion_conduccion'),
+
         }
         for emp in empleados
     ]

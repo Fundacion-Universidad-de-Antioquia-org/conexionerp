@@ -1,39 +1,1208 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{% if form.instance.pk %}Editar Evento{% else %}Crear Evento{% endif %}{% endblock %}
 
-{% block content %}
-<section class="create-capacitation">
+{% block extra_head %}
+<link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/learn-dark.css" />
+<style>
+/* Versión con colores invertidos - azul para card, gris fuerte para elementos */
+body.learn-create {
+  background: linear-gradient(135deg, #0a0f1c 0%, #0f172a 100%) fixed !important;
+  color: #f8fafc !important;
+  min-height: 100vh !important;
+}
 
-  <div class="header-section d-flex align-items-center">
-    <a href="{% url 'home' %}"><button type="button" class="btn btn-success-f"><i class="bi bi-arrow-left"></i></button></a>
-    <h3 class="subtitle">{% if form.instance.pk %}Editar Evento{% else %}Crear Evento{% endif %}</h3>
+/* Contenedor principal - azul */
+.form-container {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border: 1px solid #475569 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.2) !important;
+  padding: 3rem !important;
+  margin: 2rem auto !important;
+  max-width: 1200px !important;
+  width: 90% !important;
+  position: relative !important;
+}
+
+.form-container::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 4px !important;
+  background: linear-gradient(90deg, #059669, #34d399) !important;
+  border-radius: 16px 16px 0 0 !important;
+}
+
+/* Header integrado */
+.header-section {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 0 2rem 0 !important;
+  margin: 0 !important;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3) !important;
+}
+
+.header-section h2 {
+  color: #f8fafc !important;
+  margin: 0 !important;
+  font-size: 1.8rem !important;
+  font-weight: 600 !important;
+}
+
+/* Grupos de campos - gris fuerte sin hover */
+.field-group {
+  background: #475569 !important;
+  border: 1px solid #64748b !important;
+  border-radius: 12px !important;
+  padding: 2rem !important;
+  margin: 1.5rem 0 !important;
+  transition: none !important;
+}
+
+/* Espaciado extra para la última sección (Configuración) */
+.field-group:last-of-type {
+  margin-bottom: 3rem !important;
+}
+
+.field-group:last-of-type .form-group {
+  margin-bottom: 2.5rem !important;
+}
+
+/* Sin hover en los cards para evitar saturación */
+.field-group:hover {
+  background: #475569 !important;
+  border-color: #64748b !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.field-group h3 {
+  color: #059669 !important;
+  border-bottom: 2px solid rgba(5, 150, 105, 0.3) !important;
+  padding-bottom: 0.75rem !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+}
+
+/* Campos de entrada - gris más fuerte */
+.form-control, .form-select {
+  background: #64748b !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 8px !important;
+  padding: 0.875rem 1rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.form-control:hover, .form-select:hover {
+  border-color: #059669 !important;
+  background: #94a3b8 !important;
+}
+
+.form-control:focus, .form-select:focus {
+  background: #94a3b8 !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.15) !important;
+  transform: translateY(-1px) !important;
+}
+
+.form-control::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 0.8 !important;
+}
+
+.form-label {
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.text-muted {
+  color: #cbd5e1 !important;
+  font-size: 0.875rem !important;
+}
+
+/* Botones - gris fuerte */
+.btn-secondary {
+  background: #64748b !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1.5rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-secondary:hover {
+  background: #94a3b8 !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #059669, #34d399) !important;
+  border: 0 !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  padding: 0.875rem 2rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #047857, #059669) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
+}
+
+/* Iconos */
+.form-icon {
+  color: #059669 !important;
+}
+
+/* Eliminar cualquier fondo blanco del formulario */
+form {
+  background: transparent !important;
+}
+
+.form-create-cap {
+  background: transparent !important;
+}
+
+/* Estilos modernos y sofisticados para campos del formulario */
+.form-group {
+  margin-bottom: 2rem !important;
+  position: relative !important;
+}
+
+/* Forzar estilos Bootstrap en todos los inputs */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="number"], 
+input[type="date"], 
+input[type="time"], 
+textarea, 
+select {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.25rem !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1) !important;
+  position: relative !important;
+  backdrop-filter: blur(10px) !important;
+  display: block !important;
+  font-family: inherit !important;
+  line-height: 1.5 !important;
+}
+
+/* Hover y focus para todos los inputs */
+input[type="text"]:hover, 
+input[type="email"]:hover, 
+input[type="password"]:hover, 
+input[type="number"]:hover, 
+input[type="date"]:hover, 
+input[type="time"]:hover, 
+textarea:hover, 
+select:hover {
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255,255,255,.2) !important;
+}
+
+input[type="text"]:focus, 
+input[type="email"]:focus, 
+input[type="password"]:focus, 
+input[type="number"]:focus, 
+input[type="date"]:focus, 
+input[type="time"]:focus, 
+textarea:focus, 
+select:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  transform: translateY(-3px) !important;
+  outline: none !important;
+}
+
+/* Placeholder para todos los inputs */
+input::placeholder, 
+textarea::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 0.9 !important;
+  font-style: italic !important;
+}
+
+.form-label {
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.75rem !important;
+  display: block !important;
+  font-size: 1rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  position: relative !important;
+}
+
+.form-label::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -4px !important;
+  left: 0 !important;
+  width: 30px !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, #059669, #34d399) !important;
+  border-radius: 1px !important;
+}
+
+.form-control, .form-select {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.25rem !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1) !important;
+  position: relative !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.form-control:hover, .form-select:hover {
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255,255,255,.2) !important;
+}
+
+.form-control:focus, .form-select:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  transform: translateY(-3px) !important;
+  outline: none !important;
+}
+
+.form-control::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 0.9 !important;
+  font-style: italic !important;
+}
+
+/* Efecto adicional para inputs más definidos */
+.form-control::before, .form-select::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%) !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.form-control, .form-select {
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.text-muted {
+  color: #cbd5e1 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.5rem !important;
+  font-style: italic !important;
+  opacity: 0.8 !important;
+}
+
+/* Textarea específico con estilos premium */
+textarea.form-control {
+  min-height: 120px !important;
+  resize: vertical !important;
+  line-height: 1.6 !important;
+  font-family: inherit !important;
+}
+
+/* Checkbox y radio con diseño de dos columnas */
+.form-check {
+  margin: 0.75rem 0 !important;
+  padding: 0.75rem 1rem !important;
+  background: rgba(51, 65, 85, 0.2) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(71, 85, 105, 0.2) !important;
+  transition: none !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  gap: 0.75rem !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.form-check:hover {
+  background: rgba(51, 65, 85, 0.2) !important;
+  border-color: rgba(71, 85, 105, 0.2) !important;
+}
+
+.form-check-input {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  border-radius: 4px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,.1) !important;
+  margin: 0 !important;
+  justify-self: start !important;
+}
+
+.form-check-input:checked {
+  background: linear-gradient(135deg, #059669 0%, #34d399 100%) !important;
+  border-color: #059669 !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25) !important;
+}
+
+.form-check-label {
+  color: #f8fafc !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  justify-self: start !important;
+  width: 100% !important;
+}
+
+/* Select con diseño premium dark */
+.form-select {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.25rem !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1) !important;
+  position: relative !important;
+  backdrop-filter: blur(10px) !important;
+  display: block !important;
+  font-family: inherit !important;
+  line-height: 1.5 !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cbd5e1' stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 1rem center !important;
+  background-size: 18px 14px !important;
+  padding-right: 3rem !important;
+  cursor: pointer !important;
+}
+
+.form-select:hover {
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255,255,255,.2) !important;
+}
+
+.form-select:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  transform: translateY(-3px) !important;
+  outline: none !important;
+}
+
+/* Opciones del select también dark */
+.form-select option {
+  background: #475569 !important;
+  color: #f8fafc !important;
+  padding: 0.75rem !important;
+  font-size: 1rem !important;
+  border: none !important;
+}
+
+/* Estilos específicos para el dropdown del select */
+.form-select:focus option {
+  background: #64748b !important;
+  color: #f8fafc !important;
+}
+
+/* Asegurar que las opciones se vean dark en todos los navegadores */
+select option {
+  background: #475569 !important;
+  color: #f8fafc !important;
+  padding: 0.75rem !important;
+  font-size: 1rem !important;
+}
+
+select option:hover {
+  background: #64748b !important;
+  color: #f8fafc !important;
+}
+
+select option:checked {
+  background: #059669 !important;
+  color: #f8fafc !important;
+}
+
+/* Input groups estilos movidos a learn-create.css */
+
+/* Estados de validación */
+.is-invalid {
+  border-color: #ef4444 !important;
+}
+
+.is-valid {
+  border-color: #059669 !important;
+}
+
+.invalid-feedback {
+  color: #fca5a5 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
+}
+
+.valid-feedback {
+  color: #34d399 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
+}
+
+/* Asegurar que todos los elementos del formulario tengan estilos */
+.form-container input,
+.form-container textarea,
+.form-container select {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.25rem !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  font-size: 1rem !important;
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1) !important;
+  position: relative !important;
+  backdrop-filter: blur(10px) !important;
+  display: block !important;
+  font-family: inherit !important;
+  line-height: 1.5 !important;
+}
+
+/* Asegurar que todos los textos sean visibles (no negros) */
+.form-container * {
+  color: #f8fafc !important;
+}
+
+.form-container h1,
+.form-container h2,
+.form-container h3,
+.form-container h4,
+.form-container h5,
+.form-container h6 {
+  color: #f8fafc !important;
+}
+
+.form-container p,
+.form-container span,
+.form-container div,
+.form-container label {
+  color: #f8fafc !important;
+}
+
+.form-container small,
+.form-container .text-muted {
+  color: #cbd5e1 !important;
+}
+
+.form-container input:hover,
+.form-container textarea:hover,
+.form-container select:hover {
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255,255,255,.2) !important;
+}
+
+.form-container input:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  transform: translateY(-3px) !important;
+  outline: none !important;
+}
+
+/* Forzar que no haya texto negro en ningún lugar */
+* {
+  color: #f8fafc !important;
+}
+
+body.learn-create * {
+  color: #f8fafc !important;
+}
+
+/* Excepciones para elementos específicos */
+.form-container .text-muted,
+.form-container small,
+.form-container .form-text {
+  color: #cbd5e1 !important;
+}
+
+.form-container .form-label {
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+}
+
+/* Asegurar que los placeholders sean visibles */
+input::placeholder,
+textarea::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 0.9 !important;
+}
+
+/* Estilos adicionales para el dropdown del select */
+.form-select option:first-child {
+  background: #334155 !important;
+  color: #94a3b8 !important;
+  font-style: italic !important;
+}
+
+/* Estilos para el contenedor del dropdown */
+.form-select:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  transform: translateY(-3px) !important;
+  outline: none !important;
+}
+
+/* Forzar estilos dark en las opciones */
+.form-container select option {
+  background: #475569 !important;
+  color: #f8fafc !important;
+  padding: 0.75rem !important;
+  font-size: 1rem !important;
+  border: none !important;
+}
+
+.form-container select option:hover {
+  background: #64748b !important;
+  color: #f8fafc !important;
+}
+
+.form-container select option:checked {
+  background: #059669 !important;
+  color: #f8fafc !important;
+}
+
+/* Estilos de botón e input-group centralizados en learn-create.css */
+
+/* Modal con tema dark */
+.modal-content {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border: 1px solid #475569 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4) !important;
+}
+
+/* Lista de empleados seleccionados en el modal */
+#selected-employees-list {
+  background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+  border: 1px solid #64748b !important;
+  border-radius: 12px !important;
+  padding: 1rem !important;
+  margin: 1rem 0 !important;
+  min-height: 100px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+}
+
+.selected-employee {
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%) !important;
+  border: 1px solid #94a3b8 !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1rem !important;
+  margin: 0.5rem 0 !important;
+  color: #f8fafc !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.selected-employee:hover {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3) !important;
+}
+
+.selected-employee .btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  border: 0 !important;
+  color: #fff !important;
+  padding: 0.375rem 0.75rem !important;
+  border-radius: 6px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+}
+
+.selected-employee .btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Sugerencias de búsqueda */
+#sugerencias {
+  background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+  border: 1px solid #64748b !important;
+  border-radius: 8px !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  margin-top: 0.5rem !important;
+}
+
+.sugerencia-item {
+  background: transparent !important;
+  border: none !important;
+  color: #f8fafc !important;
+  padding: 0.75rem 1rem !important;
+  width: 100% !important;
+  text-align: left !important;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.3) !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.sugerencia-item:hover {
+  background: rgba(5, 150, 105, 0.15) !important;
+  color: #34d399 !important;
+}
+
+.sugerencia-item:last-child {
+  border-bottom: none !important;
+}
+
+/* Input de archivo en el modal */
+.modal-footer #asistentes-file {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.modal-footer #asistentes-file:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.15) !important;
+}
+
+.modal-footer #asistentes-file::file-selector-button {
+  background: linear-gradient(135deg, #475569, #64748b) !important;
+  border: 1px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 6px !important;
+  margin-right: 0.5rem !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.modal-footer #asistentes-file::file-selector-button:hover {
+  background: linear-gradient(135deg, #64748b, #475569) !important;
+  border-color: #059669 !important;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+  border-bottom: 1px solid #64748b !important;
+  border-radius: 16px 16px 0 0 !important;
+  padding: 1.5rem 2rem !important;
+}
+
+.modal-title {
+  color: #f8fafc !important;
+  font-weight: 600 !important;
+  font-size: 1.25rem !important;
+}
+
+.modal-body {
+  background: transparent !important;
+  padding: 2rem !important;
+  color: #f8fafc !important;
+}
+
+.modal-footer {
+  background: rgba(51, 65, 85, 0.5) !important;
+  border-top: 1px solid #64748b !important;
+  border-radius: 0 0 16px 16px !important;
+  padding: 1.5rem 2rem !important;
+}
+
+/* Botón cerrar del modal */
+.btn-close {
+  filter: invert(1) !important;
+  opacity: 0.8 !important;
+}
+
+.btn-close:hover {
+  opacity: 1 !important;
+}
+
+/* Labels y texto del modal */
+.modal-body label {
+  color: #f8fafc !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.modal-body .form-control {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 8px !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.modal-body .form-control:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.15) !important;
+}
+
+.modal-body .form-control::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 0.8 !important;
+}
+
+/* Botones dentro del modal */
+.modal-footer .btn-success-f,
+.modal-body .btn-success-f {
+  background: linear-gradient(135deg, #059669, #34d399) !important;
+  border: 0 !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
+}
+
+.modal-footer .btn-success-f:hover,
+.modal-body .btn-success-f:hover {
+  background: linear-gradient(135deg, #047857, #059669) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
+  color: #fff !important;
+}
+
+/* Botón secundario del modal */
+.modal-footer .btn-secondary {
+  background: #64748b !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.modal-footer .btn-secondary:hover {
+  background: #94a3b8 !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Select con búsqueda */
+.searchable-select-container {
+  position: relative !important;
+  width: 100% !important;
+}
+
+#area-search {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  border: 2px solid #94a3b8 !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 1rem 1.25rem !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  width: 100% !important;
+}
+
+#area-search:focus {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%) !important;
+  border-color: #059669 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  transform: translateY(-3px) !important;
+  outline: none !important;
+}
+
+#area-search::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 0.9 !important;
+  font-style: italic !important;
+}
+
+.searchable-dropdown {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border: 2px solid #475569 !important;
+  border-top: none !important;
+  border-radius: 0 0 12px 12px !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  z-index: 1000 !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4) !important;
+}
+
+.searchable-dropdown-item {
+  padding: 0.75rem 1.25rem !important;
+  color: #f8fafc !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3) !important;
+}
+
+.searchable-dropdown-item:hover {
+  background: rgba(5, 150, 105, 0.15) !important;
+  color: #f8fafc !important;
+}
+
+.searchable-dropdown-item:last-child {
+  border-bottom: none !important;
+}
+
+.searchable-dropdown-item.selected {
+  background: rgba(5, 150, 105, 0.25) !important;
+  color: #34d399 !important;
+  font-weight: 600 !important;
+}
+
+/* Espaciado adicional para botones */
+.form-create-item {
+  margin-top: 2rem !important;
+  padding-top: 1.5rem !important;
+  border-top: 1px solid rgba(71, 85, 105, 0.3) !important;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .form-container {
+    width: 95% !important;
+    max-width: 1000px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-container {
+    width: 98% !important;
+    max-width: 100% !important;
+    padding: 1.5rem !important;
+    margin: 1rem auto !important;
+  }
+  
+  .header-section, .field-group {
+    padding: 1.5rem !important;
+    margin: 1rem 0 !important;
+  }
+}
+
+/* Estilos específicos para input-group y botón - temporal hasta que se actualice el CSS externo */
+body.learn-create .form-group .input-group {
+  display: flex !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 8px !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+}
+
+body.learn-create .form-group .input-group .form-control {
+  border-radius: 8px !important;
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  max-width: 120px !important;
+  min-width: 120px !important;
+  display: inline-block !important;
+  float: none !important;
+  text-align: center !important;
+  vertical-align: top !important;
+}
+
+body.learn-create .form-group .input-group .form-control:focus {
+  box-shadow: 0 0 0 0.3rem rgba(5, 150, 105, 0.25), 0 8px 30px rgba(5, 150, 105, 0.4), inset 0 1px 0 rgba(255,255,255,.3) !important;
+}
+
+body.learn-create .btn-add-asistentes {
+  background: linear-gradient(135deg, #059669, #34d399) !important;
+  border: 0 !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
+  white-space: nowrap !important;
+  flex: 1 !important;
+  display: inline-block !important;
+  float: none !important;
+  font-size: 0.9rem !important;
+  vertical-align: top !important;
+  cursor: pointer !important;
+}
+
+body.learn-create .btn-add-asistentes:hover {
+  background: linear-gradient(135deg, #047857, #059669) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
+  color: #fff !important;
+}
+
+body.learn-create .form-group .input-group .btn-add-asistentes {
+  flex-shrink: 0 !important;
+  width: auto !important;
+  min-width: fit-content !important;
+}
+
+/* Forzar que el input-group funcione correctamente - máxima especificidad */
+body.learn-create .form-group .input-group {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+body.learn-create .form-group .input-group .form-control,
+body.learn-create .form-group .input-group .btn-add-asistentes {
+  display: inline-block !important;
+  float: none !important;
+  vertical-align: top !important;
+  box-sizing: border-box !important;
+}
+
+/* Estilos adicionales para asegurar el funcionamiento */
+body.learn-create .input-group {
+  position: relative !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+
+body.learn-create .input-group > .form-control {
+  position: relative !important;
+  flex: 0 0 120px !important;
+  width: 120px !important;
+  min-width: 0 !important;
+}
+
+body.learn-create .input-group > .btn-add-asistentes {
+  position: relative !important;
+  z-index: 2 !important;
+  flex: 1 !important;
+}
+</style>
+{% endblock %}
+
+{% block body_classes %}learn-create{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="header-section d-flex align-items-center mb-4">
+      <a href="{% url 'home' %}" class="me-3">
+        <button type="button" class="btn btn-secondary">
+          <i class="bi bi-arrow-left me-2"></i>Volver
+        </button>
+      </a>
+      <h2 class="mb-0">
+        <i class="bi bi-calendar-plus me-2 form-icon"></i>
+        {% if form.instance.pk %}Editar Evento{% else %}Crear Nuevo Evento{% endif %}
+      </h2>
   </div>
   
-  <form id="createCapForm" class="form-create-cap" method="post" enctype="multipart/form-data" onsubmit="showSpinner();">
+    <form id="createCapForm" method="post" enctype="multipart/form-data" onsubmit="showSpinner();">
     {% csrf_token %}
-    <div class="form-create-item-s">{{ form.agregar_fin.label_tag }} {{ form.agregar_fin }}</div>
-    <div class="form-create-item">{{ form.fecha.label_tag }} {{ form.fecha }}</div>
-    <div id="grupo-fecha-fin"  class="form-create-item" style="display:none;">
-      {{ form.fecha_fin.label_tag }} {{ form.fecha_fin }}
+    
+    <!-- Información básica del evento -->
+    <div class="field-group">
+      <h3><i class="bi bi-info-circle me-2"></i>Información Básica</h3>
+      
+      <div class="form-group">
+        <label class="form-label">{{ form.tema.label }}</label>
+        {{ form.tema }}
+        <small class="text-muted">Título descriptivo del evento de capacitación</small>
     </div>
-    <div class="form-create-item">{{ form.tipo.label_tag }} {{ form.tipo }}</div>
-    <div class="form-create-item">{{ form.privacidad.label_tag }} {{ form.privacidad }}</div>
-    <div class="form-create-item">{{ form.tema.label_tag }} {{ form.tema }}</div>
-    <div class="form-create-item">{{ form.responsable.label_tag }} {{ form.responsable }}</div>
-    <div class="form-create-item">{{ form.moderador.label_tag }} {{ form.moderador }}</div>
-    <div class="form-create-item">{{ form.hora_inicial.label_tag }} {{ form.hora_inicial }}</div>
-    <div class="form-create-item">{{ form.hora_final.label_tag }} {{ form.hora_final }}</div>
-    <div class="form-create-item">
-      {{ form.total_invitados.label_tag }} {{ form.total_invitados }}
-      <button type="button" class="fua-btn-outline-1" data-bs-toggle="modal" data-bs-target="#asistentesModal" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
+      
+      <div class="form-group">
+        <label class="form-label">{{ form.objetivo.label }}</label>
+        {{ form.objetivo }}
+        <small class="text-muted">Objetivo principal que se busca alcanzar</small>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">{{ form.responsable.label }}</label>
+            {{ form.responsable }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">{{ form.moderador.label }}</label>
+            {{ form.moderador }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fechas y horarios -->
+    <div class="field-group">
+      <h3><i class="bi bi-calendar-event me-2"></i>Fechas y Horarios</h3>
+      
+      <div class="form-group">
+        <div class="form-check">
+          {{ form.agregar_fin }}
+          <label class="form-check-label" for="{{ form.agregar_fin.id_for_label }}">
+            {{ form.agregar_fin.label }}
+          </label>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">{{ form.fecha.label }}</label>
+            {{ form.fecha }}
+          </div>
+        </div>
+        <div class="col-md-6" id="grupo-fecha-fin" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">{{ form.fecha_fin.label }}</label>
+            {{ form.fecha_fin }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">{{ form.hora_inicial.label }}</label>
+            {{ form.hora_inicial }}
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">{{ form.hora_final.label }}</label>
+            {{ form.hora_final }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración del evento -->
+    <div class="field-group">
+      <h3><i class="bi bi-gear me-2"></i>Configuración</h3>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">{{ form.tipo.label }}</label>
+            {{ form.tipo }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">{{ form.privacidad.label }}</label>
+            {{ form.privacidad }}
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="form-group">
+            <label class="form-label">{{ form.estado.label }}</label>
+            {{ form.estado }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">{{ form.area_encargada.label }}</label>
+        <div class="searchable-select-container">
+          <input type="text" id="area-search" class="form-control" placeholder="Buscar departamento..." autocomplete="off">
+          <select name="area_encargada" id="id_area_encargada" style="display: none !important;">
+            <option value="">Seleccione un departamento</option>
+            {% for choice in form.area_encargada.field.choices %}
+              <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+            {% endfor %}
+          </select>
+          <div id="area-dropdown" class="searchable-dropdown" style="display: none;"></div>
+        </div>
+        <small class="text-muted">Departamento o área responsable del evento</small>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">{{ form.modalidad.label }}</label>
+        {{ form.modalidad }}
+        <small class="text-muted">Selecciona la modalidad de realización del evento</small>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">{{ form.total_invitados.label }}</label>
+        <div class="input-group">
+          {{ form.total_invitados }}
+          <button type="button" class="btn-add-asistentes" data-bs-toggle="modal" data-bs-target="#asistentesModal" {% if form.instance.estado == 'CERRADA' %} disabled {% endif %}>
         <i class="bi bi-person-plus-fill"></i>
         Añadir Asistentes
       </button>
+        </div>
+        <small class="text-muted">Número total de invitados y gestión de asistentes</small>
     </div>
    
-    <div class="form-create-item">{{ form.area_encargada.label_tag }} {{ form.area_encargada }}</div>
-    <div class="form-create-item">{{ form.modalidad.label_tag }} {{ form.modalidad }}</div>
+      <div class="form-group">
+        <label class="form-label">{{ form.verificacion_identidad.label }}</label>
+        {{ form.verificacion_identidad }}
+        <small class="text-muted">Se pedirá la contraseña de la intranet a todos los asistentes</small>
+      </div>
+    </div>
   
     <div id="virtual-fields" class="virtual-f form-create-item" style="display: none;">
       {{ form.url_reunion.label_tag }} {{ form.url_reunion }}
@@ -42,19 +1211,6 @@
       {{ form.ubicacion.label_tag }} {{ form.ubicacion }}
     </div>
 
-    <div class="form-create form-create-item items">{{ form.objetivo.label_tag }} {{ form.objetivo }}</div>
-    <div class="form-create form-create-item items">{{ form.estado.label_tag }} {{ form.estado }}</div>
-
-    {% if form.instance.pk %}
-      <div class="form-create-item">
-        <label for="id_verificacion_identidad">Verificación de identidad (se pedirá la contraseña de la intranet a todos los asistentes):</label>
-        <select name="verificacion_identidad" id="id_verificacion_identidad" disabled>
-          <option value="{{ form.instance.verificacion_identidad }}" selected>{{ form.instance.verificacion_identidad }}</option>
-        </select>
-      </div>   
-    {% else %}
-      <div class="form-create form-create-item items"> {{ form.verificacion_identidad.label_tag }} {{ form.verificacion_identidad }}</div>
-    {% endif %}
 
     <div id="temas-fields" class="presencial-f form-create-item" style="display: none;">
       {{ form.temas.label_tag }} {{ form.temas }}
@@ -69,7 +1225,7 @@
       </button>
     </div> 
   </form>
-</section>
+</div>
 
 <!-- Modal para añadir asistentes -->
 <div class="modal fade" id="asistentesModal" tabindex="-1" aria-labelledby="asistentesModalLabel" aria-hidden="true">
@@ -161,7 +1317,7 @@
           
           data.results.forEach(function(employee) {
             const suggestion = document.createElement('div');
-            suggestion.classList.add('suggestion');
+            suggestion.classList.add('sugerencia-item');
             suggestion.textContent = `${employee.name} - ${employee.identification_id}`; // Mostrar nombre y identificación
             suggestion.addEventListener('click', function() {
               selectedEmployeeIds.push(employee.name);  // Añadir el ID único
@@ -212,7 +1368,7 @@ window.onload = function() {
 
             data.results.forEach(function(employee) {
               const suggestion = document.createElement('div');
-              suggestion.classList.add('suggestion');
+              suggestion.classList.add('sugerencia-item');
               suggestion.textContent = `${employee.name} - ${employee.identification_id}`;
               suggestion.addEventListener('click', function() {
                 selectedEmployeeIds.push(employee.name);  // Añadir la cédula (campo 'name')
@@ -364,6 +1520,113 @@ window.onload = function() {
     reader.readAsArrayBuffer(file);
   });
 
+  // Select con búsqueda para área encargada
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('area-search');
+    const dropdown = document.getElementById('area-dropdown');
+    const select = document.getElementById('id_area_encargada');
+    const options = Array.from(select.options).slice(1); // Excluir la opción vacía
+
+    if (!searchInput || !dropdown || !select) return;
+
+    // Mostrar dropdown al hacer focus en el input
+    searchInput.addEventListener('focus', function() {
+      if (searchInput.value.length > 0) {
+        dropdown.style.display = 'block';
+      }
+    });
+
+    // Filtrar opciones mientras se escribe
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      dropdown.innerHTML = '';
+
+      if (searchTerm.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      const filteredOptions = options.filter(option => 
+        option.textContent.toLowerCase().includes(searchTerm)
+      );
+
+      if (filteredOptions.length > 0) {
+        filteredOptions.forEach(option => {
+          const item = document.createElement('div');
+          item.className = 'searchable-dropdown-item';
+          item.textContent = option.textContent;
+          item.dataset.value = option.value;
+          
+          item.addEventListener('click', function() {
+            select.value = this.dataset.value;
+            searchInput.value = this.textContent;
+            dropdown.style.display = 'none';
+          });
+          
+          dropdown.appendChild(item);
+        });
+        dropdown.style.display = 'block';
+      } else {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    // Ocultar dropdown al hacer click fuera
+    document.addEventListener('click', function(e) {
+      if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+      }
+    });
+
+    // Manejar teclado (Enter, Escape, flechas)
+    searchInput.addEventListener('keydown', function(e) {
+      const items = dropdown.querySelectorAll('.searchable-dropdown-item');
+      const selectedItem = dropdown.querySelector('.searchable-dropdown-item.selected');
+      let currentIndex = -1;
+
+      if (selectedItem) {
+        currentIndex = Array.from(items).indexOf(selectedItem);
+      }
+
+      switch(e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (currentIndex < items.length - 1) {
+            if (selectedItem) selectedItem.classList.remove('selected');
+            items[currentIndex + 1].classList.add('selected');
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (currentIndex > 0) {
+            if (selectedItem) selectedItem.classList.remove('selected');
+            items[currentIndex - 1].classList.add('selected');
+          }
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (selectedItem) {
+            select.value = selectedItem.dataset.value;
+            searchInput.value = selectedItem.textContent;
+            dropdown.style.display = 'none';
+          }
+          break;
+        case 'Escape':
+          dropdown.style.display = 'none';
+          searchInput.blur();
+          break;
+      }
+    });
+
+    // Sincronizar con el select original si hay un valor preseleccionado
+    if (select.value) {
+      const selectedOption = select.options[select.selectedIndex];
+      if (selectedOption) {
+        searchInput.value = selectedOption.textContent;
+      }
+    }
+  });
+
 </script>
 
 <!-- estilos para mejorar la apariencia -->
@@ -424,20 +1687,20 @@ window.onload = function() {
   }
 
   .btn-success-f {
-    background-color: #36b902;
-    border-color: #36b902;
-    color: white;
-    font-weight: 500;
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: linear-gradient(135deg, #059669, #34d399) !important;
+    border: 0 !important;
+    color: #fff !important;
+    font-weight: 600 !important;
+    padding: 0.875rem 2rem !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
   }
 
   .btn-success-f:hover {
-    background-color: #2e8b57;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    background: linear-gradient(135deg, #047857, #059669) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4) !important;
   }
 
   .btn-danger {

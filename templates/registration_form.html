@@ -166,105 +166,15 @@
     </div>
   </div>
 
-      <!-- Spinner de carga con Camion -->
-      <div id="loading-spinner" style="display: none;"> <!-- Contenedor principal del spinner, oculto por defecto -->
-        <div class="spinner-container"> <!-- contenedor que centra el spinner en la pantalla -->
-          <div class="loader"> <!-- contenedor del camion -->
-            <div class="truckWrapper"> <!-- Envoltura del camion, define el area donde se mueve -->
-              <div class="truckBody"> <!-- cuerpo principal del camion -->
-                <svg>
-
-                  <!-- 'scale' aumenta el tamaño del camion, 'translate(-70, 82)' mueve el camion 82 unidades hacia abajo'-->
-                  <g transform="scale(0.88) translate(-70, 82)"> <!-- Posicionamiento del camion -->
-
-                    <path style="stroke: rgb(0, 0, 0); stroke-width: 1; transform-origin: -12.844px -30.973px; fill: rgb(94, 94, 94);" d="M -14.812 -53.947 H -10.876 A 5.168 5.168 0 0 1 -5.708 -48.779 V -13.167 A 5.168 5.168 0 0 1 -10.876 -7.999 H -12.844 A 7.136 22.974 0 0 1 -19.98 -30.973 V -48.779 A 5.168 5.168 0 0 1 -14.812 -53.947 Z" bx:shape="rect -19.98 -53.947 14.272 45.948 5.168 5.168 5.168 27.54 1@a13bd6dc" transform="matrix(-0.014868, 0.999889, -0.999889, -0.014868, 215.297567, 83.672243)"></path>
-                    <rect x="66.096" y="42.296" width="25.092" height="23.256" style="transform-box: fill-box; transform-origin: 115.517% 59.9999%; stroke: rgb(199, 100, 0); fill: rgb(249, 144, 44); stroke-width: 1.5px;" rx="0.612" ry="0.612"></rect>
-                    <path style="transform-box: fill-box; transform-origin: 50% 50%; stroke: rgb(199, 100, 0); fill: rgb(249, 144, 44); stroke-width: 1.5px;" transform="matrix(0.999999, -0.001166, 0.001166, 0.999999, 18.361281, 7.549959)" d="M 52.736 7.206 H 86.291 A 6.733 6.733 0 0 1 93.024 13.939 V 43.925 A 6.733 6.733 0 0 1 86.291 50.658 H 54.469 A 6.733 6.733 0 0 1 47.736 43.925 V 12.206 A 5 5 0 0 1 52.736 7.206 Z" bx:shape="rect 47.736 7.206 45.288 43.452 5 6.733 6.733 6.733 1@1e3eeedc"></path>
-                    <rect x="66.095" y="11.696" width="26.316" height="32.436" style="transform-box: fill-box; transform-origin: 50% 50%; stroke: rgb(199, 100, 0); fill: rgb(249, 144, 44); stroke-width: 1.5px;" transform="matrix(0.963495, 0.267725, -0.267725, 0.963495, 6.119963, 17.747832)"></rect>
-                    <path d="M 96.389 -7.276 L 116.246 2.978 L 121.15 26.018 L 107.409 44.495 L 85.369 44.495 L 71.628 26.018 L 76.532 2.978 Z" bx:shape="n-gon 96.389 19.958 25.398 27.234 7 0 1@95c6d197" style="transform-box: fill-box; transform-origin: 50% 50%; stroke: rgb(199, 100, 0); fill: rgb(249, 144, 44); stroke-width: 1.5px;" transform="matrix(0.879843, 0.475264, -0.475264, 0.879843, -0.61199, 0.612)"></path>
-                    <rect x="95.159" y="0.065" width="18.06" height="43.108" style="transform-box: fill-box; transform-origin: 50% 50%; stroke: rgb(199, 100, 0); fill: rgb(249, 144, 44);" transform="matrix(0.986473, 0.163926, -0.163926, 0.986473, -12.696068, 8.436934)"></rect>
-                    <rect x="160.343" y="61.879" width="56.304" height="6.732" style="stroke: rgb(0, 0, 0); fill: rgb(81, 73, 64);"></rect>
-                    <rect x="212.974" y="23.936" width="9.792" height="23.256" style="stroke: rgb(0, 0, 0); fill: rgb(43, 42, 42);"></rect>
-                    <path style="fill: rgb(199, 100, 0); stroke: rgb(199, 100, 0);" d="M 89.331 -3.321 H 91.327 A 1.9 1.9 0 0 1 93.227 -1.421 V 56.404 A 1.9 1.9 0 0 1 91.327 58.304 H 91.231 A 1.9 1.9 0 0 1 89.331 56.404 V -3.321 Z" bx:shape="rect 89.331 -3.321 3.896 61.625 0 1.9 1.9 1.9 1@526b9ea0"></path>
-                    <g style="" transform="matrix(1, 0, 0, 0.874999, 0, -0.484502)">
-                      <rect x="90.575" y="-3.876" width="125.459" height="78.335" style="stroke: rgb(199, 100, 0); fill: rgb(249, 144, 44);" rx="1.836" ry="1.836"></rect>
-                    </g>
-                    <rect x="195.385" y="60.205" width="29.988" height="4.896" style="stroke: rgb(81, 73, 63); fill: rgb(90, 81, 75);" rx="0.708" ry="0.708"></rect>
-                    <path style="stroke: rgb(81, 72, 64); fill: rgb(81, 73, 64);" d="M 94.437 57.853 H 156.192 A 3.7 3.672 0 0 1 159.892 61.525 V 64.843 A 0.354 0.354 0 0 1 159.538 65.197 H 91.091 A 0.354 0.354 0 0 1 90.737 64.843 V 61.525 A 3.7 3.672 0 0 1 94.437 57.853 Z" bx:shape="rect 90.737 57.853 69.155 7.344 3.7 3.7 0.354 0.354 1@f99cd74f"></path>
-                    <rect x="147.491" y="61.879" width="28.764" height="7.956" style="fill: rgb(81, 73, 64); stroke: rgb(81, 73, 63);" rx="4.284" ry="4.284"></rect>
-                    
-                    <!-- LLANTA TRASERA CENTRAL -->
-                    <g class="wheel-center">
-                      <ellipse style="stroke: rgb(0, 0, 0); fill: rgb(90, 83, 75);" cx="143.513" cy="74.153" rx="15.606" ry="14.382"></ellipse>
-                      <path d="M 143.696 73.887 m -8.322 0 a 8.322 9.208 0 1 0 16.644 0 a 8.322 9.208 0 1 0 -16.644 0 Z M 143.696 73.887 m -3.08 0 a 3.08 3.407 0 0 1 6.16 0 a 3.08 3.407 0 0 1 -6.16 0 Z" bx:shape="ring 143.696 73.887 3.08 3.407 8.322 9.208 1@7fbaee16" style="stroke: rgb(0, 0, 0); fill: rgb(173, 162, 148);"></path>
-                    </g>
-
-                    <path style="stroke: rgb(0, 0, 0); fill: rgb(43, 42, 42);" d="M 268.539 67.511 H 279.352 A 3 3 0 0 1 282.352 70.511 V 75.657 H 268.539 V 67.511 Z" bx:shape="rect 268.539 67.511 13.813 8.146 0 3 0 0 1@9eafbf5d"></path>
-                    <path style="stroke: rgb(0, 0, 0); transform-box: fill-box; transform-origin: 50% 50%; fill: rgb(249, 144, 44);" d="M -279.482 -81.085 H -240.403 A 11.628 11.628 0 0 1 -228.775 -69.457 V -27.801 A 11.628 11.628 0 0 1 -240.403 -16.173 H -261.41 A 29.7 29.7 0 0 1 -291.11 -45.873 V -69.457 A 11.628 11.628 0 0 1 -279.482 -81.085 Z" bx:shape="rect -291.11 -81.085 62.335 64.912 11.628 11.628 11.628 29.7 1@eab0e343" transform="matrix(-0.999869, -0.016156, 0, -1.000131, 510.197968, 91.877087)"></path>
-                    <path style="stroke: rgb(0, 0, 0); stroke-width: 1; transform-box: fill-box; transform-origin: 46.3754% 55.6835%; fill: url(#gradient-0);" transform="matrix(-0.967046, -0.254601, -0.417131, -1.143898, 309.710028, 38.623938)" d="M -38.542 -22.657 H -32.822 A 1.418 1.418 0 0 1 -31.404 -21.239 V -5.937 A 1.418 1.418 0 0 1 -32.822 -4.519 H -35.682 A 4.278 4.905 0 0 1 -39.96 -9.424 V -21.239 A 1.418 1.418 0 0 1 -38.542 -22.657 Z" bx:shape="rect -39.96 -22.657 8.556 18.138 1.418 1.418 1.418 4.905 1@ede6d3e4"></path>
-                    
-                    <!-- LLANTA TRASERA IZQUIERDA -->
-                    <g class="wheel-left">
-                      <ellipse style="stroke: rgb(0, 0, 0); fill: rgb(90, 82, 75);" cx="109.241" cy="73.541" rx="15.606" ry="14.382"></ellipse>
-                      <path d="M 109.165 73.533 m -8.5 0 a 8.5 9.208 0 1 0 17 0 a 8.5 9.208 0 1 0 -17 0 Z M 109.165 73.533 m -3.145 0 a 3.145 3.407 0 0 1 6.29 0 a 3.145 3.407 0 0 1 -6.29 0 Z" bx:shape="ring 109.165 73.533 3.145 3.407 8.5 9.208 1@8820f2c9" style="stroke: rgb(0, 0, 0); fill: rgb(173, 163, 149);"></path>
-                    </g>
-
-                    <path style="fill: rgb(249, 144, 44); stroke: rgb(208, 105, 1);" d="M 237.454 20.264 H 258.054 A 10 10 0 0 1 268.054 30.264 V 64.328 A 3.06 3.06 0 0 1 264.994 67.388 H 237.454 A 3.06 3.06 0 0 1 234.394 64.328 V 23.324 A 3.06 3.06 0 0 1 237.454 20.264 Z" bx:shape="rect 234.394 20.264 33.66 47.124 3.06 10 3.06 3.06 1@4599f921"></path>
-                    
-                    <!-- LLANTA TRASERA DERECHA -->
-                    <g class="wheel-right">
-                      <ellipse style="stroke: rgb(0, 0, 0); fill: rgb(90, 83, 75);" cx="230.416" cy="73.991" rx="15.606" ry="14.382"></ellipse>
-                      <path d="M 230.466 73.886 m -8.677 0 a 8.677 9.208 0 1 0 17.354 0 a 8.677 9.208 0 1 0 -17.354 0 Z M 230.466 73.886 m -3.21 0 a 3.21 3.407 0 0 1 6.42 0 a 3.21 3.407 0 0 1 -6.42 0 Z" bx:shape="ring 230.466 73.886 3.21 3.407 8.677 9.208 1@e047274f" style="stroke: rgb(0, 0, 0); fill: rgb(173, 162, 148);"></path>
-                    </g>
-
-                    <rect x="99.143" y="4.16" width="108.935" height="49.572" style="fill: none; fill-rule: nonzero; stroke: rgb(199, 100, 0); stroke-width: 2px;"></rect>
-                    <text style="fill: rgb(111, 162, 40); fill-rule: evenodd; font-family: Alatsi; font-size: 30.3867px; paint-order: stroke; stroke-dashoffset: -3px; stroke-linejoin: bevel; stroke-width: 26.0774px; text-rendering: geometricprecision; white-space: pre;" transform="matrix(2.359107, 0, 0, 1.977962, -228.385406, -40.792038)" x="162.791" y="47.532" dx="1.497" dy="-0.912">V</text>
-                    <path style="stroke: rgb(0, 0, 0); stroke-linejoin: bevel; stroke-linecap: round; transform-box: fill-box; transform-origin: 50% 50%; fill: url(#gradient-1);" d="M -238.357 -35.882 H -219.706 A 6.4 6.4 0 0 1 -213.306 -29.482 V -23.984 A 0.946 0.946 0 0 1 -214.252 -23.038 H -238.454 A 1.796 1.796 0 0 1 -240.25 -24.834 V -33.989 A 1.893 1.893 0 0 1 -238.357 -35.882 Z" bx:shape="rect -240.25 -35.882 26.944 12.844 1.893 6.4 0.946 1.796 1@826372b5" transform="matrix(0.999384, 0.035087, -0.000072, 1.000614, 478.303532, 59.414491)"></path>
-                    <ellipse style="stroke: rgb(0, 0, 0);" cx="243.187" cy="46.92" rx="2.835" ry="0.612"></ellipse>
-                    <rect style="fill: rgb(97, 90, 78); stroke: rgb(81, 73, 64);" x="186.046" y="66.163" width="20.196" height="13.464" rx="2" ry="2"></rect>
-                    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 192.778 67.033 C 192.778 71.113 192.778 75.193 192.778 79.273"></path>
-                    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 200.122 67.032 C 200.122 71.112 200.122 75.192 200.122 79.272"></path>
-                    <defs>
-                      <style bx:fonts="Alatsi">@import url(https://fonts.googleapis.com/css2?family=Alatsi%3Aital%2Cwght%400%2C400&amp;display=swap);</style>
-                      <linearGradient gradientUnits="userSpaceOnUse" x1="-35.682" y1="-22.657" x2="-35.682" y2="-4.519" id="gradient-0">
-                        <stop offset="0" style="stop-color: rgb(84.706% 84.706% 84.706%)"></stop>
-                        <stop offset="1" style="stop-color: rgb(48.42% 48.42% 48.42%)"></stop>
-                      </linearGradient>
-                      <linearGradient gradientUnits="userSpaceOnUse" x1="-226.778" y1="-35.882" x2="-226.778" y2="-23.038" id="gradient-1">
-                        <stop offset="0" style="stop-color: rgb(84.706% 84.706% 84.706%)"></stop>
-                        <stop offset="1" style="stop-color: rgb(48.42% 48.42% 48.42%)"></stop>
-                      </linearGradient>
-                    </defs>
-                    <rect x="66.311" y="63.616" width="23.729" height="3.187" style="stroke: rgb(0, 0, 0); fill: rgb(43, 42, 42);"></rect>
-                    <rect x="274.913" y="57.596" width="6.375" height="4.958" style="paint-order: stroke; stroke: rgb(236, 223, 0); fill: rgb(255, 241, 0);"></rect>
-                  </g>
-                </svg>
-
-
-            <div class="road"></div> <!-- carretera y lampara -->
-              <svg 
-                xml:space="preserve" 
-                viewBox="0 0 453.459 453.459" 
-                xmlns:xlink="http://www.w3.org/1999/xlink" 
-                xmlns="http://www.w3.org/2000/svg" 
-                id="Capa_1" 
-                version="1.1" 
-                fill="#000000" 
-                class="lampPost" 
-              > 
-              <path 
-                d="M252.882,0c-37.781,0-68.686,29.953-70.245,67.358h-6.917v8.954c-26.109,2.163-45.463,10.011-45.463,19.366h9.993 
-                c-1.65,5.146-2.507,10.54-2.507,16.017c0,28.956,23.558,52.514,52.514,52.514c28.956,0,52.514-23.558,52.514-52.514 
-                c0-5.478-0.856-10.872-2.506-16.017h9.992c0-9.354-19.352-17.204-45.463-19.366v-8.954h-6.149C200.189,38.779,223.924,16,252.882,16 
-                c29.952,0,54.32,24.368,54.32,54.32c0,28.774-11.078,37.009-25.105,47.437c-17.444,12.968-37.216,27.667-37.216,78.884v113.914 
-                h-0.797c-5.068,0-9.174,4.108-9.174,9.177c0,2.844,1.293,5.383,3.321,7.066c-3.432,27.933-26.851,95.744-8.226,115.459v11.202h45.75 
-                v-11.202c18.625-19.715-4.794-87.527-8.227-115.459c2.029-1.683,3.322-4.223,3.322-7.066c0-5.068-4.107-9.177-9.176-9.177h-0.795 
-                V196.641c0-43.174,14.942-54.283,30.762-66.043c14.793-10.997,31.559-23.461,31.559-60.277C323.202,31.545,291.656,0,252.882,0z 
-                M232.77,111.694c0,23.442-19.071,42.514-42.514,42.514c-23.442,0-42.514-19.072-42.514-42.514c0-5.531,1.078-10.957,3.141-16.017 
-                h78.747C231.693,100.736,232.77,106.162,232.77,111.694z" 
-              ></path> 
-              </svg> 
-              </div> 
+      <!-- Spinner de carga - puntos giratorios en verde -->
+      <div id="loading-spinner" style="display: none;">
+        <div class="spinner-wrapper">
+          <div class="spinner">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
             </div>
             <p class="spinner-text">Procesando, por favor espere...</p>
           </div>
@@ -717,44 +627,37 @@
   }
 
 
-  /* Spinner de carga con Camion */
+  /* Spinner de carga overlay */
     #loading-spinner {
       position: fixed; /* posicion fija para cubrir toda la pantalla */
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(255, 255, 255, 0.9); /* fondo semi-transparente */
+      background-color: rgba(0, 0, 0, 0.7); /* fondo semi-transparente oscuro */
       display: flex;
       justify-content: center;
       align-items: center;
       z-index: 9999; /* asegura que este por encima de todo */
     }
 
-    .spinner-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      background-color: white;
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* sombra suave */
-      margin-top: 100px;
-    }
+    .spinner-wrapper { text-align: center; display: flex; flex-direction: column; align-items: center; }
 
-    .loader {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+    /* Spinner puntos - tema verde */
+    .spinner { width: 84px; height: 84px; position: relative; }
+    .spinner .dot { position: absolute; inset: 0; display: flex; justify-content: center; align-items: flex-start; animation: spin 2s infinite; }
+    .spinner .dot::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background-color: #34d399; }
+    .spinner .dot:nth-child(2){ animation-delay:100ms }
+    .spinner .dot:nth-child(3){ animation-delay:200ms }
+    .spinner .dot:nth-child(4){ animation-delay:300ms }
+    .spinner .dot:nth-child(5){ animation-delay:400ms }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .spinner-text {
-      margin-top: 20px;
+      margin-top: 12px;
       font-weight: 600;
-      color: var(--primary-color);
-      font-size: 1.2rem;
+      color: #e5e7eb;
+      font-size: 1rem;
       text-align: center;
     }
     
@@ -883,51 +786,19 @@
     }
   }
   
-  .spinner-container {
-    text-align: center;
-  }
+  .spinner-wrapper { text-align: center; }
   
-  /* Estilos del hámster */
-  .wheel-and-hamster {
-    --dur: 1s;
-    position: relative;
-    width: 12em;
-    height: 12em;
-    font-size: 14px;
-    margin: 0 auto;
-  }
+  /* Spinner puntos verde */
+  .spinner { width: 60px; height: 60px; position: relative; }
+    .spinner .dot { position: absolute; inset: 0; display: flex; justify-content: center; align-items: flex-start; animation: spin 2s infinite; }
+  .spinner .dot::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background-color: #34d399; }
+  .spinner .dot:nth-child(2){ animation-delay:100ms }
+  .spinner .dot:nth-child(3){ animation-delay:200ms }
+  .spinner .dot:nth-child(4){ animation-delay:300ms }
+  .spinner .dot:nth-child(5){ animation-delay:400ms }
+  @keyframes spin { to { transform: rotate(360deg); } }
   
-  .wheel,
-  .hamster,
-  .hamster div,
-  .spoke {
-    position: absolute;
-  }
-  
-  .wheel,
-  .spoke {
-    border-radius: 50%;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  }
-  
-  .wheel {
-    background: radial-gradient(100% 100% at center,hsla(0,0%,60%,0) 47.8%,hsl(0,0%,60%) 48%);
-    z-index: 2;
-  }
-  
-  .hamster {
-    animation: hamster var(--dur) ease-in-out infinite;
-    top: 50%;
-    left: calc(50% - 3.5em);
-    width: 7em;
-    height: 3.75em;
-    transform: rotate(4deg) translate(-0.8em,1.85em);
-    transform-origin: 50% 0;
-    z-index: 1;
-  }
+  /* Eliminar estilos antiguos del hamster (ya no se usan) */
   
   .hamster__head {
     animation: hamsterHead var(--dur) ease-in-out infinite;

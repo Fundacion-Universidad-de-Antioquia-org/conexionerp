@@ -26,6 +26,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, PatternFill
 from django.views.decorators.csrf import csrf_exempt
 from .utils import registrar_log_interno
+from app_learning.services.odoo_conection import fetch_departametos_from_odoo
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
@@ -810,7 +811,11 @@ def home(request, *, context):
         capacitacion.fecha_formateada = capacitacion.fecha.strftime('%Y-%m-%d')
         capacitacion.hora_inicial_formateada = capacitacion.hora_inicial.strftime('%H:%M')
         capacitacion.hora_final_formateada = capacitacion.hora_final.strftime('%H:%M')
-    return render(request, 'home.html', {'capacitaciones': capacitaciones})
+    departments = fetch_departametos_from_odoo() or []
+    return render(request, 'home.html', {
+        'capacitaciones': capacitaciones,
+        'departments': departments
+    })
 
 #Actualizar Capacitación en Odoo por ID:
 def update_odoo_capacitacion (capacitacion):
@@ -1206,7 +1211,7 @@ def generar_pdf(request, id):
         elements.append(Spacer(1, 4))
 
         asistentes_table_data = [
-            [P("<b>#</b>"), P("<b>Identificación</b>"), P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>")]
+            [P("<b>#</b>"), P("<b>Identificación</b>"), P("<b>Nombre</b>"), P("<b>Cargo</b>"), P("<b>Área</b>"), P("<b>Fecha registro</b>")]
         ]
         for idx, assistant in enumerate(asistentes_data, start=1):
             asistentes_table_data.append([
@@ -1214,11 +1219,19 @@ def generar_pdf(request, id):
                 P(assistant.get('employeeId', 'No disponible')),
                 P(assistant.get('username', 'No disponible')),
                 P(assistant.get('jobTitle', 'No disponible')),
-                P(assistant.get('employeeDepartment') or assistant.get('employeeCompany') or 'no hay')
+                P(assistant.get('employeeDepartment') or assistant.get('employeeCompany') or 'no hay'),
+                P(assistant.get('registroFechaHora', 'No disponible'))
             ])
         total_width = letter[0] - 80  
 
-        asistentes_table = Table(asistentes_table_data, colWidths=[total_width * 0.10, total_width * 0.225, total_width * 0.225, total_width * 0.225, total_width * 0.225])
+        asistentes_table = Table(asistentes_table_data, colWidths=[
+            total_width * 0.08,  # numero
+            total_width * 0.18,  # identificacion
+            total_width * 0.22,  # nombre
+            total_width * 0.18,  # cargo
+            total_width * 0.18,  # area
+            total_width * 0.16   # fecha registro
+        ])
         asistentes_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 0), (-1, -1), 12),
@@ -1389,7 +1402,8 @@ def get_asistentes_odoo(capacitacion_id):
                     'x_studio_cargo', 
                     'x_studio_departamento_empleado',
                     'x_studio_capacitacion_compania_empleado',
-                    'x_studio_many2one_field_iphhw'
+                    'x_studio_many2one_field_iphhw',
+                    'x_studio_fecha_hora_registro'
                     ],
                 'limit': 999
             }
@@ -1404,6 +1418,7 @@ def get_asistentes_odoo(capacitacion_id):
                 'employeeDepartment': record.get('x_studio_departamento_empleado'),
                 'employeeCompany': record.get('x_studio_capacitacion_compania_empleado'),
                 'employeeId': record.get('x_studio_many2one_field_iphhw', [])[1] if record.get('x_studio_many2one_field_iphhw') else '',
+                'registroFechaHora': record.get('x_studio_fecha_hora_registro') or ''
                 
             })
         return asistentes_data

@@ -1,4 +1,256 @@
 {% extends 'base.html' %} {% block title %}Gestión de Asistencias{% endblock %}
+{% load static %}
+{% block extra_head %}
+<link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/learn-dark.css " />
+<link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/learn-home.css" />
+<style>
+  /* Overrides locales para mejor contraste y hover suave */
+  .filter-container .form-control, .filter-container .form-select{ color:#e5e7eb !important; }
+  .filter-container .form-control::placeholder{ color:#9ca3af !important; opacity:1; }
+  .filter-container label{ color:#cbd5e1 !important; }
+  table.table tbody tr{ transition: background-color .25s ease, color .25s ease; }
+  table.table tbody tr:hover{ background: linear-gradient(90deg, rgba(148,163,184,.12), rgba(30,41,59,.4)) !important; color: inherit !important; }
+  table.table.table-hover tbody tr:hover td,
+  table.table.table-hover tbody tr:hover th{ color: var(--color-text) !important; }
+  table.table tbody td, table.table thead th{ transition: color .25s ease, background-color .25s ease; }
+  .dropdown-item{ transition: background-color .2s ease, color .2s ease; }
+  .dropdown-menu .dropdown-item:hover,
+  .dropdown-menu .dropdown-item:focus{
+    background: rgba(148,163,184,.15) !important;
+    color: #e5e7eb !important;
+  }
+  /* Paginación: ocultar filas fuera de página */
+  .pag-hidden{ display:none !important; }
+
+  /* Estilos específicos de home - banner ya está en base.html */
+  .dropdown-menu .dropdown-item.active,
+  .dropdown-menu .dropdown-item:active{
+    background: rgba(5,150,105,.25) !important;
+    color: #fff !important;
+  }
+
+  /* Botón Menú (acciones por fila) en tabla -> verde del tema */
+  .btn-actions .btn.btn-secondary.dropdown-toggle{
+    background: #334155 !important; /* slate-700 */
+    border: 1px solid #475569 !important; /* slate-600 */
+    color: #e5e7eb !important;
+    transition: background-color .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+  }
+  .btn-actions .btn.btn-secondary.dropdown-toggle:hover,
+  .btn-actions .btn.btn-secondary.dropdown-toggle:focus{
+    background: #475569 !important; /* slate-600 */
+    color: #ffffff !important;
+    border-color: #64748b !important; /* slate-500 */
+    box-shadow: 0 0 0 .15rem rgba(71,85,105,.35) !important;
+  }
+
+  /* Iconos de tabla y menú en verde del tema */
+  table.table thead th i,
+  .dropdown-menu .dropdown-item i{
+    color: #059669 !important;
+  }
+  .dropdown-menu .dropdown-item:hover i,
+  .dropdown-menu .dropdown-item:focus i{
+    color: #34d399 !important;
+  }
+
+  /* Acordeón de filtros: estado activo en gris suave */
+  .accordion-button:not(.collapsed){
+    color: #e5e7eb !important;
+    background: linear-gradient(90deg, rgba(148,163,184,.15), rgba(30,41,59,.6)) !important;
+  }
+
+  /* Iconos de filtros en verde del tema */
+  .filter-container .input-group-text i{
+    color: #059669 !important;
+  }
+
+  /* Contenedor principal más ancho y responsive */
+  .home {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0.5rem !important; /* reducir padding lateral para ganar ancho visible */
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 120px) !important; /* llenar alto de pantalla dejando header */
+  }
+
+  /* Wrapper de tabla para separación clara */
+  .table-wrapper {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    border: 1px solid #475569 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.2) !important;
+    overflow: hidden !important;
+    margin-bottom: 2rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important; /* estirar para ocupar espacio vertical */
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Tabla sin scroll interno - scroll a nivel de página */
+  .table-responsive {
+    overflow-x: visible !important;
+    overflow-y: auto !important; /* permitir scroll vertical interno */
+    margin-bottom: 0 !important;
+    padding: 0.5rem 0.5rem 1rem 0.5rem !important; /* deja aire sobre la paginación */
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 auto !important; /* permitir que el cuerpo de la tabla crezca */
+    min-height: 200px !important;
+  }
+
+  /* Tabla más ancha y con mejor distribución */
+  .table {
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Compactar celdas para que quepan más columnas sin scroll */
+  .table thead th,
+  .table tbody td {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* En pantallas muy grandes, compactar un poco más para que quepan más filas visibles */
+  @media (min-width: 1600px) and (min-height: 900px) {
+    .table thead th,
+    .table tbody td { padding: 0.3rem 0.45rem !important; font-size: 0.875rem !important; }
+    .pagination-container { padding: 1rem 1.5rem !important; }
+    .table-responsive { padding: 0.5rem 0.5rem 1rem 0.5rem !important; }
+  }
+
+  /* Última fila de la tabla con margen extra */
+  .table tbody tr:last-child td {
+    padding-bottom: 1.5rem !important;
+  }
+
+  /* Columnas con ancho optimizado que suman 100% */
+  .table th:nth-child(1), .table td:nth-child(1) { width: 23% !important; white-space: normal !important; word-break: break-word !important; hyphens: auto !important; } /* Tema */
+  .table th:nth-child(2), .table td:nth-child(2) { width: 17% !important; white-space: normal !important; word-break: break-word !important; hyphens: auto !important; } /* Proceso */
+  .table th:nth-child(3), .table td:nth-child(3) { width: 19% !important; white-space: normal !important; word-break: break-word !important; hyphens: auto !important; } /* Moderador */
+  .table th:nth-child(4), .table td:nth-child(4) { width: 9% !important; } /* Fecha */
+  .table th:nth-child(5), .table td:nth-child(5) { width: 6% !important; }  /* Inicio */
+  .table th:nth-child(6), .table td:nth-child(6) { width: 6% !important; }  /* Fin */
+  .table th:nth-child(7), .table td:nth-child(7) { width: 10% !important; } /* Estado */
+  .table th:nth-child(8), .table td:nth-child(8) { width: 10% !important; }  /* Acciones */
+
+  /* Botón de acciones compacto para caber en la columna */
+  .btn-actions .btn.btn-secondary.dropdown-toggle {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Paginación al final */
+  .pagination-container {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 1rem 1.5rem !important;
+    border-top: 1px solid rgba(71, 85, 105, 0.3) !important;
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+    border-radius: 0 0 12px 12px !important;
+    position: relative !important;
+    z-index: 10 !important;
+    margin-top: auto !important; /* fijar al fondo del wrapper */
+  }
+
+  .pagination-nav {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1rem !important;
+  }
+
+  .page-info {
+    color: #cbd5e1 !important;
+    font-weight: 600 !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Estilos para el selector de filas por página */
+  .page-size {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .page-size label {
+    color: #cbd5e1 !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    margin: 0 !important;
+  }
+
+  .page-size .form-select {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+    border: 1px solid #64748b !important;
+    color: #f8fafc !important;
+    border-radius: 6px !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .page-size .form-select:focus {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border-color: #059669 !important;
+    color: #f8fafc !important;
+    box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.15) !important;
+  }
+
+  /* Botones de paginación mejorados */
+  .pagination-nav .btn {
+    background: linear-gradient(135deg, #475569 0%, #334155 100%) !important;
+    border: 1px solid #64748b !important;
+    color: #f8fafc !important;
+    border-radius: 6px !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .pagination-nav .btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+    border-color: #059669 !important;
+    color: #34d399 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+  }
+
+  .pagination-nav .btn:disabled {
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+    border-color: #475569 !important;
+    color: #64748b !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+  }
+
+  /* Responsive para pantallas más pequeñas: mantener sin scroll horizontal */
+  @media (max-width: 1200px) {
+    .home {
+      padding: 0 1rem !important;
+    }
+    .table { min-width: 100% !important; table-layout: fixed !important; }
+    .table-responsive { overflow-x: visible !important; }
+  }
+
+  @media (max-width: 768px) {
+    .home { padding: 0 0.5rem !important; }
+    .table { min-width: 100% !important; table-layout: fixed !important; }
+    .table-responsive { overflow-x: visible !important; }
+    .pagination-container { flex-direction: column !important; gap: 1rem !important; }
+  }
+</style>
+{% endblock %}
+{% block body_classes %}learn-home{% endblock %}
 {% block content %}
 
 <!-- Spinner de carga -->
@@ -28,13 +280,7 @@
 
 
 <section class="home">
-  <div class="btn-center">
-    <a class="btn-center" href="{% url 'create_capacitacion' %}">
-      <button class="btn btn-funda btn-success-f">
-        <i class="bi bi-plus-circle me-2"></i>Crear Evento
-      </button>
-    </a>
-  </div>
+  {# Botón redundante removido: ya existe acción en el banner del header #}
 
   <div class="section-header">
     <h3 class="subtitle">Eventos Registrados:</h3>
@@ -77,12 +323,12 @@
               <label for="filterProceso">Filtrar por Proceso:</label>
               <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-diagram-3"></i></span>
-                <input
-                  type="text"
-                  id="filterProceso"
-                  placeholder="Proceso responsable"
-                  class="form-control"
-                />
+                <select id="filterProceso" class="form-select">
+                  <option value="">Todos</option>
+                  {% for dept in departments %}
+                    <option value="{{ dept }}">{{ dept }}</option>
+                  {% endfor %}
+                </select>
               </div>
             </div>
             <div class="fc-items fc-2">
@@ -128,8 +374,10 @@
     </div>
   </div>
 
-  <div class="table-responsive">
-    <table class="table table-hover" id="capacitacionesTable">
+  <!-- Contenedor de tabla con separación clara -->
+  <div class="table-wrapper">
+    <div class="table-responsive">
+      <table class="table table-hover" id="capacitacionesTable">
       <thead>
         <tr>
           <th><i class="bi bi-book me-2"></i>Tema</th>
@@ -214,14 +462,92 @@
         </tr>
         {% endfor %}
       </tbody>
-    </table>
+      </table>
+    </div>
+
+    <!-- Paginación al final con mejor diseño -->
+  <div class="pagination-container">
+    <div class="page-size">
+      <label for="rowsPerPage" class="me-2 text-light">Filas por página:</label>
+      <select id="rowsPerPage" class="form-select form-select-sm" style="width: auto;">
+        <option value="5">5</option>
+        <option value="15" selected>15</option>
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="50">50</option>
+      </select>
+    </div>
+    <nav class="pagination-nav" aria-label="Paginación de eventos">
+      <button id="prevPage" class="btn btn-outline-secondary btn-sm" disabled>
+        <i class="bi bi-chevron-left"></i> Anterior
+      </button>
+      <span id="pageInfo" class="page-info">Página 1 de 1</span>
+      <button id="nextPage" class="btn btn-outline-secondary btn-sm" disabled>
+        Siguiente <i class="bi bi-chevron-right"></i>
+      </button>
+    </nav>
   </div>
+  </div> <!-- Cierre del table-wrapper -->
 </section>
 
 <script>
+  // Persistencia de filtros por navegador/usuario
+  const STORAGE_KEY = 'learnHomeFilters';
+
   // Función para eliminar tildes
   function removeAccents(str) {
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function getFilterElements() {
+    return {
+      tema: document.getElementById("filterTema"),
+      proceso: document.getElementById("filterProceso"),
+      moderador: document.getElementById("filterModerador"),
+      fecha: document.getElementById("filterFecha"),
+      estado: document.getElementById("estadoFilter"),
+      accordionBtn: document.querySelector('#accordionExample .accordion-button'),
+      accordionCollapse: document.getElementById('collapseTwo')
+    };
+  }
+
+  function saveFilters() {
+    const els = getFilterElements();
+    if (!els.tema || !els.proceso || !els.moderador || !els.fecha || !els.estado) return;
+    const data = {
+      tema: els.tema.value || "",
+      proceso: els.proceso.value || "",
+      moderador: els.moderador.value || "",
+      fecha: els.fecha.value || "",
+      estado: els.estado.value || ""
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) { /* noop */ }
+  }
+
+  function expandFiltersAccordion() {
+    const { accordionBtn, accordionCollapse } = getFilterElements();
+    if (!accordionBtn || !accordionCollapse) return;
+    accordionBtn.classList.remove('collapsed');
+    accordionBtn.setAttribute('aria-expanded', 'true');
+    accordionCollapse.classList.add('show');
+  }
+
+  function loadFilters() {
+    const els = getFilterElements();
+    if (!els.tema || !els.proceso || !els.moderador || !els.fecha || !els.estado) return false;
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { stored = null; }
+    if (!stored) return false;
+    els.tema.value = stored.tema || "";
+    els.proceso.value = stored.proceso || "";
+    els.moderador.value = stored.moderador || "";
+    els.fecha.value = stored.fecha || "";
+    els.estado.value = stored.estado || "";
+    const anyActive = !!(stored.tema || stored.proceso || stored.moderador || stored.fecha || stored.estado);
+    if (anyActive) {
+      expandFiltersAccordion();
+    }
+    return anyActive;
   }
 
   // Función para filtrar tabla por columna
@@ -292,6 +618,9 @@
     } else if (noResultsRow) {
       noResultsRow.remove();
     }
+
+    // Actualizar paginación tras cualquier filtrado
+    updatePagination();
   }
 
   // Limpiar todos los filtros
@@ -301,15 +630,16 @@
     document.getElementById("filterModerador").value = "";
     document.getElementById("filterFecha").value = "";
     document.getElementById("estadoFilter").value = "";
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* noop */ }
     filterTable();
   }
 
   // Asignar eventos de filtro a los campos
-  document.getElementById("filterTema").addEventListener("keyup", filterTable);
-  document.getElementById("filterProceso").addEventListener("keyup", filterTable);
-  document.getElementById("filterModerador").addEventListener("keyup", filterTable);
-  document.getElementById("filterFecha").addEventListener("change", filterTable);
-  document.getElementById("estadoFilter").addEventListener("change", filterTable);
+  document.getElementById("filterTema").addEventListener("keyup", function(){ saveFilters(); filterTable(); });
+  document.getElementById("filterProceso").addEventListener("change", function(){ saveFilters(); filterTable(); });
+  document.getElementById("filterModerador").addEventListener("keyup", function(){ saveFilters(); filterTable(); });
+  document.getElementById("filterFecha").addEventListener("change", function(){ saveFilters(); filterTable(); });
+  document.getElementById("estadoFilter").addEventListener("change", function(){ saveFilters(); filterTable(); });
   
   // Agregar evento al botón de limpiar filtros
   var clearFiltersBtn = document.getElementById("clearFilters");
@@ -317,11 +647,173 @@
     clearFiltersBtn.addEventListener("click", clearFilters);
   }
   
-  // Ejecutar al cargar la página para mostrar solo eventos activos por defecto
+  // Ejecutar al cargar la página: restaurar filtros almacenados o aplicar por defecto
   document.addEventListener("DOMContentLoaded", function() {
-    // Aplicar el filtro de estado "ACTIVA" por defecto
-    filterTable();
+    const restored = loadFilters();
+    if (!restored) {
+      // Si no hay filtros guardados, aplica el comportamiento actual
+      filterTable();
+    } else {
+      // Si se restauraron filtros, aplica filtrado con esos valores
+      filterTable();
+    }
+    initPagination();
+    // fijar altura inicial del cuerpo de tabla después de pintar
+    setTimeout(setTableBodyHeight, 0);
   });
+
+  // ==========================
+  // Paginación Tabla (cliente)
+  // ==========================
+  var currentPage = 1;
+  var rowsPerPageSelect = null;
+
+  function getTableRows() {
+    var table = document.getElementById("capacitacionesTable");
+    return Array.from(table.getElementsByTagName("tr")).slice(1); // Excluye encabezado
+  }
+
+  function getVisibleRows() {
+    return getTableRows().filter(function(row){ return row.style.display !== 'none'; });
+  }
+
+  function renderPage() {
+    var perPage = parseInt((rowsPerPageSelect && rowsPerPageSelect.value) || '10', 10);
+    var visible = getVisibleRows();
+    var total = visible.length;
+    var totalPages = Math.max(1, Math.ceil(total / perPage));
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    var start = (currentPage - 1) * perPage;
+    var end = start + perPage;
+
+    // Oculta todas las visibles para paginación, luego muestra el rango
+    getTableRows().forEach(function(row){
+      if (row.style.display !== 'none') {
+        row.classList.add('pag-hidden');
+      } else {
+        row.classList.remove('pag-hidden');
+      }
+    });
+    visible.slice(start, end).forEach(function(row){ row.classList.remove('pag-hidden'); });
+
+    // Actualiza controles
+    var prevBtn = document.getElementById('prevPage');
+    var nextBtn = document.getElementById('nextPage');
+    var pageInfo = document.getElementById('pageInfo');
+    if (prevBtn && nextBtn && pageInfo) {
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+      pageInfo.textContent = 'Página ' + currentPage + ' de ' + totalPages;
+    }
+  }
+
+  function updatePagination() {
+    currentPage = 1;
+    renderPage();
+  }
+
+  function initPagination() {
+    rowsPerPageSelect = document.getElementById('rowsPerPage');
+    var prevBtn = document.getElementById('prevPage');
+    var nextBtn = document.getElementById('nextPage');
+    // Establecer valor por defecto según tamaño de pantalla
+    if (rowsPerPageSelect) {
+      var desired = Math.max(15, computeRowsPerViewport());
+      // Si el valor actual difiere y la opción existe, ajústalo
+      if (Array.from(rowsPerPageSelect.options).some(o => o.value === String(desired))) {
+        rowsPerPageSelect.value = String(desired);
+      }
+      rowsPerPageSelect.addEventListener('change', function(){
+        window.__rowsManual__ = true; // marca que el usuario ajustó manualmente
+        renderPage();
+        saveFilters();
+      });
+    }
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function(){ if (currentPage > 1) { currentPage--; renderPage(); } });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function(){ currentPage++; renderPage(); });
+    }
+    renderPage();
+    // Responder a cambios del viewport: ajustar SOLO altura del contenedor.
+    // Si el cambio de alto es grande (>120px) y no hubo selección manual, se recalcula filas.
+    window.__vhLast__ = window.innerHeight || document.documentElement.clientHeight;
+    window.addEventListener('resize', function(){
+      if (!rowsPerPageSelect) return;
+      var vhNow = window.innerHeight || document.documentElement.clientHeight;
+      var delta = Math.abs(vhNow - (window.__vhLast__ || vhNow));
+      window.__vhLast__ = vhNow;
+      // Siempre ajustar el alto visible del body de la tabla
+      setTableBodyHeight();
+      if (window.__rowsManual__) { return; }
+      if (delta < 120) { return; }
+      var newDesired = Math.max(15, computeRowsPerViewport());
+      if (Array.from(rowsPerPageSelect.options).some(o => o.value === String(newDesired))) {
+        rowsPerPageSelect.value = String(newDesired);
+        updatePagination();
+      }
+    });
+
+    // Recalcular también cuando el acordeón de filtros se abra/cierre
+    var collapseEl = document.getElementById('collapseTwo');
+    if (collapseEl && typeof bootstrap !== 'undefined') {
+      collapseEl.addEventListener('shown.bs.collapse', setTableBodyHeight);
+      collapseEl.addEventListener('hidden.bs.collapse', setTableBodyHeight);
+    } else if (collapseEl) {
+      // Fallback: observar cambios de tamaño si Bootstrap no está en el scope global
+      var obs = new MutationObserver(function(){ setTableBodyHeight(); });
+      obs.observe(collapseEl, { attributes: true, attributeFilter: ['class', 'style'] });
+    }
+  }
+
+  // Calcular cuántas filas caben en el viewport sin usar scroll vertical
+  function computeRowsPerViewport() {
+    try {
+      var viewportH = window.innerHeight || document.documentElement.clientHeight;
+      var tableEl = document.getElementById('capacitacionesTable');
+      var pagEl = document.querySelector('.pagination-container');
+      var wrapperEl = document.querySelector('.table-wrapper');
+      var topY = wrapperEl ? wrapperEl.getBoundingClientRect().top : (tableEl ? tableEl.getBoundingClientRect().top : 0);
+      var pagH = pagEl ? Math.max(70, pagEl.getBoundingClientRect().height) : 90;
+      // espacio disponible desde el top del wrapper hasta el fondo, restando paginación
+      var spaceForRows = Math.max(0, viewportH - topY - pagH - 24);
+      var sampleRow = null;
+      if (tableEl) {
+        var rows = tableEl.getElementsByTagName('tr');
+        if (rows && rows.length > 1) sampleRow = rows[1];
+      }
+      var rowH = sampleRow ? Math.max(34, sampleRow.getBoundingClientRect().height) : 38;
+      // Asegurar un pequeño margen para evitar solape con el footer
+      spaceForRows = Math.max(0, spaceForRows - 8);
+      var maxRows = Math.floor(spaceForRows / rowH);
+      // Normalizar a nuestros valores preferidos
+      if (maxRows >= 20) return 20;
+      if (maxRows >= 15) return 15;
+      if (maxRows >= 10) return 10;
+      if (maxRows >= 5) return 5;
+      return 10;
+    } catch (e) {
+      return 10;
+    }
+  }
+
+  // Solo recalcular el alto visible del contenedor scroll de la tabla, sin cambiar filas por página
+  function setTableBodyHeight() {
+    try {
+      var viewportH = window.innerHeight || document.documentElement.clientHeight;
+      var wrapperEl = document.querySelector('.table-wrapper');
+      var tableBodyEl = document.querySelector('.table-responsive');
+      var pagEl = document.querySelector('.pagination-container');
+      if (!wrapperEl || !tableBodyEl) return;
+      var topY = wrapperEl.getBoundingClientRect().top;
+      var pagH = pagEl ? Math.max(70, pagEl.getBoundingClientRect().height) : 90;
+      var available = Math.max(200, viewportH - topY - pagH - 24);
+      tableBodyEl.style.maxHeight = available + 'px';
+      tableBodyEl.style.minHeight = Math.min(available, 400) + 'px';
+    } catch (e) { /* noop */ }
+  }
 </script>
 
 <!-- Estilos y JavaScript para el spinner de carga -->
@@ -662,6 +1154,15 @@
   // Mostrar spinner al recargar la página
   window.addEventListener('beforeunload', function() {
     showSpinner();
+  });
+  
+  // Restaurar el spinner si el usuario regresa usando el botón 'atrás' del navegador
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {  // Detecta si la página se carga desde la caché
+      setTimeout(function() {
+        hideSpinner();
+      }, 500);
+    }
   });
   
   // Mostrar spinner inmediatamente

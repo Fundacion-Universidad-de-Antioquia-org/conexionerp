@@ -35,8 +35,9 @@
     <!-- FAVICON -->
     <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png"/>
     <title>{% block title %}Detalles Capacitación{% endblock %}</title>
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_classes %}{% endblock %}">
     <header class="dinamic-header">
         <div class="container items-header">
             <div class="logo-container">
@@ -101,5 +102,53 @@
     integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
     crossorigin="anonymous"
     ></script>
+    
+    <!-- Estilos globales del banner - heredados para todas las vistas -->
+    <style>
+        /* Banner global con tema dark */
+        body{
+            background: linear-gradient(180deg, #0a0f1c 0%, #0b1328 100%) fixed;
+            color: #e5e7eb;
+            font-family: "Open Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        }
+        
+        .dinamic-header{
+            background: rgba(10,15,28,.85);
+            backdrop-filter: saturate(140%) blur(6px);
+            border-bottom: 1px solid #1f2937;
+        }
+        
+        .dinamic-header .btn-nav{
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            color: #e5e7eb !important;
+            text-decoration: none !important;
+        }
+        .dinamic-header .btn-nav:hover,
+        .dinamic-header .btn-nav:focus{
+            background: rgba(5,150,105,.15) !important;
+            border: 1px solid rgba(5,150,105,.35) !important;
+            color: #e5e7eb !important;
+            text-decoration: none !important;
+        }
+        .dinamic-header .btn-logout{
+            background: transparent !important;
+            border: 1px solid rgba(148,163,184,.3) !important;
+            color: #e5e7eb !important;
+        }
+        .dinamic-header .btn-logout:hover{
+            border: 1px solid rgba(5,150,105,.35) !important;
+        }
+        
+        /* Botón Crear Evento en banner */
+        .dinamic-header .btn-create{
+            background: #059669 !important;
+            color: #fff !important;
+            border: 0 !important;
+        }
+        .dinamic-header .btn-create:hover{
+            background: #047857 !important;
+        }
+    </style>
 </body>
 </html>

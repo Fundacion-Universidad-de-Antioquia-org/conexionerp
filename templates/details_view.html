@@ -1,7 +1,61 @@
 {% extends 'base.html' %} 
 {% block title %}
 {% if form.instance.pk %}Editar Capacitación{% else %}Crear Capacitación{% endif %}
-{% endblock %} 
+{% endblock %}
+{% block extra_head %}
+<link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/learn-dark.css" />
+<style>
+/* Tema oscuro alineado con crear evento */
+body.learn-details { background: linear-gradient(135deg, #0a0f1c 0%, #0f172a 100%) fixed !important; color: #f8fafc !important; }
+.container { background: transparent !important; }
+
+.details {
+  background: transparent !important; /* sin bloque grande para evitar parche blanco */
+  border: none !important;
+  padding: 0 !important;
+  margin: 2rem auto !important;
+  max-width: 1200px !important;
+}
+
+.header-section { border-bottom: 1px solid rgba(71, 85, 105, 0.3) !important; padding-bottom: 1rem !important; margin-bottom: 1.5rem !important; }
+.principal-title { color: #f8fafc !important; font-weight: 600 !important; }
+
+.grid-container { max-width: 100% !important; padding-left: 0 !important; padding-right: 0 !important; }
+.grid-container {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border: 1px solid #475569 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2) !important;
+  padding: 1rem !important;
+}
+
+.header-resume, .detail-info, .url-container, .qr-container {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border: 1px solid #475569 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2) !important;
+  color: #f8fafc !important;
+}
+
+.header-resume { padding: 1.25rem !important; border-left: 4px solid #059669 !important; }
+.header-resume p strong { color: #34d399 !important; }
+.header-resume pre { background: #1f2937 !important; border: 1px solid #475569 !important; color: #e5e7eb !important; }
+
+.detail-info p { background: #1f2937 !important; border-left: 3px solid #475569 !important; color: #e5e7eb !important; }
+.detail-info p strong { color: #34d399 !important; }
+.detail-info p:hover { border-left-color: #059669 !important; box-shadow: 0 2px 10px rgba(5,150,105,.25) !important; }
+
+.url-container { padding: 1.25rem !important; border-left: 4px solid #059669 !important; }
+.url-container a { color: #34d399 !important; }
+.url-container a:hover { color: #059669 !important; }
+
+.qr-container { padding: 1.25rem !important; }
+#qr-image { border: 6px solid #1f2937 !important; box-shadow: 0 6px 20px rgba(0,0,0,.35) !important; }
+
+@media (max-width: 768px) { .details { padding: 1.5rem !important; } }
+</style>
+{% endblock %}
+{% block body_classes %}learn-details{% endblock %}
 {% block content %}
 
 <section class="details">
@@ -53,7 +107,7 @@
   </div>
 </section>
 
-<!-- estilos específicos para details_view */ -->
+<!-- estilos específicos para details_view (animaciones y layouts básicos) -->
 <style>
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px);}
@@ -64,14 +118,7 @@
   to { width: 100%;}
 }
 
-.details {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(92,156,49,0.07);
-  padding: 2rem 2.5rem;
-  margin-bottom: 2rem;
-  animation: fadeInUp 0.7s cubic-bezier(.39,.575,.565,1) both;
-}
+
 
 .header-section {
   border-bottom: 2px solid #5c9c31;
@@ -111,63 +158,24 @@
   padding-right: 1.5rem;
 }
 
-.header-resume, .detail-info, .url-container, .qr-container {
-  border-radius: 10px;
-  background: #f8f9fa;
-  box-shadow: 0 2px 8px rgba(92,156,49,0.04);
-  animation: fadeInUp 0.8s cubic-bezier(.39,.575,.565,1) both;
-  transition: box-shadow 0.25s, transform 0.25s;
-}
+.header-resume, .detail-info, .url-container, .qr-container { animation: fadeInUp 0.8s cubic-bezier(.39,.575,.565,1) both; transition: box-shadow 0.25s, transform 0.25s; margin-bottom: .75rem !important; }
 .header-resume:hover, .detail-info:hover, .url-container:hover, .qr-container:hover {
   box-shadow: 0 8px 24px rgba(92,156,49,0.13);
   transform: translateY(-4px) scale(1.02);
 }
 
-.header-resume {
-  border-left: 4px solid #5c9c31;
-  padding: 1.2rem 1.5rem;
-}
+.header-resume { }
 
-.header-resume p strong {
-  color: #5c9c31;
-}
+.header-resume p strong { }
 
-.header-resume pre {
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 0.8rem;
-  font-size: 1rem;
-}
+.header-resume pre { border-radius: 6px; padding: 0.8rem; font-size: 1rem; }
 
-.detail-info p {
-  background: #fff;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-  padding: 0.7rem 1rem;
-  border-left: 3px solid #e0e0e0;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.detail-info p strong {
-  color: #5c9c31;
-}
-.detail-info p:hover {
-  border-left: 3px solid #5c9c31;
-  box-shadow: 0 2px 8px rgba(92,156,49,0.10);
-}
+.detail-info p { border-radius: 6px; margin-bottom: 0.5rem; padding: 0.7rem 1rem; transition: border-color 0.2s, box-shadow 0.2s; }
+.detail-info p strong { }
+.detail-info p:hover { }
 
-.url-container {
-  border-left: 4px solid #5c9c31;
-  padding: 1.2rem 1.5rem;
-}
-.url-container a {
-  color: #5c9c31;
-  font-weight: 500;
-  text-decoration: underline;
-  transition: color 0.2s;
-  position: relative;
-  overflow: hidden;
-}
+.url-container { }
+.url-container a { font-weight: 500; text-decoration: underline; transition: color 0.2s; position: relative; overflow: hidden; }
 .url-container a::after {
   content: "";
   display: block;
@@ -194,15 +202,7 @@
   padding: 1.2rem 0.5rem;
 }
 
-#qr-image {
-  max-width: 350px;
-  width: 90%;
-  border: 6px solid #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(92,156,49,0.10);
-  margin-top: 0.5rem;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
+#qr-image { max-width: 350px; width: 90%; border-radius: 8px; margin-top: 0.5rem; transition: box-shadow 0.2s, transform 0.2s; }
 #qr-image:hover {
   box-shadow: 0 6px 18px rgba(92,156,49,0.18);
   transform: scale(1.05) rotate(-2deg);

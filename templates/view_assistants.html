@@ -1,4 +1,116 @@
 {% extends 'base.html' %}
+{% block extra_head %}
+<link rel = "stylesheet" href = "https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/learn-dark.css" />
+<style>
+/* Tema dark alineado con crear/editar/home */
+body.learn-assistants { background: linear-gradient(135deg, #0a0f1c 0%, #0f172a 100%) fixed !important; color: #f8fafc !important; }
+
+.header-section,
+.resume-section,
+.download-section,
+.accordion,
+.accordion-item,
+.card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+  border: 1px solid #475569 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+  color: #f8fafc !important;
+}
+
+.header-section h3 { color: #f8fafc !important; }
+.resume-section h5, .download-section h5 { color: #e5e7eb !important; border-color: rgba(71,85,105,.4) !important; }
+
+/* Botón primario coherente */
+.btn-success-f { background: linear-gradient(135deg, #059669, #34d399) !important; border: 0 !important; color: #fff !important; font-weight: 600 !important; box-shadow: 0 4px 15px rgba(5,150,105,.3) !important; }
+.btn-success-f:hover { background: linear-gradient(135deg, #047857, #059669) !important; transform: translateY(-1px) !important; }
+
+/* Tabla dark */
+.table { width: 100% !important; }
+.table thead { background: #1f2937 !important; color: #e5e7eb !important; }
+.table tbody tr { border-bottom: 1px solid rgba(71,85,105,.35) !important; }
+.table tbody tr:hover { background: rgba(148,163,184,.12) !important; }
+.table td, .table th { color: #f8fafc !important; vertical-align: middle !important; }
+.table-responsive { padding: .5rem !important; }
+
+/* Acordeón dark */
+.accordion-button { background: linear-gradient(135deg, #334155, #1f2937) !important; color: #e5e7eb !important; }
+.accordion-button:not(.collapsed) { color: #e5e7eb !important; box-shadow: none !important; }
+.accordion-body { background: transparent !important; }
+
+/* Cards de carga */
+.card-header { background: #334155 !important; border-bottom: 1px solid #475569 !important; color: #f8fafc !important; }
+.card-body { background: #1f2937 !important; color: #f8fafc !important; }
+.form-control { background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important; border: 2px solid #94a3b8 !important; color: #f8fafc !important; }
+.form-control:focus { border-color: #059669 !important; box-shadow: 0 0 0 .2rem rgba(5,150,105,.25) !important; }
+
+/* Galería */
+.image-card { background: #1f2937 !important; }
+.image-container { background: #111827 !important; }
+.card .text-primary { color: #34d399 !important; }
+.modal-content { background: linear-gradient(135deg, #1e293b, #334155) !important; color: #f8fafc !important; }
+.modal-footer { background: #1f2937 !important; border-top: 1px solid #475569 !important; }
+
+/* Utilidades */
+.icon-container { 
+  background: linear-gradient(135deg, #475569 0%, #334155 100%) !important; 
+  border: 1px solid #64748b !important; 
+  width: 38px !important; 
+  height: 38px !important; 
+  display: inline-flex !important; 
+  align-items: center !important; 
+  justify-content: center !important; 
+  border-radius: 999px !important; 
+  box-shadow: 0 4px 12px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.08) !important; 
+}
+.icon-container i { font-size: 1rem !important; color: #34d399 !important; }
+.item-attendants { gap: .5rem !important; padding: .6rem .9rem !important; }
+.total-attendants .item-attendants p { font-size: .95rem !important; }
+.total-attendants .item-attendants strong { font-size: 1rem !important; }
+.alert-info { background: #1f2937 !important; color: #e5e7eb !important; border: 1px solid #475569 !important; }
+
+/* Quitar amarillos y blancos del resumen/descargas/evidencia */
+.total-attendants { background: transparent !important; }
+.item-attendants { background: #334155 !important; border: 1px solid #475569 !important; border-radius: 10px !important; padding: .75rem !important; }
+body.learn-assistants .bg-white { background: #1f2937 !important; color: #f8fafc !important; }
+body.learn-assistants .bg-light { background: #334155 !important; color: #f8fafc !important; }
+.download-section .download-zone { background: transparent !important; padding: .5rem 0 !important; }
+.download-section { border: none !important; }
+.download-section .card, .download-section { box-shadow: 0 8px 24px rgba(0,0,0,.2) !important; }
+.resume-section { border: none !important; }
+
+/* Forzar estilos dark en el contenedor de evidencia */
+body.learn-assistants .card,
+body.learn-assistants .card-header,
+body.learn-assistants .card-body { background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important; }
+body.learn-assistants .evidence-zone { background: transparent !important; }
+.card { border: 1px solid #475569 !important; }
+
+/* Evidencia compacta */
+.evidence-compact .card-header { padding: .5rem .75rem !important; font-size: .95rem !important; }
+.evidence-compact .card-body { padding: .75rem !important; }
+.evidence-compact .form-label { margin-bottom: .25rem !important; font-size: .85rem !important; color: #cbd5e1 !important; }
+.evidence-compact .form-control { padding: .375rem .5rem !important; font-size: .875rem !important; height: auto !important; }
+.evidence-compact .btn { padding: .45rem .75rem !important; font-size: .875rem !important; }
+.evidence-compact .row { --bs-gutter-x: .75rem; }
+
+/* Inline compact */
+.evidence-inline .form-control { padding: .375rem .5rem !important; font-size: .875rem !important; }
+.evidence-inline .btn { padding: .45rem .9rem !important; font-size: .875rem !important; white-space: nowrap !important; }
+.evidence-inline .evi-item { min-width: 280px; }
+
+/* Botones de descarga estilizados */
+.downloads-wrap { display: flex; flex-wrap: wrap; gap: .75rem; }
+.download-btn { border-radius: 999px !important; padding: .5rem 1rem !important; box-shadow: 0 6px 16px rgba(5,150,105,.25) !important; }
+.download-btn i { opacity: .95; }
+
+/* Card-like wrapper same as resumen */
+.card-like { background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important; border: 1px solid #475569 !important; border-radius: 12px !important; box-shadow: 0 8px 24px rgba(0,0,0,.2) !important; }
+.card-like-header { border-bottom: 1px solid rgba(71,85,105,.35) !important; padding-bottom: .5rem !important; }
+
+</style>
+{% endblock %}
+{% block body_classes %}learn-assistants{% endblock %}
 
 {% block title %}Asistentes{% endblock %}
 
@@ -28,46 +140,46 @@
         </div>
     </div>
 
-    <div class="header-section p-3 mb-4 bg-light rounded shadow-sm">
+    <div class="header-section p-3 mb-4 rounded shadow-sm">
         <div class="d-flex align-items-center">
             <a href="{% url 'home' %}" class="btn btn-success-f rounded-circle me-3" title="Regresar al inicio">
                 <i class="bi bi-arrow-left"></i>
             </a>
-            <h3 class="mb-0" style="color: #35bd00;">Asistentes {{ capacitacion.tipo }}: <span class="text-dark">{{ capacitacion.tema }}</span></h3>
+            <h3 class="mb-0">Asistentes {{ capacitacion.tipo }}: <span>{{ capacitacion.tema }}</span></h3>
         </div>
     </div>
 
-    <section class="resume-section p-3 mb-4 bg-white rounded shadow-sm">
+    <section class="resume-section p-3 mb-4 rounded shadow-sm">
         <!-- Tabla de datos y botón de descarga -->
         <section class="attendants-data">
             <h5 class="border-bottom pb-2 mb-3">Resumen:</h5>
             <div class="total-attendants row g-3">
                 <div class="col-md item-attendants d-flex align-items-center">
-                    <div class="icon-container bg-primary text-white rounded-circle p-2 me-2">
+                    <div class="icon-container text-white rounded-circle p-2 me-2">
                         <i class="bi bi-envelope-check-fill"></i>
                     </div>
                     <p class="mb-0">Total Invitados: <strong>{{ total_invitados }}</strong></p>
                 </div>
                 <div class="col-md item-attendants d-flex align-items-center">
-                    <div class="icon-container bg-success text-white rounded-circle p-2 me-2">
+                    <div class="icon-container text-white rounded-circle p-2 me-2">
                         <i class="bi bi-person-check-fill"></i>
                     </div>
                     <p class="mb-0">Asistentes: <strong>{{ assistants_yes|length }}</strong></p>
                 </div>
                 <div class="col-md item-attendants d-flex align-items-center">
-                    <div class="icon-container bg-danger text-white rounded-circle p-2 me-2">
+                    <div class="icon-container text-white rounded-circle p-2 me-2">
                         <i class="bi bi-person-dash-fill"></i>
                     </div>
                     <p class="mb-0">Ausentes Citados: <strong>{{ assistants_no|length }}</strong></p>
                 </div>
                 <div class="col-md item-attendants d-flex align-items-center">
-                    <div class="icon-container bg-info text-white rounded-circle p-2 me-2">
+                    <div class="icon-container text-white rounded-circle p-2 me-2">
                         <i class="bi bi-people-fill"></i>
                     </div>
                     <p class="mb-0">Cupos Disponibles: <strong>{{ total_ausentes }}</strong></p>
                 </div>
                 <div class="col-md item-attendants d-flex align-items-center">
-                    <div class="icon-container text-dark rounded-circle p-2 me-2" style="background-color:coral;">
+                    <div class="icon-container text-white rounded-circle p-2 me-2">
                         <i class="bi bi-reception-3"></i>
                     </div>
                     <p class="mb-0">Tasa de éxito: <strong>{{ tasa_exito }} %</strong></p>
@@ -77,24 +189,28 @@
     </section>
     
     <!-- Sección de Descargas -->
-    <section class="download-section p-3 mb-4 bg-white rounded shadow-sm">
-        <h5 class="border-bottom pb-2 mb-3">Descargas disponibles:</h5>
-        <div class="download-zone d-flex flex-wrap gap-2">
-            <a href="?download=excel" class="btn btn-success-f d-flex align-items-center gap-2">
+    <section class="download-section card-like p-3 mb-4 rounded shadow-sm">
+        <div class="d-flex align-items-center mb-2 gap-2 card-like-header">
+            <i class="bi bi-cloud-arrow-down text-success"></i>
+            <h5 class="mb-0">Descargas disponibles</h5>
+        </div>
+    </br>
+        <div class="downloads-wrap">
+            <a href="?download=excel" class="btn btn-success-f d-flex align-items-center gap-2 download-btn">
                 <i class="fa-solid fa-file-arrow-down"></i>
-                Descargar Asistencia
-            </a>      
+                Asistencia (Excel)
+            </a>
 
-            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f d-flex align-items-center gap-2" target="_blank">
+            <a href="{% url 'generar_pdf' capacitacion.id %}" class="btn btn-success-f d-flex align-items-center gap-2 download-btn" target="_blank">
                 <i class="fa-solid fa-download"></i>
-                Descargar Resumen
-            </a>    
-    
+                Resumen (PDF)
+            </a>
+
             {% if capacitacion.archivo_presentacion %}
-                <a href="{{ capacitacion.archivo_presentacion }}" class="btn btn-success-f d-flex align-items-center gap-2" target="_blank">
-                    <i class="bi bi-file-ppt me-2"></i>
-                    Descargar Presentación
-                </a>
+            <a href="{{ capacitacion.archivo_presentacion }}" class="btn btn-success-f d-flex align-items-center gap-2 download-btn" target="_blank">
+                <i class="bi bi-file-ppt"></i>
+                Presentación
+            </a>
             {% endif %}
         </div>
     </section>
@@ -109,10 +225,10 @@
                     </button>
                 </h2>
                 <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                    <div class="accordion-body p-0">
+            <div class="accordion-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped mb-0">
-                                <thead class="table-light">
+                            <table class="table table-hover mb-0">
+                                <thead>
                                     <tr>
                                         <th class="text-center">#</th>
                                         <th>Cédula</th>
@@ -146,14 +262,14 @@
             <div class="accordion-item">
                 <h2 class="accordion-header">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                        <i class="bi bi-hourglass-split text-warning me-2"></i> Pendientes ({{ assistants_no|length }})
+                        <i class="bi bi-hourglass-split text-success me-2"></i> Pendientes ({{ assistants_no|length }})
                     </button>
                 </h2>
                 <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                    <div class="accordion-body p-0">
+            <div class="accordion-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover table-striped mb-0">
-                                <thead class="table-light">
+                            <table class="table table-hover mb-0">
+                                <thead>
                                     <tr>
                                         <th class="text-center">#</th>
                                         <th>Cédula</th>
@@ -184,68 +300,46 @@
             </div>
         </div>
 
-    <!-- Sección de Carga de Evidencias -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-light">
+    <!-- Sección de Carga de Evidencias (compacta en una fila) -->
+    <div class="card shadow-sm mb-4 card-like">
+        <div class="card-header card-like-header">
             <h5 class="mb-0">Cargar Evidencia</h5>
         </div>
         <div class="card-body">
-            <div class="evidence-zone row g-3">
-                {% if capacitacion.estado == 'ACTIVA' %}
-                    <!-- Formulario para la imagen -->
-                    <div class="col-md-6">
-                        <div class="card h-100" style="border-color: #ABD904;">
-                            <div class="card-header text-black" style="background-color: #ABD904;">
-                                <i class="bi bi-images me-2"></i> Imágenes
-                            </div>
-                            <div class="card-body">
-                                <form class="load-image-form" method="POST" enctype="multipart/form-data" onsubmit="return validateImageForm()">
-                                    <div class="load-image-settings">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="form_type" value="image_upload">
-                                        <div class="load-image-tool mb-3">	
-                                            <label for="images" class="form-label">Elige máximo 5 imágenes (Máximo 3MB):</label>
-                                            <input type="file" name="images" id="images" class="form-control" accept="image/*" multiple required>
-                                        </div>
-                                        <div class="load-image-button">
-                                            <button type="submit" id="uploadImagesBtn" class="btn w-100" style="background-color: #ABD904;">
-                                                <i class="bi bi-upload me-2"></i> Cargar Imágenes
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+            {% if capacitacion.estado == 'ACTIVA' %}
+            <div class="evidence-inline d-flex flex-wrap align-items-end gap-3">
+                <!-- Imágenes -->
+                <form class="load-image-form evi-item flex-grow-1" method="POST" enctype="multipart/form-data" onsubmit="return validateImageForm()">
+                    {% csrf_token %}
+                    <input type="hidden" name="form_type" value="image_upload">
+                    <label for="images" class="form-label mb-1">Imágenes (hasta 5 | máx 3MB)</label>
+                    <div class="d-flex gap-2">
+                        <input type="file" name="images" id="images" class="form-control" accept="image/*" multiple required>
+                        <button type="submit" id="uploadImagesBtn" class="btn btn-success-f">
+                            <i class="bi bi-upload me-2"></i>Subir
+                        </button>
                     </div>
-                
-                    <!-- Formulario para subir presentación -->
-                    <div class="col-md-6">
-                        <div class="card h-100" style="border-color: #F26B1D;">
-                            <div class="card-header text-black" style="background-color: #F26B1D;">
-                                <i class="bi bi-file-earmark-slides me-2"></i> Presentación
-                            </div>
-                            <div class="card-body">
-                                <form class="load-file-form" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
-                                    {% csrf_token %}
-                                    <div class="form-group mb-3">
-                                        <label for="archivo_presentacion" class="form-label">Subir Presentación (PDF o PPTX):</label>
-                                        <input type="file" name="archivo_presentacion" id="archivo_presentacion" class="form-control" accept=".pdf, .pptx" required>
-                                    </div>
-                                    <button type="submit" class="btn w-100" style="background-color: #F26B1D;">
-                                        <i class="bi bi-upload me-2"></i> Cargar Presentación
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                </form>
+
+                <!-- Presentación -->
+                <form class="load-file-form evi-item flex-grow-1" method="POST" enctype="multipart/form-data" onsubmit="showSpinner()">
+                    {% csrf_token %}
+                    <label for="archivo_presentacion" class="form-label mb-1">Presentación (PDF o PPTX)</label>
+                    <div class="d-flex gap-2">
+                        <input type="file" name="archivo_presentacion" id="archivo_presentacion" class="form-control" accept=".pdf, .pptx" required>
+                        <button type="submit" class="btn btn-success-f">
+                            <i class="bi bi-upload me-2"></i>Subir
+                        </button>
                     </div>
-                {% else %}
-                    <div class="col-12 text-center py-3">
-                        <div class="alert alert-info mb-0">
-                            <i class="bi bi-info-circle me-2"></i> La capacitación no está activa. No se pueden cargar evidencias.
-                        </div>
-                    </div>
-                {% endif %}
+                </form>
             </div>
+            {% else %}
+            <div class="text-center py-3">
+                <div class="alert alert-info mb-0">
+                    <i class="bi bi-info-circle me-2"></i> La capacitación no está activa. No se pueden cargar evidencias.
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 
@@ -261,13 +355,12 @@
 
     <!-- Sección de Evidencias - GALERÍA -->
     {% if capacitacion.images.all %}
-    <section class="evidences mb-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header text-white d-flex align-items-center" style="background: linear-gradient(135deg, #36b902, #0c6600) !important;">
-                <i class="bi bi-images me-2 fs-4"></i>
-                <h5 class="mb-0">Galería de Evidencias</h5>
-            </div>
-            <div class="card-body p-4 bg-light">
+    <section class="evidences mb-4 card-like">
+        <div class="d-flex align-items-center card-like-header">
+            <i class="bi bi-images me-2 fs-4"></i>
+            <h5 class="mb-0">Galería de Evidencias</h5>
+        </div>
+        <div class="p-4">
                 <!-- Galería de imágenes -->
                 <div class="row g-4 image-gallery">
                     {% for image in capacitacion.images.all %}
@@ -291,7 +384,7 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="card-body text-center bg-white rounded-bottom">
+                            <div class="card-body text-center rounded-bottom">
                                 <h6 class="card-title mb-0 text-primary">Evidencia {{ forloop.counter }}</h6>
                             </div>
                         </div>
@@ -301,13 +394,13 @@
                     <div class="modal fade" id="imageModal{{ image.id }}" tabindex="-1" aria-labelledby="imageModalLabel{{ image.id }}" aria-hidden="true">
                         <div class="modal-dialog modal-xl modal-dialog-centered">
                             <div class="modal-content border-0">
-                                <div class="modal-header bg-gradient-primary text-white">
+                                <div class="modal-header">
                                     <h5 class="modal-title" id="imageModalLabel{{ image.id }}">
                                         <i class="bi bi-image me-2"></i> Evidencia {{ forloop.counter }} - {{ capacitacion.tema }}
                                     </h5>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                                 </div>
-                                <div class="modal-body text-center p-0 bg-dark">
+                                <div class="modal-body text-center p-0">
                                     <div class="image-viewer">
                                         <img src="{{ image.image_url }}" class="img-fluid" alt="Evidencia {{ forloop.counter }}">
                                     </div>
@@ -335,7 +428,6 @@
                     </div>
                     {% endfor %}
                 </div>
-            </div>
         </div>
     </section>
     {% else %}
