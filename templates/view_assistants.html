@@ -196,7 +196,7 @@ body.learn-assistants .evidence-zone { background: transparent !important; }
         </div>
     </br>
         <div class="downloads-wrap">
-            <a href="?download=excel" class="btn btn-success-f d-flex align-items-center gap-2 download-btn">
+            <a href="?download=excel" class="btn btn-success-f d-flex align-items-center gap-2 download-btn no-spinner">
                 <i class="fa-solid fa-file-arrow-down"></i>
                 Asistencia (Excel)
             </a>
@@ -860,6 +860,8 @@ body.learn-assistants .evidence-zone { background: transparent !important; }
     <script>
         // Variable para controlar si el formulario ya se envió
         let imageFormSubmitted = false;
+        // Variable para rastrear si se hizo clic en un enlace que no debe mostrar spinner
+        let noSpinnerClick = false;
         
         // Función para mostrar el spinner de carga
         function showGlobalSpinner() {
@@ -952,6 +954,8 @@ body.learn-assistants .evidence-zone { background: transparent !important; }
         document.addEventListener('DOMContentLoaded', function() {
             // Reiniciar el estado del formulario
             imageFormSubmitted = false;
+            // Reiniciar la variable de control del spinner
+            noSpinnerClick = false;
             
             // Ocultar el spinner global después de un breve retraso
             setTimeout(function() {
@@ -984,8 +988,8 @@ body.learn-assistants .evidence-zone { background: transparent !important; }
                 });
             });
             
-            // Agregar manejadores para los enlaces de descarga
-            document.querySelectorAll('.download-zone a').forEach(link => {
+            // Agregar manejadores para los enlaces de descarga (excluyendo los que tienen clase no-spinner)
+            document.querySelectorAll('.download-zone a:not(.no-spinner)').forEach(link => {
                 link.addEventListener('click', function() {
                     showGlobalSpinner();
                     setTimeout(function() {
@@ -995,8 +999,25 @@ body.learn-assistants .evidence-zone { background: transparent !important; }
             });
         });
         
+        // Prevenir que el spinner se muestre al hacer clic en botones de descarga con clase no-spinner
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.download-btn.no-spinner, .downloads-wrap a.no-spinner').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Marcar que este clic no debe mostrar spinner
+                    noSpinnerClick = true;
+                    // Ocultar spinner si está visible
+                    hideGlobalSpinner();
+                });
+            });
+        });
+        
         // Mostrar el spinner cuando la página se está recargando
-        window.addEventListener('beforeunload', function() {
+        // Excluir enlaces con clase 'no-spinner' para evitar mostrar spinner en descargas
+        window.addEventListener('beforeunload', function(e) {
+            // Si se hizo clic en un enlace con clase no-spinner, no mostrar spinner
+            if (noSpinnerClick) {
+                return;
+            }
             showGlobalSpinner();
         });
         

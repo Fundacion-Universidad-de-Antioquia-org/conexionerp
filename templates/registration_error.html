@@ -1,0 +1,212 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/style.css" />
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
+    />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
+    <!-- FAVICON -->
+    <link rel="icon" type="image/jpg" href="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/Favicono.png" />
+    <title>Error en el Registro | Fundación</title>
+
+    <style>
+      :root {
+        --primary-color: #5c9c31;
+        --error-color: #dc2626;
+        --text-color: #333;
+        --light-text: #6c757d;
+        --border-radius: 10px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: 'Open Sans', sans-serif;
+        background-color: #f5f5f5;
+        color: var(--text-color);
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        padding: 2rem;
+      }
+
+      .error-container {
+        background-color: #fff;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        width: 100%;
+        max-width: 600px;
+        padding: 3rem 2rem;
+        text-align: center;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          transform: translateY(30px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .error-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: shake 0.5s ease-in-out;
+      }
+
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+      }
+
+      .error-icon i {
+        font-size: 3rem;
+        color: var(--error-color);
+      }
+
+      .error-title {
+        color: var(--error-color);
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+      }
+
+      .error-message {
+        color: var(--text-color);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.8;
+      }
+
+      .error-details {
+        background-color: #fef2f2;
+        border-left: 4px solid var(--error-color);
+        padding: 1rem;
+        margin-bottom: 2rem;
+        text-align: left;
+        border-radius: 4px;
+      }
+
+      .error-details strong {
+        color: var(--error-color);
+      }
+
+      .btn-retry {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(92, 156, 49, 0.3);
+      }
+
+      .btn-retry:hover {
+        background-color: #4a8026;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(92, 156, 49, 0.4);
+        color: white;
+      }
+
+      .logo-error {
+        max-width: 200px;
+        margin-bottom: 2rem;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 768px) {
+        .error-container {
+          padding: 2rem 1.5rem;
+        }
+
+        .error-title {
+          font-size: 1.5rem;
+        }
+
+        .error-message {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-container">
+      <img
+        src="https://cdnfuadesarrollo.blob.core.windows.net/estilosfua/funda-logo-3.png"
+        class="logo-error"
+        alt="Logo Fundación"
+      />
+      
+      <div class="error-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+
+      <h1 class="error-title">Error al Registrar Asistencia</h1>
+      
+      <p class="error-message">
+        Lo sentimos, no se pudo completar el registro de tu asistencia en este momento.
+      </p>
+
+      {% if error_message %}
+      <div class="error-details">
+        <strong>Detalles del error:</strong><br>
+        {{ error_message }}
+      </div>
+      {% endif %}
+
+      <div class="error-details">
+        <strong>¿Qué puedes hacer?</strong><br>
+        • Verifica tu conexión a internet<br>
+        • Intenta nuevamente en unos momentos<br>
+        • Si el problema persiste, contacta al área encargada: <strong>{{ responsable }}</strong>
+      </div>
+
+      {% if capacitacion_id %}
+      <a href="{% url 'registration_view' id=capacitacion_id %}" class="btn-retry">
+        <i class="bi bi-arrow-clockwise me-2"></i>Intentar Nuevamente
+      </a>
+      {% endif %}
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
+

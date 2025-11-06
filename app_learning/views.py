@@ -8,6 +8,7 @@ import unicodedata
 import requests
 import os
 import io
+import time
 import traceback
 from django.contrib import messages
 from azure.storage.blob import BlobServiceClient
@@ -253,82 +254,248 @@ def get_employee_id_by_name(name):
         logger.error('Failed to fetch employee ID from Odoo', exc_info=True)
         return None
 
-# Función para enviar datos a Odoo
-def send_to_odoo(data):
-    logger.debug("Intentando enviar datos a Odoo")
+# Función para actualizar registro existente en Odoo con verificación
+def update_record_in_odoo(record_id, update_data, capacitacion_id, employee_id):
+    """
+    Actualiza un registro existente en Odoo y verifica que la actualización fue exitosa.
+    Retorna: (success, employee_name, error_message)
+    """
+    try:
+        common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+        uid = common.authenticate(database, user, password, {})
+        
+        if not uid:
+            return False, None, "No se pudo autenticar con Odoo"
+        
+        models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+        
+        # Actualizar el registro
+        result = models.execute_kw(database, uid, password, 
+                                  'x_capacitacion_emplead', 'write', 
+                                  [[record_id], update_data])
+        
+        if not result:
+            logger.error(f"La actualización no retornó éxito. Record ID: {record_id}")
+            return False, None, "La actualización no fue exitosa"
+        
+        logger.info(f"Registro actualizado en Odoo. ID: {record_id}")
+        
+        # Verificar que la actualización fue exitosa leyendo el registro
+        time.sleep(0.5)  # Pequeña pausa para asegurar que Odoo procesó la actualización
+        
+        updated_records = models.execute_kw(database, uid, password,
+                                           'x_capacitacion_emplead', 'search_read',
+                                           [[
+                                               ['id', '=', record_id],
+                                               ['x_studio_id_capacitacion', '=', capacitacion_id],
+                                               ['x_studio_many2one_field_iphhw', '=', employee_id]
+                                           ]],
+                                           {'fields': ['id', 'x_studio_asisti'], 'limit': 1})
+        
+        if not updated_records or len(updated_records) == 0:
+            logger.error(f"CRÍTICO: Registro no encontrado después de actualización. ID: {record_id}")
+            return False, None, "No se pudo verificar la actualización del registro"
+        
+        # Verificar que la asistencia se actualizó correctamente
+        if 'x_studio_asisti' in update_data:
+            if updated_records[0]['x_studio_asisti'] != update_data['x_studio_asisti']:
+                logger.error(f"CRÍTICO: La asistencia no se actualizó correctamente. Esperado: {update_data['x_studio_asisti']}, Obtenido: {updated_records[0]['x_studio_asisti']}")
+                return False, None, "La actualización no se aplicó correctamente"
+        
+        # Obtener el nombre del empleado
+        employee_data = models.execute_kw(database, uid, password,
+                                         'hr.employee', 'search_read',
+                                         [[['id', '=', employee_id]]],
+                                         {'fields': ['identification_id'], 'limit': 1})
+        
+        if not employee_data or 'identification_id' not in employee_data[0]:
+            logger.warning(f"No se pudo obtener el nombre del empleado. ID: {employee_id}")
+            employee_name = None
+        else:
+            employee_name = employee_data[0]['identification_id']
+        
+        logger.info(f"Registro actualizado y verificado exitosamente. Record ID: {record_id}")
+        return True, employee_name, None
+        
+    except Exception as e:
+        logger.error(f'Error al actualizar registro en Odoo. ID: {record_id}', exc_info=True)
+        return False, None, f"Error al actualizar el registro: {str(e)}"
+
+# Función para verificar que un registro existe en Odoo
+def verify_record_in_odoo(record_id, capacitacion_id, employee_id):
+    """
+    Verifica que un registro realmente existe en Odoo después de crearlo.
+    Retorna True si existe, False en caso contrario.
+    """
     try:
         common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
         uid = common.authenticate(database, user, password, {})
         models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
-
-        department_id = get_department_id(data['department'])
-        if not department_id:
-            raise ValueError(f"Department '{data['department']}' not found in Odoo")
-
-        # Verificar si 'employee_id' está en 'data'; si no, buscarlo
-        if 'employee_id' in data and data['employee_id']:
-            employee_id = data['employee_id']
+        
+        # Buscar el registro por ID y verificar que existe
+        records = models.execute_kw(database, uid, password,
+                                   'x_capacitacion_emplead', 'search_read',
+                                   [[
+                                       ['id', '=', record_id],
+                                       ['x_studio_id_capacitacion', '=', capacitacion_id],
+                                       ['x_studio_many2one_field_iphhw', '=', employee_id]
+                                   ]],
+                                   {'fields': ['id', 'x_studio_asisti'], 'limit': 1})
+        
+        if records and len(records) > 0:
+            logger.info(f"Registro verificado exitosamente en Odoo. ID: {record_id}")
+            return True
         else:
-            # Buscar el empleado por 'document_id' si 'employee_id' no está disponible
+            logger.error(f"Registro no encontrado en Odoo después de creación. ID esperado: {record_id}")
+            return False
+            
+    except Exception as e:
+        logger.error(f'Error al verificar registro en Odoo. ID: {record_id}', exc_info=True)
+        return False
+
+# Función para enviar datos a Odoo con reintentos y verificación robusta
+def send_to_odoo(data, max_retries=3):
+    """
+    Envía datos a Odoo con reintentos automáticos y verificación post-creación.
+    Retorna: (record_id, employee_name, url_reunion, error_message)
+    Si hay error, record_id será None y error_message contendrá el mensaje.
+    """
+    logger.debug("Intentando enviar datos a Odoo", extra={'document_id': data.get('document_id'), 'capacitacion_id': data.get('capacitacion_id')})
+    
+    last_error = None
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.debug(f"Intento {attempt} de {max_retries} para enviar datos a Odoo")
+            
+            common = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/common')
+            uid = common.authenticate(database, user, password, {})
+            
+            if not uid:
+                raise ValueError("No se pudo autenticar con Odoo")
+            
+            models = xmlrpc.client.ServerProxy(f'{host}/xmlrpc/2/object')
+
+            department_id = get_department_id(data['department'])
+            if not department_id:
+                raise ValueError(f"Department '{data['department']}' not found in Odoo")
+
+            # Verificar si 'employee_id' está en 'data'; si no, buscarlo
+            if 'employee_id' in data and data['employee_id']:
+                employee_id = data['employee_id']
+            else:
+                # Buscar el empleado por 'document_id' si 'employee_id' no está disponible
+                employee_data = models.execute_kw(database, uid, password,
+                                                  'hr.employee', 'search_read',
+                                                  [[['name', '=', data['document_id']]]],
+                                                  {'fields': ['id', 'name'], 'limit': 1})
+                logger.debug("Respuesta de busqueda de empleado recibida")
+
+                if not employee_data:
+                    raise ValueError(f"Empleado con documento '{data['document_id']}' no encontrado en Odoo")
+
+                employee_id = employee_data[0]['id']
+
+            # Convertir fechas a cadenas en UTC
+            date_str = data['date'].strftime('%Y-%m-%d')
+            start_time_str = data['start_time'].strftime('%H:%M:%S')
+            end_time_str = data['end_time'].strftime('%H:%M:%S')
+            
+            # Preparar los datos para el registro en Odoo
+            odoo_data = {
+                'x_studio_tema': data['topic'],
+                'x_studio_many2one_field_iphhw': employee_id,
+                'x_studio_fecha_sesin': date_str,
+                'x_studio_hora_inicial': start_time_str,
+                'x_studio_hora_final': end_time_str,
+                'x_studio_many2one_field_ftouu': department_id,
+                'x_studio_estado': 'ACTIVA',
+                'x_studio_modalidad': data.get('mode', ''),
+                'x_studio_ubicacin': data.get('location', ''),
+                'x_studio_url': data.get('url_reunion', ''),
+                'x_studio_asisti': 'Si',
+                'x_studio_tipo': data.get('tipo', ''),
+                'x_studio_fecha_hora_registro': data['registro_datetime'],
+                'x_studio_ip_del_registro': data.get('ip_address', ''),
+                'x_studio_user_agent': data.get('user_agent', ''),
+                'x_studio_longitud': data.get('longitude', ''),
+                'x_studio_latitud': data.get('latitude', ''),
+                'x_studio_moderador': data.get('moderator', ''),
+                'x_studio_responsable': data.get('in_charge', ''),
+                'x_studio_id_capacitacion': data['capacitacion_id']
+            }
+
+            # Verificar que no haya valores None en los datos antes de enviar
+            for key, value in odoo_data.items():
+                if value is None:
+                    raise ValueError(f"El campo {key} tiene un valor None, lo que no es permitido en Odoo.")
+            
+            # Crear el registro en Odoo
+            record_id = models.execute_kw(database, uid, password,
+                                          'x_capacitacion_emplead', 'create', [odoo_data])
+            
+            if not record_id:
+                raise ValueError("Odoo no retornó un ID de registro válido después de la creación")
+
+            logger.info(f"Registro creado en Odoo. ID: {record_id}", extra={
+                'record_id': record_id,
+                'employee_id': employee_id,
+                'capacitacion_id': data['capacitacion_id']
+            })
+
+            # VERIFICACIÓN CRÍTICA: Verificar que el registro realmente existe en Odoo
+            time.sleep(0.5)  # Pequeña pausa para asegurar que Odoo procesó la creación
+            
+            record_verified = verify_record_in_odoo(record_id, data['capacitacion_id'], employee_id)
+            
+            if not record_verified:
+                logger.error(f"CRÍTICO: Registro creado pero no verificado en Odoo. ID: {record_id}")
+                raise ValueError("El registro fue creado pero no se pudo verificar en Odoo. Por favor, intente nuevamente.")
+
+            # Obtener el nombre del empleado desde el campo `identification_id`
             employee_data = models.execute_kw(database, uid, password,
                                               'hr.employee', 'search_read',
-                                              [[['name', '=', data['document_id']]]],
-                                              {'fields': ['id', 'name'], 'limit': 1})
-            logger.debug("Respuesta de busqueda de empleado recibida")
+                                              [[['id', '=', employee_id]]],
+                                              {'fields': ['identification_id'], 'limit': 1})
+            
+            if not employee_data or 'identification_id' not in employee_data[0]:
+                logger.warning(f"No se pudo obtener el nombre del empleado. ID: {employee_id}")
+                employee_name = data.get('document_id', 'Usuario')
+            else:
+                employee_name = employee_data[0]['identification_id']
 
-            if not employee_data:
-                raise ValueError(f"Empleado con documento '{data['document_id']}' no encontrado en Odoo")
+            logger.info(f"Registro completado exitosamente. Record ID: {record_id}, Employee: {employee_name}")
+            return record_id, employee_name, data.get('url_reunion', ''), None
 
-            employee_id = employee_data[0]['id']
-
-       # Convertir fechas a cadenas en UTC
-        date_str = data['date'].strftime('%Y-%m-%d')
-        start_time_str = data['start_time'].strftime('%H:%M:%S')
-        end_time_str = data['end_time'].strftime('%H:%M:%S')
-        
-       # Preparar los datos para el registro en Odoo
-        odoo_data = {
-            'x_studio_tema': data['topic'],
-            'x_studio_many2one_field_iphhw': employee_id,
-            'x_studio_fecha_sesin': date_str,
-            'x_studio_hora_inicial': start_time_str,
-            'x_studio_hora_final': end_time_str,
-            'x_studio_many2one_field_ftouu': department_id,
-            'x_studio_estado': 'ACTIVA',
-            'x_studio_modalidad': data.get('mode', ''),
-            'x_studio_ubicacin': data.get('location', ''),
-            'x_studio_url': data.get('url_reunion', ''),
-            'x_studio_asisti': 'Si',
-            'x_studio_tipo':data.get('tipo',''),
-            'x_studio_fecha_hora_registro': data['registro_datetime'],
-            'x_studio_ip_del_registro': data.get('ip_address'),
-            'x_studio_user_agent': data.get('user_agent'),
-            'x_studio_longitud': data.get('longitude'),
-            'x_studio_latitud': data.get('latitude'),
-            'x_studio_moderador': data.get('moderator', ''),
-            'x_studio_responsable': data.get('in_charge'),
-            'x_studio_id_capacitacion': data['capacitacion_id']
-        }
-
-        # Verificar que no haya valores None en los datos antes de enviar
-        for key, value in odoo_data.items():
-            if value is None:
-                raise ValueError(f"El campo {key} tiene un valor None, lo que no es permitido en Odoo.")
-        
-        record_id = models.execute_kw(database, uid, password,
-                                      'x_capacitacion_emplead', 'create', [odoo_data])
-
-        # Obtener el nombre del empleado desde el campo `identification_id`
-        employee_name = models.execute_kw(database, uid, password,
-                                          'hr.employee', 'search_read',
-                                          [[['id', '=', employee_id]]],
-                                          {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
-
-        return record_id, employee_name, data.get('url_reunion', '')
-
-    except Exception as e:
-        logger.error('Failed to send data to Odoo', exc_info=True)
-        return None, None, None
+        except (xmlrpc.client.Fault, ConnectionError, TimeoutError) as e:
+            # Errores transitorios que pueden reintentarse
+            last_error = str(e)
+            logger.warning(f"Error transitorio al enviar datos a Odoo (intento {attempt}/{max_retries}): {last_error}")
+            if attempt < max_retries:
+                time.sleep(1 * attempt)  # Backoff exponencial
+                continue
+            else:
+                logger.error(f'Failed to send data to Odoo after {max_retries} attempts', exc_info=True)
+                return None, None, None, f"Error de conexión con el sistema. Por favor, intente nuevamente en unos momentos."
+                
+        except ValueError as e:
+            # Errores de validación que no deben reintentarse
+            last_error = str(e)
+            logger.error(f'Error de validación al enviar datos a Odoo: {last_error}', exc_info=True)
+            return None, None, None, f"Error al procesar los datos: {last_error}"
+            
+        except Exception as e:
+            # Otros errores
+            last_error = str(e)
+            logger.error(f'Error inesperado al enviar datos a Odoo (intento {attempt}/{max_retries}): {last_error}', exc_info=True)
+            if attempt < max_retries:
+                time.sleep(1 * attempt)
+                continue
+            else:
+                return None, None, None, f"Error inesperado al registrar la asistencia. Por favor, contacte al administrador."
+    
+    # Si llegamos aquí, todos los intentos fallaron
+    return None, None, None, f"No se pudo registrar la asistencia después de {max_retries} intentos. Por favor, intente nuevamente."
 
 # Función para crear QR de Capacitación
 @csrf_exempt
@@ -619,20 +786,26 @@ def registration_view(request, id=None):
                                             'x_studio_fecha_hora_registro': registro_datetime,
                                             'x_studio_ip_del_registro': ip_address,
                                             'x_studio_user_agent': user_agent,
-                                            'x_studio_longitud': longitude,
-                                            'x_studio_latitud': latitude,
+                                            'x_studio_longitud': longitude or '',
+                                            'x_studio_latitud': latitude or '',
                                         }
                                         
-                                        models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'write', [[record_id], update_data])
-                                        logger.info("Asistencia actualizada a 'Si' para empleado")
+                                        # Usar función robusta para actualizar con verificación
+                                        success, employee_name, update_error = update_record_in_odoo(
+                                            record_id, update_data, capacitacion_id, employee_id
+                                        )
                                         
-                                        employee_name = models.execute_kw(database, uid, password,
-                                            'hr.employee', 'search_read',
-                                            [[['id', '=', employee_id]]],
-                                            {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
-                                        
-                                        encoded_url = quote(capacitacion.url_reunion or 'without-url', safe='')
-                                        return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))  
+                                        if success and employee_name:
+                                            encoded_url = quote(capacitacion.url_reunion or 'without-url', safe='')
+                                            return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
+                                        else:
+                                            # Si la actualización falla, mostrar página de error
+                                            logger.error(f"Error al actualizar registro. ID: {record_id}, Error: {update_error}")
+                                            return render(request, 'registration_error.html', {
+                                                'error_message': update_error or "No se pudo actualizar el registro de asistencia.",
+                                                'responsable': capacitacion.responsable,
+                                                'capacitacion_id': capacitacion_id
+                                            })  
                                     else:
                                         error_message = f"El usuario con documento {document_id} ya ha registrado su asistencia."
 
@@ -686,20 +859,26 @@ def registration_view(request, id=None):
                                             'x_studio_fecha_hora_registro': registro_datetime,
                                             'x_studio_ip_del_registro': ip_address,
                                             'x_studio_user_agent': user_agent,
-                                            'x_studio_longitud': longitude,
-                                            'x_studio_latitud': latitude,
+                                            'x_studio_longitud': longitude or '',
+                                            'x_studio_latitud': latitude or '',
                                         }
 
-                                        models.execute_kw(database, uid, password, 'x_capacitacion_emplead', 'write', [[record_id], update_data])
-                                        logger.info("Asistencia actualizada a 'Si' para empleado")
-
-                                        employee_name = models.execute_kw(database, uid, password,
-                                            'hr.employee', 'search_read',
-                                            [[['id', '=', employee_id]]],
-                                            {'fields': ['identification_id'], 'limit': 1})[0]['identification_id']
-
-                                        encoded_url = quote(capacitacion.url_reunion or 'without-url', safe='')
-                                        return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
+                                        # Usar función robusta para actualizar con verificación
+                                        success, employee_name, update_error = update_record_in_odoo(
+                                            record_id, update_data, capacitacion_id, employee_id
+                                        )
+                                        
+                                        if success and employee_name:
+                                            encoded_url = quote(capacitacion.url_reunion or 'without-url', safe='')
+                                            return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
+                                        else:
+                                            # Si la actualización falla, mostrar página de error
+                                            logger.error(f"Error al actualizar registro. ID: {record_id}, Error: {update_error}")
+                                            return render(request, 'registration_error.html', {
+                                                'error_message': update_error or "No se pudo actualizar el registro de asistencia.",
+                                                'responsable': capacitacion.responsable,
+                                                'capacitacion_id': capacitacion_id
+                                            })
                                     else:
                                         error_message = f"El usuario con documento {document_id} ya ha registrado su asistencia."
                                 else:
@@ -713,17 +892,35 @@ def registration_view(request, id=None):
                                     data['capacitacion_id'] = capacitacion_id
                                     data['employee_id'] = employee_id  # Pasar el ID del empleado
 
-                                    record_id, employee_name, url_reunion = send_to_odoo(data)
-                                    if record_id:
+                                    # Usar función robusta con verificación post-creación
+                                    record_id, employee_name, url_reunion, error_msg = send_to_odoo(data)
+                                    
+                                    if record_id and employee_name:
+                                        # Verificación exitosa - redirigir a success
                                         encoded_url = quote(url_reunion or 'without-url', safe='')
                                         return redirect(reverse('success', kwargs={'employee_name': employee_name, 'url_reunion': encoded_url}))
                                     else:
-                                        error_message = "Hubo un problema al enviar los datos a Odoo. Por favor, intente nuevamente."
+                                        # Error al crear registro - mostrar página de error
+                                        logger.error(f"Error al crear registro en Odoo. Documento: {document_id}, Error: {error_msg}")
+                                        return render(request, 'registration_error.html', {
+                                            'error_message': error_msg or "No se pudo registrar la asistencia en el sistema.",
+                                            'responsable': capacitacion.responsable,
+                                            'capacitacion_id': capacitacion_id
+                                        })
 
 
                     except Exception as e:
-                        logger.error('Error al registrar la asistencia en Odoo:', exc_info=True)
-                        error_message = "Hubo un problema al verificar los datos en el sistema. Por favor, intente nuevamente."
+                        logger.error('Error inesperado al registrar la asistencia en Odoo:', exc_info=True, extra={
+                            'document_id': document_id,
+                            'capacitacion_id': capacitacion_id,
+                            'error': str(e)
+                        })
+                        # Mostrar página de error en lugar de solo un mensaje
+                        return render(request, 'registration_error.html', {
+                            'error_message': f"Error inesperado al procesar el registro: {str(e)}. Por favor, contacte al administrador.",
+                            'responsable': capacitacion.responsable,
+                            'capacitacion_id': capacitacion_id
+                        })
                 else:
                     return render(request, 'registration_form.html', {
                         'form': form,
